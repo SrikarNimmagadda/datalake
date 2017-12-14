@@ -152,13 +152,13 @@ resources:
             - Event: s3:ObjectCreated:*
               Function:
                 "Fn::GetAtt": 
-                  - S3WaiterLambdaFunction
+                  - RouteRawLambdaFunction
                   - Arn
-      DependsOn: WaiterLambdaPermissionLandingS3
+      DependsOn: RouteRawLambdaPermission
         #VersioningConfiguration:
         #  Status: Enabled
         # add additional custom bucket configuration here
-    WaiterLambdaPermissionLandingS3:
+    RouteRawLambdaPermission:
       Type: "AWS::Lambda::Permission"
       Properties:
         FunctionName:
@@ -225,9 +225,4 @@ resources:
       Description: Bucket to store secrets managed by MotherHen
       Value:
         Ref: SecretsBucket
-    S3TriggeredLambda:
-      Description: Lambda listens for created objects put into  S3 by SnapLogic and moves to appropriate bucket
-      Value:
-        Fn::GetAtt:
-          - S3WaiterLambdaFunction
-          - Arn
+
