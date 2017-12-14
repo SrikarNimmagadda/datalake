@@ -55,7 +55,7 @@ provider:
   stackTags:
     GLCODE: "0062"
     bill-glcode: "0062"
-    # TODO: change support team to EIM at some point...
+    # TODO: change support team to EIM at some point
     SupportTeam: eaapplicationarchitects@gamestop.com
     tech-support-team: eaapplicationarchitects@gamestop.com
     BuiltBy: eaapplicationarchitects@gamestop.com

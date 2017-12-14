@@ -21,7 +21,7 @@ pyb install_dependencies
 echo "executing initial build"
 pyb
 
-# hmm...if serverless is doing the pull of dependencies on package, then the unit tests have to run against the package?
+# hmm if serverless is doing the pull of dependencies on package, then the unit tests have to run against the package?
 # or do we have to pull dependencies twice? That would break the principle of "build once"
 #serverless package
 
