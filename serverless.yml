@@ -1,6 +1,6 @@
 # NOTE: Service name must match the repository name, but replace all '.' with '-' (this is a restriction of Cloudformation naming conventions)
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
-service: ${env:SERVICE_NAME, self:custom.localDeploy.service}
+service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
 # plugins:
 #   - serverless-package-python-functions
@@ -106,6 +106,10 @@ functions:
 
     name: routeRaw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
+    events:
+      - s3:
+         bucket: landing
+         event: s3:ObjectCreated:*
     package:
       include:
         - routeRaw
@@ -131,26 +135,7 @@ functions:
       include:
         - startJobStore
       # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}.zip
-  
-  s3Waiter:
-    environment:
-      SECRETS_BUCKET: ${self:custom.secretsBucket}
-      APP_COMMIT_HASH: ${self:custom.appHash}
-    handler: src/waiter.handler
-    events:
-      - s3:
-         bucket: landing
-         event: s3:ObjectCreated:*
-      - s3:
-         bucket: ${self:custom.buckets.rawRegular}
-         event: s3:ObjectCreated:*
-         #rules:
-          #- prefix: */
-          #- suffix: .*
-    description: invokes the invoker function when a new object is created in an s3 bucket
-    #memorySize: 128
-    #timeout: 10
-      
+
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
 
