@@ -1,0 +1,37 @@
+*.pyc
+__pycache__
+target
+target/dist
+target/dist/gs.app.s3triggertest-1.0.dev0/dist/gs.app.s3triggertest-1.0.dev0-py2-none-any.whl
+target/dist/gs.app.s3triggertest-1.0.dev0/dist/gs.app.s3triggertest-1.0.dev0.tar.gz
+.DS_Store
+.coverage
+user
+.project
+.pydevproject
+ve*
+*~
+.*~
+*.iml
+.idea
+out
+
+# generated pdoc documentation
+docs
+
+# Virtualization artifacts
+Vagrantfile
+.vagrant
+**/*.swp
+
+# Ignoring cram test error
+src/cmdlinetest/test_help.t.err
+
+# sphinx doc artefacts
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Ignore node
+node_modules
+

@@ -1,0 +1,21 @@
+buckets:
+    raw_pii:
+        source: replace-me-with-your-SOURCE-bucket
+        in_file: pii_customer.csv
+        target: replace-me-with-your-TARGET-bucket
+        out_file: pii_customer.csv
+    raw_regular:
+        source: replace-me-with-your-SOURCE-bucket
+        in_file: raw-regular-to-emr.csv
+        target: replace-me-with-your-TARGET-bucket
+        out_file: raw-regular-to-emr.csv
+    raw_pii_qa:
+        source: tb-us-east-1-dev-raw-pii-customer-qa
+        in_file: pii_customer.csv
+        target: tb-us-east-1-dev-raw-pii-customer-target-qa
+        out_file: pii_test2.csv
+emr_paths:
+    script_runner: s3n://elasticmapreduce/libs/script-runner/script-runner.jar
+    emr_logs: s3://gs-us1-sandbox-jar/EMRLogs/
+regions:
+    default: us-east-1

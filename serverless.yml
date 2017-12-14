@@ -1,0 +1,248 @@
+# NOTE: Service name must match the repository name, but replace all '.' with '-' (this is a restriction of Cloudformation naming conventions)
+# NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
+service: ${env:SERVICE_NAME, self:custom.localDeploy.service}
+
+# plugins:
+#   - serverless-package-python-functions
+
+custom:
+  appHash: ${file(./apphash.txt), "none"}
+  hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
+  coop: ${env:COOP, self:custom.localDeploy.coop}
+  basePath: newapp
+  localDeploy: # Settings used when deploying locally
+    stage: local
+    hen: local
+    coop: local
+    service: gs-app-s3-trigger-lambda
+  secretsBucket: ${self:service}-secrets-${self:custom.hen}-${self:provider.stage}
+  buckets:
+    code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
+    landing: ${self:service}-landing-${self:custom.hen}-${self:provider.stage}
+    rawPii: ${self:service}-raw-pii-${self:custom.hen}-${self:provider.stage}
+    rawHr: ${self:service}-raw-hr-${self:custom.hen}-${self:provider.stage}
+    rawRegular: ${self:service}-raw-regular-${self:custom.hen}-${self:provider.stage}
+    discoveryPii: ${self:service}-discovery-pii-${self:custom.hen}-${self:provider.stage}
+    discoveryHr: ${self:service}-discovery-hr-${self:custom.hen}-${self:provider.stage}
+    discoveryRegular: ${self:service}-discovery-regular-${self:custom.hen}-${self:provider.stage}
+    refinedPii: ${self:service}-refined-pii-${self:custom.hen}-${self:provider.stage}
+    refinedHr: ${self:service}-refined-hr-${self:custom.hen}-${self:provider.stage}
+    refinedRegular: ${self:service}-refined-regular-${self:custom.hen}-${self:provider.stage}
+    delivery: ${self:service}-delivery-${self:custom.hen}-${self:provider.stage}
+  pkgPyFuncs: # plugin configuration
+    requirementsFile: 'requirements.txt'
+    globalRequirements:
+      - ./globalRequirements.txt
+    globalIncludes:
+      - ./common_files
+    buildDir: _build
+    cleanup: true
+
+provider:
+  name: aws
+  runtime: python2.7
+  stage: ${env:STAGE, self:custom.localDeploy.stage}
+  region: us-east-1
+  deploymentBucket: motherhen-${self:custom.coop}-${self:custom.hen}-deployments
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+        - logs:DescribeLogStreams
+      Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+  stackTags:
+    GLCODE: "0062"
+    bill-glcode: "0062"
+    # TODO: change support team to EIM at some point...
+    SupportTeam: eaapplicationarchitects@gamestop.com
+    tech-support-team: eaapplicationarchitects@gamestop.com
+    BuiltBy: eaapplicationarchitects@gamestop.com
+    tech-builtby: eaapplicationarchitects@gamestop.com
+    tech-deployby: MH-CodePipeline
+    LastUpdatedBy: "512883"
+  environment:
+    SECRETS_BUCKET: ${self:custom.secretsBucket}
+    APP_COMMIT_HASH: ${self:custom.appHash}
+    STAGE: ${self:provider.stage}
+    # uncomment for local test via sls offline, or define the env var manually in your test shell
+    # but do not checkin since it will break the TEST stage of your app's code-pipeline
+    # AWS_REGION: ${self:provider.region} # needed for sls offline
+
+# NOTE: You can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  
+  extractMetadata:
+    environment:
+      SECRETS_BUCKET: ${self:custom.secretsBucket}
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+    name: extractMetadata-${self:provider.stage}
+    handler: extract-metadata/handler.lambda_handler
+    package:
+      include:
+        - extractMetadata
+      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}.zip
+  
+  routeRaw:
+    environment:
+      SECRETS_BUCKET: ${self:custom.secretsBucket}
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+
+    name: routeRaw-${self:provider.stage}
+    handler: functions/route-raw/handler.lambda_handler
+    package:
+      include:
+        - routeRaw
+      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}.zip
+  
+  startJobStore:
+    environment:
+      SECRETS_BUCKET: ${self:custom.secretsBucket}
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_PII_BUCKET: ${self:custom.buckets.discoveryPii}
+      DISCOVERY_HR_BUCKET: ${self:custom.buckets.discoveryHr}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_PII_BUCKET: ${self:custom.buckets.refinedPii}
+      REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+    name: startJobStore-${self:provider.stage}
+    handler: start-job-store/handler.lambda_handler
+    package:
+      include:
+        - startJobStore
+      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}.zip
+  
+  s3Waiter:
+    environment:
+      SECRETS_BUCKET: ${self:custom.secretsBucket}
+      APP_COMMIT_HASH: ${self:custom.appHash}
+    handler: src/waiter.handler
+    events:
+      - s3:
+         bucket: landing
+         event: s3:ObjectCreated:*
+      - s3:
+         bucket: ${self:custom.buckets.rawRegular}
+         event: s3:ObjectCreated:*
+         #rules:
+          #- prefix: */
+          #- suffix: .*
+    description: invokes the invoker function when a new object is created in an s3 bucket
+    #memorySize: 128
+    #timeout: 10
+      
+# NOTE: If needed, add additional Lambda Function definitions here
+# See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
+
+resources:
+  # STUFF FOR CUSTOM BUCKET CONFIGURATION
+  ### TODO ### https://serverless.com/framework/docs/providers/aws/events/s3/
+  Resources:
+    S3BucketLanding:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.landing}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: s3:ObjectCreated:*
+              Function:
+                "Fn::GetAtt": 
+                  - S3WaiterLambdaFunction
+                  - Arn
+      DependsOn: WaiterLambdaPermissionLandingS3
+        #VersioningConfiguration:
+        #  Status: Enabled
+        # add additional custom bucket configuration here
+    WaiterLambdaPermissionLandingS3:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        FunctionName:
+          "Fn::GetAtt": 
+           - S3WaiterLambdaFunction
+           - Arn 
+        Principal: "s3.amazonaws.com"
+        Action: "lambda:InvokeFunction"
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn: 
+          Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - ${self:custom.buckets.landing}
+# was:      Fn::GetAtt: [ S3BucketLanding, Arn ]
+
+    # STUFF NEEDED FOR SECRETS TO WORK - DO NOT MODIFY!!!
+    AppKey: ${file(./serverless-resource-appkey.yml)}
+    SecretsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.secretsBucket}
+        VersioningConfiguration:
+          Status: Enabled
+        LoggingConfiguration:
+          DestinationBucketName:
+            Fn::ImportValue:
+              AppSecretLoggingBucket
+          LogFilePrefix: logs-${self:service}-${self:provider.stage}
+    SecretsBucketPolicy: ${file(./serverless-resource-secretsbucketpolicy.yml)}
+
+#    NOTE: If needed, add more CloudFormation resources
+#    EXAMPLE: S3 Bucket 
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#
+#    EXAMPLE: DynamoDB table
+#    DynamoTable:
+#      Type: 'AWS::DynamoDB::Table'
+#      Properties:
+#        AttributeDefinitions:
+#          -
+#            AttributeName: id
+#            AttributeType: S
+#        KeySchema:
+#          -
+#            AttributeName: id
+#            KeyType: HASH
+#        ProvisionedThroughput:
+#          ReadCapacityUnits: 1
+#          WriteCapacityUnits: 1
+#        NOTE: Must grant access to this TableName in iamRoleStatements section
+#        TableName: '${self:service}.${self:provider.stage}'
+
+  Outputs:
+    KmsKeyId:
+      Description: KMS key id used to encrypt Github token
+      Value:
+        Ref: AppKey
+    SecretsBucket:
+      Description: Bucket to store secrets managed by MotherHen
+      Value:
+        Ref: SecretsBucket
+    S3TriggeredLambda:
+      Description: Lambda listens for created objects put into  S3 by SnapLogic and moves to appropriate bucket
+      Value:
+        Fn::GetAtt:
+          - S3WaiterLambdaFunction
+          - Arn

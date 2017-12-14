@@ -1,0 +1,6 @@
+pytest>=3.3.0
+codecov>=2.0.9
+pytest-cov>=2.5.1
+pytest-spark>=0.4.0
+pytest-aws>=0.1.0
+pybuilder

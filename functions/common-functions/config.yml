@@ -1,0 +1,22 @@
+buckets:
+    raw1:
+        source: gs-tg-testbucket
+        in_file: City-Parish_Employee_Annual_Salaries.csv
+        query_key: JOB CODE
+        query_value: 5020
+        target: gs-app-s3-trigger-lambda-tb-landing-preprod-master
+        out_file: pii_test1.csv
+    raw2:
+        source: gs-tg-testbucket
+        in_file: City-Parish_Employee_Annual_Salaries.csv
+        query_key: JOB CODE
+        query_value: 5010
+        target: gs-app-s3-trigger-lambda-tb-landing-preprod-master
+        out_file: pii_test2.csv
+    raw3:
+        source: gs-tg-testbucket
+        in_file: City-Parish_Employee_Annual_Salaries.csv
+        query_key: JOB CODE
+        query_value: 5015
+        target: gs-app-s3-trigger-lambda-tb-landing-preprod-master
+        out_file: pii_test3.csv
