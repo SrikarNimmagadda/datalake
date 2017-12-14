@@ -16,7 +16,7 @@ BUCKETS = {
     'regular': os.getenv('RAW_REGULAR_BUCKET')
 }
 
-LOGGER.info(BUCKETS)
+LOGGER.info(BUCKETS['pii'])
 
 S3 = boto3.client('s3')
 
