@@ -163,7 +163,7 @@ resources:
       Properties:
         FunctionName:
           "Fn::GetAtt": 
-           - S3WaiterLambdaFunction
+           - RouteRawLambdaFunction
            - Arn 
         Principal: "s3.amazonaws.com"
         Action: "lambda:InvokeFunction"
