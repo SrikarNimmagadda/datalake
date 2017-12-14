@@ -89,7 +89,7 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: extractMetadata-${self:provider.stage}
+    name: ${self:service}-extractMetadata-${self:provider.stage}
     handler: extract-metadata/handler.lambda_handler
     package:
       include:
@@ -104,7 +104,7 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
-    name: routeRaw-${self:provider.stage}
+    name: ${self:service}-routeRaw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
     events:
       - s3:
@@ -129,7 +129,7 @@ functions:
       REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: startJobStore-${self:provider.stage}
+    name: ${self:service}-startJobStore-${self:provider.stage}
     handler: start-job-store/handler.lambda_handler
     package:
       include:
