@@ -5,16 +5,17 @@ s3 = boto3.resource('s3')
 
 # Usage
 # cr = ConfigReader()
-# cfg = cr.yaml_config_reader()
+# cfg = cr.yaml_config_reader("../config.yml")
 # buckets = cfg["buckets"]
 # for k, v in buckets.items():
 #    s3_object = s3.Object(buckets[k]["source"], buckets[k]["in_file"])
 #    print(s3_object)
 
-class ConfigReader:
+class ConfigReader():
 
-    def __init__(self):
+    def __init__(self, cfg_file):
         self.cfg = []
+        self.cfg_file = cfg_file
 
     # configuration reader from a YAML file.
     # YAML will provide organizational structure to your properties and connection string definitions
@@ -23,9 +24,8 @@ class ConfigReader:
         try:
             # config is defined here for this solution, however, it can be abstracted to the class scope for using other 
             # configuration files parsed with the same method, utilizing the same exception handling
-            cfg_file = "./config.yml"
-            with open(cfg_file, 'r') as config:
-                if cfg_file.endswith('.yml'):
+            with open(self.cfg_file, 'r') as config:
+                if self.cfg_file.endswith('.yml'):
                     self.cfg = yaml.load(config)
                 return self.cfg
         except IOError, (ErrorNumber, ErrorMessage):

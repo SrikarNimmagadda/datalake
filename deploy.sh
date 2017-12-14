@@ -40,7 +40,7 @@ function deploy_app
 
 
   echo DEPLOY - START
-  serverless deploy -v
+  serverless deploy
   echo DEPLOY - DONE
 }
 export -f deploy_app

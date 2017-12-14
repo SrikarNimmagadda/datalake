@@ -8,7 +8,7 @@ use_plugin("python.install_dependencies")
 use_plugin("python.distutils")
 
 # https://github.com/pybuilder/pybuilder/issues/245
-name = "gs.app.s3-trigger-lambda"
+name = "tb.app.datalake"
 default_task = "publish"
 
 @init

@@ -2,8 +2,8 @@
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
 service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
-# plugins:
-#   - serverless-package-python-functions
+plugins:
+ - serverless-package-python-functions
 
 custom:
   appHash: ${file(./apphash.txt), "none"}
@@ -94,7 +94,7 @@ functions:
     package:
       include:
         - extractMetadata
-      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}.zip
   
   routeRaw:
     environment:
@@ -113,7 +113,7 @@ functions:
     package:
       include:
         - routeRaw
-      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}.zip
   
   startJobStore:
     environment:
@@ -134,7 +134,7 @@ functions:
     package:
       include:
         - startJobStore
-      # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
