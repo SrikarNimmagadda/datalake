@@ -143,6 +143,7 @@ resources:
   # STUFF FOR CUSTOM BUCKET CONFIGURATION
   ### TODO ### https://serverless.com/framework/docs/providers/aws/events/s3/
   Resources:
+    # SPARK CODE BUCKET
     # S3 bucket where we put spark code. Not used by lambdas, but read by the EMR cluster
     S3BucketCode:
       Type: AWS::S3::Bucket
@@ -209,7 +210,7 @@ resources:
         Principal: 's3.amazonaws.com'
         Action: 'lambda:InvokeFunction'
         SourceAccount:
-          Fn::Ref: 'AWS::AccountId'
+          Ref: 'AWS::AccountId'
         SourceArn:
           Fn::Join:
             - ''
@@ -242,7 +243,7 @@ resources:
         Principal: 's3.amazonaws.com'
         Action: 'lambda:InvokeFunction'
         SourceAccount:
-          Fn::Ref: 'AWS::AccountId'
+          Ref: 'AWS::AccountId'
         SourceArn:
           Fn::Join:
             - ''
@@ -275,7 +276,7 @@ resources:
         Principal: 's3.amazonaws.com'
         Action: 'lambda:InvokeFunction'
         SourceAccount:
-          Fn::Ref: 'AWS::AccountId'
+          Ref: 'AWS::AccountId'
         SourceArn:
           Fn::Join:
             - ''
@@ -308,12 +309,54 @@ resources:
         Principal: 's3.amazonaws.com'
         Action: 'lambda:InvokeFunction'
         SourceAccount:
-          Fn::Ref: 'AWS::AccountId'
+          Ref: 'AWS::AccountId'
         SourceArn:
           Fn::Join:
             - ''
             - - 'arn:aws:s3:::'
               - ${self:custom.buckets.delivery}
+
+    # DISCOVERY PII BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.discoveryPii}
+        # need to add policy to allow the cluster to read the bucket
+
+    # DISCOVERY HR BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.discoveryHr}
+        # need to add policy to allow the cluster to read the bucket
+
+    # DISCOVERY REGULAR BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.discoveryRegular}
+        # need to add policy to allow the cluster to read the bucket
+
+    # REFINED PII BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.refinedPii}
+        # need to add policy to allow the cluster to read the bucket
+
+    # REFINED HR BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.refinedHr}
+        # need to add policy to allow the cluster to read the bucket
+
+    # REFINED REGULAR BUCKET
+    S3BucketCode:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.refinedRegular}
+        # need to add policy to allow the cluster to read the bucket
 
     # SECRETS BUCKET
     # STUFF NEEDED FOR SECRETS TO WORK - DO NOT MODIFY!!!
