@@ -317,42 +317,42 @@ resources:
               - ${self:custom.buckets.delivery}
 
     # DISCOVERY PII BUCKET
-    S3BucketCode:
+    S3BucketDiscoveryPii:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryPii}
         # need to add policy to allow the cluster to read the bucket
 
     # DISCOVERY HR BUCKET
-    S3BucketCode:
+    S3BucketDiscoveryHr:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryHr}
         # need to add policy to allow the cluster to read the bucket
 
     # DISCOVERY REGULAR BUCKET
-    S3BucketCode:
+    S3BucketDiscoveryRegular:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryRegular}
         # need to add policy to allow the cluster to read the bucket
 
     # REFINED PII BUCKET
-    S3BucketCode:
+    S3BucketRefinedPii:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedPii}
         # need to add policy to allow the cluster to read the bucket
 
     # REFINED HR BUCKET
-    S3BucketCode:
+    S3BucketRefinedHr:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedHr}
         # need to add policy to allow the cluster to read the bucket
 
     # REFINED REGULAR BUCKET
-    S3BucketCode:
+    S3BucketRefinedRegular:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedRegular}
