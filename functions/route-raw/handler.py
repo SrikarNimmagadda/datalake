@@ -16,13 +16,13 @@ BUCKETS = {
     'regular': os.getenv('RAW_REGULAR_BUCKET')
 }
 
-LOGGER.info(BUCKETS)
-
 S3 = boto3.client('s3')
 
 
 def lambda_handler(event, context):  # pylint: disable=unused-argument
     """handler entry point."""
+
+    LOGGER.info(BUCKETS['pii'])
 
     # no logic in the main handler except passing the S3 boto object.
     # this will allow us to unit test the main logic with a mock of that service
