@@ -22,29 +22,31 @@ def set_properties(project):
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_source_unittest_python", "tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("coverage_break_build", False)
 
 @task
-def extract_metadata(project):
+def extract_metadata(project, logger):
 # extract-metadata
+    logger.info("I am building extract-metadata for {0} in version {1}!".format(project.name, project.version))
     #project.build_depends_on('mockito')
     project.set_property("dir_source_main_python", "functions/extract-metadata")
     project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "$dir_target/dist/" + extract_metadata_path + "-" + version)
+    project.set_property("dir_dist", "_build_fun/dist/1/" + extract_metadata_path + "-" + version)
 
 @task
-def route_raw(project):
+def route_raw(project, logger):
 # route-raw
+    logger.info("I am building route-raw for {0} in version {1}!".format(project.name, project.version))
     project.set_property("dir_source_main_python", "functions/route-raw")
     project.set_property("dir_source_unittest_python", "functions/route-raw/tests")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "$dir_target/dist/" + route_raw_path + "-" + version)
+    project.set_property("dir_dist", "_build_fun/dist/2/" + route_raw_path + "-" + version)
 
 @task
-def start_job_store(project):
+def start_job_store(project, logger):
 # start-job-store
+    logger.info("I am building start_job_store for {0} in version {1}!".format(project.name, project.version))
     project.set_property("dir_source_main_python", "functions/start-job-store")
     project.set_property("dir_source_unittest_python", "functions/start-job-store/tests")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "$dir_target/dist/" + start_job_store_path + "-" + version)
+    project.set_property("dir_dist", "_build_fun/dist/3/" + start_job_store_path + "-" + version)
