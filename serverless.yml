@@ -14,7 +14,16 @@ custom:
     stage: local
     hen: local
     coop: local
-    service: gs-app-s3-trigger-lambda
+    service: tb-app-datalake
+  dynamo:
+    fileMetadata:
+      name: ${self:service}.file-metadata.${self:provider.stage}
+      readCapacity: ${env:DYNAMO_FILE_META_READ_CAP, '1'}
+      writeCapacity: ${env:DYNAMO_FILE_META_WRITE_CAP, '1'}
+    processMetadata:
+      name: ${self:service}.process-metadata.${self:provider.stage}
+      readCapacity: ${env:DYNAMO_PROCESS_META_READ_CAP, '1'}
+      writeCapacity: ${env:DYNAMO_PROCESS_META_WRITE_CAP, '1'}
   secretsBucket: ${self:service}-secrets-${self:custom.hen}-${self:provider.stage}
   buckets:
     code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
@@ -143,7 +152,10 @@ resources:
   # STUFF FOR CUSTOM BUCKET CONFIGURATION
   ### TODO ### https://serverless.com/framework/docs/providers/aws/events/s3/
   Resources:
+    ######################################################################
     # SPARK CODE BUCKET
+    ######################################################################
+    
     # S3 bucket where we put spark code. Not used by lambdas, but read by the EMR cluster
     S3BucketCode:
       Type: AWS::S3::Bucket
@@ -151,7 +163,10 @@ resources:
         BucketName: ${self:custom.buckets.code}
         # need to add policy to allow the cluster to read the bucket
     
+    ######################################################################
     # LANDING BUCKET
+    ######################################################################
+    
     # S3 bucket where CSV files enter the data lake
     S3BucketLanding:
       Type: AWS::S3::Bucket
@@ -184,6 +199,10 @@ resources:
             - - 'arn:aws:s3:::'
               - ${self:custom.buckets.landing}
 
+    ######################################################################
+    # RAW BUCKETS
+    ######################################################################
+    
     # RAW PII BUCKET
     # S3 bucket that contains raw (csv) files containing PII data
     S3BucketRawPii:
@@ -283,7 +302,10 @@ resources:
             - - 'arn:aws:s3:::'
               - ${self:custom.buckets.rawRegular}
 
+    ######################################################################
     # DELIVERY BUCKET
+    ######################################################################
+    
     # S3 bucket that contains the output of the datalake processing (csv)
     S3BucketDelivery:
       Type: AWS::S3::Bucket
@@ -316,6 +338,10 @@ resources:
             - - 'arn:aws:s3:::'
               - ${self:custom.buckets.delivery}
 
+    ######################################################################
+    # DISCOVERY BUCKETS
+    ######################################################################
+    
     # DISCOVERY PII BUCKET
     S3BucketDiscoveryPii:
       Type: AWS::S3::Bucket
@@ -337,6 +363,10 @@ resources:
         BucketName: ${self:custom.buckets.discoveryRegular}
         # need to add policy to allow the cluster to read the bucket
 
+    ######################################################################
+    # REFINED BUCKETS
+    ######################################################################
+    
     # REFINED PII BUCKET
     S3BucketRefinedPii:
       Type: AWS::S3::Bucket
@@ -358,7 +388,48 @@ resources:
         BucketName: ${self:custom.buckets.refinedRegular}
         # need to add policy to allow the cluster to read the bucket
 
-    # SECRETS BUCKET
+    ######################################################################
+    # DYNAMO TABLES
+    ######################################################################
+
+    FileMetadataDynamoTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.dynamo.fileMetadata.readCapacity}
+          WriteCapacityUnits: ${self:custom.dynamo.fileMetadata.writeCapacity}
+        # NOTE: Must grant access to this TableName in iamRoleStatements section
+        TableName: ${self:custom.dynamo.fileMetadata.name}
+
+    ProcessMetadataDynamoTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.dynamo.processMetadata.readCapacity}
+          WriteCapacityUnits: ${self:custom.dynamo.processMetadata.writeCapacity}
+        # NOTE: Must grant access to this TableName in iamRoleStatements section
+        TableName: ${self:custom.dynamo.processMetadata.name}
+
+    ######################################################################
+    # SECRETS
+    ######################################################################
+    
     # STUFF NEEDED FOR SECRETS TO WORK - DO NOT MODIFY!!!
     AppKey: ${file(./serverless-resource-appkey.yml)}
     SecretsBucket:
@@ -374,30 +445,9 @@ resources:
           LogFilePrefix: logs-${self:service}-${self:provider.stage}
     SecretsBucketPolicy: ${file(./serverless-resource-secretsbucketpolicy.yml)}
 
-#    NOTE: If needed, add more CloudFormation resources
-#    EXAMPLE: S3 Bucket 
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#
-#    EXAMPLE: DynamoDB table
-#    DynamoTable:
-#      Type: 'AWS::DynamoDB::Table'
-#      Properties:
-#        AttributeDefinitions:
-#          -
-#            AttributeName: id
-#            AttributeType: S
-#        KeySchema:
-#          -
-#            AttributeName: id
-#            KeyType: HASH
-#        ProvisionedThroughput:
-#          ReadCapacityUnits: 1
-#          WriteCapacityUnits: 1
-#        NOTE: Must grant access to this TableName in iamRoleStatements section
-#        TableName: '${self:service}.${self:provider.stage}'
+  ######################################################################
+  # OUTPUTS
+  ######################################################################
 
   Outputs:
     KmsKeyId:
