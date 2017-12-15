@@ -1,0 +1,19 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+pytest>=3.3.0
+codecov>=2.0.9
+pytest-cov>=2.5.1
+pytest-spark>=0.4.0
+pytest-aws>=0.1.0
+pybuilder
+
+[packages]
+boto3>=1.4.7
+pyspark>=2.2.0
+
+requests = "*"
