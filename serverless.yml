@@ -16,14 +16,15 @@ custom:
     coop: local
     service: tb-app-datalake
   dynamo:
+    defaultCapacity: 1
     fileMetadata:
       name: ${self:service}.file-metadata.${self:provider.stage}
-      readCapacity: ${env:DYNAMO_FILE_META_READ_CAP, '1'}
-      writeCapacity: ${env:DYNAMO_FILE_META_WRITE_CAP, '1'}
+      readCapacity: ${env:DYNAMO_FILE_META_READ_CAP, self:custom.dynamo.defaultCapacity}
+      writeCapacity: ${env:DYNAMO_FILE_META_WRITE_CAP, self:custom.dynamo.defaultCapacity}
     processMetadata:
       name: ${self:service}.process-metadata.${self:provider.stage}
-      readCapacity: ${env:DYNAMO_PROCESS_META_READ_CAP, '1'}
-      writeCapacity: ${env:DYNAMO_PROCESS_META_WRITE_CAP, '1'}
+      readCapacity: ${env:DYNAMO_PROCESS_META_READ_CAP, self:custom.dynamo.defaultCapacity}
+      writeCapacity: ${env:DYNAMO_PROCESS_META_WRITE_CAP, self:custom.dynamo.defaultCapacity}
   secretsBucket: ${self:service}-secrets-${self:custom.hen}-${self:provider.stage}
   buckets:
     code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
