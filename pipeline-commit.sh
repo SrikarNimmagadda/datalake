@@ -3,8 +3,6 @@
 # phases:
 #  install:
 #    commands:
-#npm install serverless-package-python-functions
-npm install serverless-s3-remover
 pip install -r dev-dependencies.txt
 
 #  pre_build:
