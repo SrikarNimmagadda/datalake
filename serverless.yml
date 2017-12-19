@@ -459,4 +459,8 @@ resources:
       Description: Bucket to store secrets managed by MotherHen
       Value:
         Ref: SecretsBucket
+    CodeBucket:
+      Description: Bucket where the spark code is deployed--the location where EMR steps get their code
+      Value:
+        Ref: S3BucketCode
 
