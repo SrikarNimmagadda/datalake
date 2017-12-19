@@ -11,6 +11,11 @@ function install_tools
 }
 export -f install_tools
 
+function get_bucket() {
+  BUCKET_NAME=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`$1`].OutputValue' --output text) 2>&1)
+  echo BUCKET_NAME
+}
+export -f get_bucket
 
 # FUNCTION PURPOSE: Deploy the app
 function deploy_app
@@ -44,7 +49,7 @@ function deploy_app
 
   echo deploying spark code to code bucket
 
-  CODE_BUCKET=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`CodeBucket`].OutputValue' --output text) 2>&1)
+  CODE_BUCKET=$(get_bucket CodeBucket)
 
   aws s3 sync ./spark s3://$CODE_BUCKET --delete
 
