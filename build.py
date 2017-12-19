@@ -20,14 +20,13 @@ default_task = ["publish","package_lambda_code"]
 @init
 def set_properties(project):
     project.set_property("dir_source_main_python", "functions/")
-    project.set_property("dir_source_unittest_python", "tests/")
+    #project.set_property("dir_source_unittest_python", "tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
 
 @task
 def extract_metadata(project, logger):
 # extract-metadata
     logger.info("I am building extract-metadata for {0} in version {1}!".format(project.name, project.version))
-    #project.build_depends_on('mockito')
     project.set_property("dir_source_main_python", "functions/extract-metadata/")
     project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
