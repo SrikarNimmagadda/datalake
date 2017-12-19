@@ -2,8 +2,8 @@
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
 service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
-# plugins:
-#   - serverless-package-python-functions
+plugins:
+  - serverless-s3-remover
 
 custom:
   appHash: ${file(./apphash.txt), 'none'}
@@ -39,6 +39,9 @@ custom:
     refinedHr: ${self:service}-refined-hr-${self:custom.hen}-${self:provider.stage}
     refinedRegular: ${self:service}-refined-regular-${self:custom.hen}-${self:provider.stage}
     delivery: ${self:service}-delivery-${self:custom.hen}-${self:provider.stage}
+  remover:
+    buckets:
+      - ${self:custom.buckets.code}
   pkgPyFuncs: # plugin configuration
     requirementsFile: 'requirements.txt'
     globalRequirements:
