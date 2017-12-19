@@ -2,9 +2,6 @@
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
 service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
-plugins:
-  - serverless-s3-remover
-
 custom:
   appHash: ${file(./apphash.txt), 'none'}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
