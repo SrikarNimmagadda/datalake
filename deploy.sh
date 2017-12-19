@@ -41,6 +41,13 @@ function deploy_app
 
   echo DEPLOY - START
   serverless deploy -v
+
+  echo deploying spark code to code bucket
+
+  CODE_BUCKET=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`CodeBucket`].OutputValue' --output text) 2>&1)
+
+  aws s3 sync ./spark s3://$CODE_BUCKET --delete
+
   echo DEPLOY - DONE
 }
 export -f deploy_app
