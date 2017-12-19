@@ -11,9 +11,9 @@ use_plugin("pybuilder_aws_plugin")
 use_plugin("exec")
 
 name = "tb.app.datalake"
-extract_metadata_path = "tb.app.datalake.extract.metadata"
-route_raw_path = "tb.app.datalake.route.raw"
-start_job_store_path = "tb.app.datalake.start.job.store"
+extract_metadata_path = "tb-app-datalake-extract-metadata"
+route_raw_path = "tb-app-datalake-route-raw"
+start_job_store_path = "tb-app-datalake-start-job-store"
 version = VCSRevision().get_git_revision_count()
 default_task = ["publish","package_lambda_code"]
 
@@ -28,8 +28,8 @@ def extract_metadata(project, logger):
 # extract-metadata
     logger.info("I am building extract-metadata for {0} in version {1}!".format(project.name, project.version))
     #project.build_depends_on('mockito')
-    project.set_property("dir_source_main_python", "functions/extract-metadata")
-    project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests")
+    project.set_property("dir_source_main_python", "functions/extract-metadata/")
+    project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
     project.set_property("dir_dist", "_build/dist/" + extract_metadata_path + "-" + version)
 
@@ -37,8 +37,8 @@ def extract_metadata(project, logger):
 def route_raw(project, logger):
 # route-raw
     logger.info("I am building route-raw for {0} in version {1}!".format(project.name, project.version))
-    project.set_property("dir_source_main_python", "functions/route-raw")
-    project.set_property("dir_source_unittest_python", "functions/route-raw/tests")
+    project.set_property("dir_source_main_python", "functions/route-raw/")
+    project.set_property("dir_source_unittest_python", "functions/route-raw/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
     project.set_property("dir_dist", "_build/dist/" + route_raw_path + "-" + version)
 
@@ -46,7 +46,7 @@ def route_raw(project, logger):
 def start_job_store(project, logger):
 # start-job-store
     logger.info("I am building start_job_store for {0} in version {1}!".format(project.name, project.version))
-    project.set_property("dir_source_main_python", "functions/start-job-store")
-    project.set_property("dir_source_unittest_python", "functions/start-job-store/tests")
+    project.set_property("dir_source_main_python", "functions/start-job-store/")
+    project.set_property("dir_source_unittest_python", "functions/start-job-store/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
     project.set_property("dir_dist", "_build/dist/" + start_job_store_path + "-" + version)
