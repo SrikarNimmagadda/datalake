@@ -17,6 +17,12 @@ function get_bucket() {
 }
 export -f get_bucket
 
+function clean_bucket() {
+  BUCKET_NAME=$(get_bucket $1)
+  aws s3 rm s3://$BUCKET_NAME --recursive
+}
+export -f clean_bucket
+
 # FUNCTION PURPOSE: Deploy the app
 function deploy_app
 {

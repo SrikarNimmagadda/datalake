@@ -16,8 +16,7 @@ pytest tests/functional-acceptance-tests
 
 echo "Deleting objects from buckets so we can delete the buckets"
 
-CODE_BUCKET=$(get_bucket CodeBucket)
-aws s3 rm s3://$CODE_BUCKET --recursive
+clean_bucket CodeBucket
 
 echo "Tearing down integration testing stack"
 
