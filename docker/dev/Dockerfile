@@ -7,8 +7,8 @@ FROM gamestop/gs.docker.serverless.nodejs.4.3.2
 #RUN chmod +x /usr/local/bin/build.sh && chmod +x /usr/local/bin/unittests.sh && chmod +x /usr/local/bin/package.sh
 
 ENV SERVICE_NAME=tb-app-datalake \
-    PIPELINE=gs.app.datalake \
-    STACK_NAME=gs-app-datalake-local \
+    PIPELINE=tb.app.datalake-local \
+    STACK_NAME=tb-app-datalake-local \
     STAGE=local \
     COOP=apparch \
     HEN_NAME=d0083 \

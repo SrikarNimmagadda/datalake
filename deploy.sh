@@ -19,7 +19,8 @@ export -f get_bucket
 
 function clean_bucket() {
   BUCKET_NAME=$(get_bucket $1)
-  aws s3 rm s3://$BUCKET_NAME --recursive
+  echo Removing all objects from $BUCKET_NAME
+  # aws s3 rm s3://$BUCKET_NAME --recursive
 }
 export -f clean_bucket
 
