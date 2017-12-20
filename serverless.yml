@@ -2,9 +2,6 @@
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
 service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
-#plugins:
-# - serverless-package-python-functions
-
 custom:
   appHash: ${file(./apphash.txt), 'none'}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
@@ -39,6 +36,9 @@ custom:
     refinedHr: ${self:service}-refined-hr-${self:custom.hen}-${self:provider.stage}
     refinedRegular: ${self:service}-refined-regular-${self:custom.hen}-${self:provider.stage}
     delivery: ${self:service}-delivery-${self:custom.hen}-${self:provider.stage}
+  remover:
+    buckets:
+      - ${self:custom.buckets.code}
   pkgPyFuncs: # plugin configuration
     requirementsFile: 'requirements.txt'
     globalRequirements:
@@ -90,7 +90,7 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  
+
   extractMetadata:
     environment:
       SECRETS_BUCKET: ${self:custom.secretsBucket}
@@ -127,7 +127,6 @@ functions:
   
   startJobStore:
     environment:
-      SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -427,36 +426,13 @@ resources:
         # NOTE: Must grant access to this TableName in iamRoleStatements section
         TableName: ${self:custom.dynamo.processMetadata.name}
 
-    ######################################################################
-    # SECRETS
-    ######################################################################
-    
-    # STUFF NEEDED FOR SECRETS TO WORK - DO NOT MODIFY!!!
-    AppKey: ${file(./serverless-resource-appkey.yml)}
-    SecretsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.secretsBucket}
-        VersioningConfiguration:
-          Status: Enabled
-        LoggingConfiguration:
-          DestinationBucketName:
-            Fn::ImportValue:
-              AppSecretLoggingBucket
-          LogFilePrefix: logs-${self:service}-${self:provider.stage}
-    SecretsBucketPolicy: ${file(./serverless-resource-secretsbucketpolicy.yml)}
-
   ######################################################################
   # OUTPUTS
   ######################################################################
 
   Outputs:
-    KmsKeyId:
-      Description: KMS key id used to encrypt Github token
+    CodeBucket:
+      Description: Bucket where the spark code is deployed--the location where EMR steps get their code
       Value:
-        Ref: AppKey
-    SecretsBucket:
-      Description: Bucket to store secrets managed by MotherHen
-      Value:
-        Ref: SecretsBucket
+        Ref: S3BucketCode
 

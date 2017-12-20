@@ -3,7 +3,6 @@
 # phases:
 #  install:
 #    commands:
-# npm install serverless-package-python-functions
 pip install -r dev-dependencies.txt
 
 #  pre_build:

@@ -11,6 +11,19 @@ function install_tools
 }
 export -f install_tools
 
+function get_bucket() {
+  QUERY="Stacks[0].Outputs[?OutputKey=='$1'].OutputValue"
+  BUCKET_NAME=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query $QUERY --output text) 2>&1)
+  echo $BUCKET_NAME
+}
+export -f get_bucket
+
+function clean_bucket() {
+  BUCKET_NAME=$(get_bucket $1)
+  echo Removing all objects from $BUCKET_NAME
+  aws s3 rm s3://$BUCKET_NAME --recursive
+}
+export -f clean_bucket
 
 # FUNCTION PURPOSE: Deploy the app
 function deploy_app
@@ -40,7 +53,13 @@ function deploy_app
 
 
   echo DEPLOY - START
-  serverless deploy
+  serverless deploy -v
+
+  CODE_BUCKET=$(get_bucket CodeBucket)
+  echo deploying spark code to code bucket $CODE_BUCKET
+
+  aws s3 sync ./spark s3://$CODE_BUCKET --delete
+
   echo DEPLOY - DONE
 }
 export -f deploy_app
