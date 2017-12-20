@@ -53,11 +53,11 @@ function deploy_app
   echo DEPLOY - START
   serverless deploy -v
 
-  echo deploying spark code to code bucket
-
   CODE_BUCKET=$(get_bucket CodeBucket)
+  echo deploying spark code to code bucket $CODE_BUCKET
 
-  aws s3 sync ./spark s3://$CODE_BUCKET --delete
+  # commenting out to unbreak the build until I figure out how to fix
+  # aws s3 sync ./spark s3://$CODE_BUCKET --delete
 
   echo DEPLOY - DONE
 }
