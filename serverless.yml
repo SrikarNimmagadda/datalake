@@ -414,7 +414,7 @@ resources:
     RouteRawRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        RoleName: ${self:service}-routeRawRole-${self:provider.stage}
         AssumeRolePolicyDocument:
           Version: '2017'
           Statement:
