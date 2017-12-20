@@ -90,7 +90,7 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  
+
   extractMetadata:
     environment:
       SECRETS_BUCKET: ${self:custom.secretsBucket}
@@ -127,7 +127,6 @@ functions:
   
   startJobStore:
     environment:
-      SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -427,33 +426,11 @@ resources:
         # NOTE: Must grant access to this TableName in iamRoleStatements section
         TableName: ${self:custom.dynamo.processMetadata.name}
 
-    ######################################################################
-    # SECRETS
-    ######################################################################
-    
-    # STUFF NEEDED FOR SECRETS TO WORK - DO NOT MODIFY!!!
-    AppKey: ${file(./serverless-resource-appkey.yml)}
-    SecretsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.secretsBucket}
-        VersioningConfiguration:
-          Status: Enabled
-    SecretsBucketPolicy: ${file(./serverless-resource-secretsbucketpolicy.yml)}
-
   ######################################################################
   # OUTPUTS
   ######################################################################
 
   Outputs:
-    KmsKeyId:
-      Description: KMS key id used to encrypt Github token
-      Value:
-        Ref: AppKey
-    SecretsBucket:
-      Description: Bucket to store secrets managed by MotherHen
-      Value:
-        Ref: SecretsBucket
     CodeBucket:
       Description: Bucket where the spark code is deployed--the location where EMR steps get their code
       Value:
