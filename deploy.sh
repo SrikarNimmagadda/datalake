@@ -12,15 +12,16 @@ function install_tools
 export -f install_tools
 
 function get_bucket() {
-  BUCKET_NAME=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`$1`].OutputValue' --output text) 2>&1)
-  echo BUCKET_NAME
+  QUERY="Stacks[0].Outputs[?OutputKey=='$1'].OutputValue"
+  BUCKET_NAME=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query $QUERY --output text) 2>&1)
+  echo $BUCKET_NAME
 }
 export -f get_bucket
 
 function clean_bucket() {
   BUCKET_NAME=$(get_bucket $1)
   echo Removing all objects from $BUCKET_NAME
-  # aws s3 rm s3://$BUCKET_NAME --recursive
+  aws s3 rm s3://$BUCKET_NAME --recursive
 }
 export -f clean_bucket
 
@@ -57,8 +58,7 @@ function deploy_app
   CODE_BUCKET=$(get_bucket CodeBucket)
   echo deploying spark code to code bucket $CODE_BUCKET
 
-  # commenting out to unbreak the build until I figure out how to fix
-  # aws s3 sync ./spark s3://$CODE_BUCKET --delete
+  aws s3 sync ./spark s3://$CODE_BUCKET --delete
 
   echo DEPLOY - DONE
 }
