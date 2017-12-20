@@ -183,12 +183,12 @@ resources:
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRawPii
                         - '/*'
-                    - Fn:Join:
+                    - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRawHr
                         - '/*'
-                    - Fn:Join:
+                    - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRegular
@@ -231,17 +231,17 @@ resources:
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRawPii
                         - '/*'
-                    - Fn:Join:
+                    - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRawHr
                         - '/*'
-                    - Fn:Join:
+                    - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketRegular
                         - '/*'
-                    - Fn:Join:
+                    - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
                         - Ref: S3BucketDelivery
