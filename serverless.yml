@@ -45,7 +45,7 @@ custom:
       - ./globalRequirements.txt
     globalIncludes:
       - ./common_files
-    buildDir: _build
+    buildDir: _build/dist/
     cleanup: true
 
 provider:
@@ -99,12 +99,12 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: ${self:service}-extractMetadata-${self:provider.stage}
+    name: ${self:service}-extract-metadata-${self:provider.stage}
     handler: extract-metadata/handler.lambda_handler
     package:
       include:
         - extractMetadata
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   routeRaw:
     environment:
@@ -114,7 +114,7 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
-    name: ${self:service}-routeRaw-${self:provider.stage}
+    name: ${self:service}-route-raw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
     events:
       - s3:
@@ -123,7 +123,7 @@ functions:
     package:
       include:
         - routeRaw
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
   
   startJobStore:
     environment:
@@ -139,12 +139,12 @@ functions:
       REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: ${self:service}-startJobStore-${self:provider.stage}
+    name: ${self:service}-start-job-store-${self:provider.stage}
     handler: start-job-store/handler.lambda_handler
     package:
       include:
         - startJobStore
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information

@@ -30,7 +30,7 @@ def extract_metadata(project, logger):
     project.set_property("dir_source_main_python", "functions/extract-metadata/")
     project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "_build/dist/{0}-{1}".format(extract_metadata_path,version))
+    project.set_property("dir_dist", "_build/dist/{0}".format(extract_metadata_path))
 
 @task
 def route_raw(project, logger):
@@ -39,7 +39,7 @@ def route_raw(project, logger):
     project.set_property("dir_source_main_python", "functions/route-raw/")
     project.set_property("dir_source_unittest_python", "functions/route-raw/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "_build/dist/{0}-{1}".format(route_raw_path,version))
+    project.set_property("dir_dist", "_build/dist/{0}".format(route_raw_path))
 
 @task
 def start_job_store(project, logger):
@@ -48,4 +48,4 @@ def start_job_store(project, logger):
     project.set_property("dir_source_main_python", "functions/start-job-store/")
     project.set_property("dir_source_unittest_python", "functions/start-job-store/tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "_build/dist/{0}-{1}".format(start_job_store_path,version))
+    project.set_property("dir_dist", "_build/dist/{0}".format(start_job_store_path))
