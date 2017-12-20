@@ -191,7 +191,7 @@ resources:
                     - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
-                        - Ref: S3BucketRegular
+                        - Ref: S3BucketRawRegular
                         - '/*'
 
     ExtractMetadataRole:
@@ -239,7 +239,7 @@ resources:
                     - Fn::Join:
                       - ''
                       - - 'arn:aws:s3:::'
-                        - Ref: S3BucketRegular
+                        - Ref: S3BucketRawRegular
                         - '/*'
                     - Fn::Join:
                       - ''
