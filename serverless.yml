@@ -45,7 +45,7 @@ custom:
       - ./globalRequirements.txt
     globalIncludes:
       - ./common_files
-    buildDir: _build/dist/
+    buildDir: _build/dist
     cleanup: true
 
 provider:
@@ -104,7 +104,7 @@ functions:
     package:
       include:
         - extractMetadata
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
+      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   routeRaw:
     environment:
@@ -123,7 +123,7 @@ functions:
     package:
       include:
         - routeRaw
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
+      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
   
   startJobStore:
     environment:
@@ -144,7 +144,7 @@ functions:
     package:
       include:
         - startJobStore
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
+      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
