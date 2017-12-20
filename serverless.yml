@@ -439,11 +439,6 @@ resources:
         BucketName: ${self:custom.secretsBucket}
         VersioningConfiguration:
           Status: Enabled
-        LoggingConfiguration:
-          DestinationBucketName:
-            Fn::ImportValue:
-              AppSecretLoggingBucket
-          LogFilePrefix: logs-${self:service}-${self:provider.stage}
     SecretsBucketPolicy: ${file(./serverless-resource-secretsbucketpolicy.yml)}
 
   ######################################################################

@@ -8,7 +8,7 @@ FROM gamestop/gs.docker.serverless.nodejs.4.3.2
 
 ENV SERVICE_NAME=tb-app-datalake \
     PIPELINE=tb.app.datalake-local \
-    STACK_NAME=tb-app-datalake-local \
+    STACK_NAME=tb-app-datalake-master \
     STAGE=local \
     COOP=apparch \
     HEN_NAME=d0083 \
