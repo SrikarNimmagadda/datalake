@@ -10,8 +10,8 @@ ENV SERVICE_NAME=tb-app-datalake \
     PIPELINE=tb.app.datalake-master \
     STACK_NAME=tb-app-datalake-master \
     STAGE=local \
-    COOP=apparch \
-    HEN_NAME=d0083 \
+    COOP=tb \
+    HEN_NAME=preprod \
     NPM_TOKEN=none \
     SLS_DEBUG=true
 
