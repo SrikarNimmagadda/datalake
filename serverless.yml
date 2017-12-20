@@ -54,14 +54,6 @@ provider:
   stage: ${env:STAGE, self:custom.localDeploy.stage}
   region: us-east-1
   deploymentBucket: motherhen-${self:custom.coop}-${self:custom.hen}-deployments
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-        - logs:DescribeLogStreams
-      Resource: 'arn:aws:logs:${self:provider.region}:*:*'
   stackTags:
     GLCODE: '0062'
     bill-glcode: '0062'
@@ -80,18 +72,9 @@ provider:
     # but do not checkin since it will break the TEST stage of your app's code-pipeline
     # AWS_REGION: ${self:provider.region} # needed for sls offline
 
-# NOTE: You can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
-
 functions:
-
   extractMetadata:
+    role: ExtractMetadataRole
     environment:
       SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
@@ -107,6 +90,7 @@ functions:
       # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}.zip
   
   routeRaw:
+    role: RouteRawRole
     environment:
       SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
@@ -126,6 +110,7 @@ functions:
       # artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}.zip
   
   startJobStore:
+    role: StartJobRole
     environment:
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
@@ -152,6 +137,157 @@ resources:
   # STUFF FOR CUSTOM BUCKET CONFIGURATION
   ### TODO ### https://serverless.com/framework/docs/providers/aws/events/s3/
   Resources:
+    RouteRawRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Version: '2017'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: LogPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:DescribeLogStreams
+                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+          - PolicyName: BucketPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource:
+                    - Fn::Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketLanding
+                        - '/*'
+                - Effect: Allow
+                  Action:
+                    - s3:PutObject
+                  Resource:
+                    - Fn::Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRawPii
+                        - '/*'
+                    - Fn:Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRawHr
+                        - '/*'
+                    - Fn:Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRegular
+                        - '/*'
+
+    ExtractMetadataRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Version: '2017'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: LogPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:DescribeLogStreams
+                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+          - PolicyName: BucketPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource:
+                    - Fn::Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRawPii
+                        - '/*'
+                    - Fn:Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRawHr
+                        - '/*'
+                    - Fn:Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketRegular
+                        - '/*'
+                    - Fn:Join:
+                      - ''
+                      - - 'arn:aws:s3:::'
+                        - Ref: S3BucketDelivery
+                        - '/*'
+          - PolicyName: DynamoDbPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:*
+                  Resource:
+                    - GetAtt:
+                      - FileMetadataDynamoTable
+                      - Arn
+
+    # need to figure out what permissions we need to call the cluster and add steps
+    # hopefully we can also define iam:passrole and provide another role to emr that has
+    # access to the s3 buckets and dynamo table
+    #
+    # This role will be used by all StartJob lambdas
+    StartJobRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-startJobRole-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Version: '2017'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: LogPolicy
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:DescribeLogStreams
+                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+
     ######################################################################
     # SPARK CODE BUCKET
     ######################################################################
