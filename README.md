@@ -13,3 +13,6 @@
 ## Working Locally with Docker
 
 ## Getting the Application Deployed
+
+## Understanding and writing functional acceptance tests
+Details Can be found [__here__](./tests/functional-acceptance-tests)
