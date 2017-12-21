@@ -12,6 +12,7 @@ deploy_app
 
 echo "Running integration tests"
 pip install pytest
+pip install boto3
 pytest tests/functional-acceptance-tests
 
 echo "Deleting objects from buckets so we can delete the buckets"
