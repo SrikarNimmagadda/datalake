@@ -13,7 +13,7 @@ deploy_app
 echo "Running integration tests"
 pip install pytest
 pip install boto3
-pytest tests/functional-acceptance-tests
+cd tests/functional-acceptance-tests && pytest -q --stackname $STACK_NAME && cd ../..
 
 echo "Deleting objects from buckets so we can delete the buckets"
 
