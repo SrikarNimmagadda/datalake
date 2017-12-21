@@ -165,6 +165,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.landing}
+      DependsOn: RouteRawLambdaPermissionLandingS3
 
     # Permission to invoke the Lambda that routes files from the Landing bucket to the Raw buckets
     RouteRawLambdaPermissionLandingS3:
@@ -190,6 +191,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawPii}
+      DependsOn: ExtractMetadataLambdaPermissionRawPiiS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
     ExtractMetadataLambdaPermissionRawPiiS3:
@@ -211,6 +213,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHr}
+      DependsOn: ExtractMetadataLambdaPermissionRawHrS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw hr bucket
     ExtractMetadataLambdaPermissionRawHrS3:
@@ -232,6 +235,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawRegular}
+      DependsOn: ExtractMetadataLambdaPermissionRawRegularS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw regular bucket
     ExtractMetadataLambdaPermissionRawRegularS3:
@@ -256,6 +260,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.delivery}
+      DependsOn: ExtractMetadataLambdaPermissionDeliveryS3
 
     # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
     ExtractMetadataLambdaPermissionDeliveryS3:
