@@ -14,6 +14,7 @@ import pyspark.sql.functions as sf
 
 SalesLeadInput = sys.argv[1]
 SalesLeadOutput = sys.argv[2]
+FileTime = sys.argv[3]
 
 spark = SparkSession.builder.\
     appName("SalesLead_CSVToParquet").getOrCreate()
@@ -68,7 +69,12 @@ if len(fields) > 0:
         print(newformat)
 
 dfSalesLead = dfSalesLead.withColumn('report_date', lit(newformat))
+
+
+todayyear = datetime.now().strftime('%Y')
+todaymonth = datetime.now().strftime('%m')
 dfSalesLead.coalesce(1).select("*"). \
-    write.mode("overwrite").parquet(SalesLeadOutput)
+    write.parquet(SalesLeadOutput + '/' + todayyear +
+                  '/' + todaymonth + '/' + 'dfSalesLead' + FileTime)
 
 spark.stop()
