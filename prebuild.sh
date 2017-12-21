@@ -11,3 +11,5 @@ pip install pytest
 echo "installing PipEnv"
 pip install pipenv
 pipenv install requests
+echo "installing boto3"
+pip install boto3
