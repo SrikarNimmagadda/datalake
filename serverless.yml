@@ -411,30 +411,32 @@ resources:
     # IAM ROLES
     ######################################################################
 
+    LogPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: LogPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogStreams
+              Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+        Roles:
+          - Ref: RouteRawRole
+          - Ref: ExtractMetadataRole
+          - Ref: StartJobRole
+
     RouteRawRole:
       Type: AWS::IAM::Role
       Properties:
         RoleName: ${self:service}-routeRawRole-${self:provider.stage}
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - lambda.amazonaws.com
-              Action: sts:AssumeRole
+        AssumeRolePolicyDocument: 
+          ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: LogPolicy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - logs:CreateLogGroup
-                    - logs:CreateLogStream
-                    - logs:PutLogEvents
-                    - logs:DescribeLogStreams
-                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
           - PolicyName: BucketPolicy
             PolicyDocument:
               Version: '2012-10-17'
@@ -457,25 +459,8 @@ resources:
       Properties:
         RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
         AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - lambda.amazonaws.com
-              Action: sts:AssumeRole
+          ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: LogPolicy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - logs:CreateLogGroup
-                    - logs:CreateLogStream
-                    - logs:PutLogEvents
-                    - logs:DescribeLogStreams
-                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
           - PolicyName: BucketPolicy
             PolicyDocument:
               Version: '2012-10-17'
@@ -510,25 +495,7 @@ resources:
       Properties:
         RoleName: ${self:service}-startJobRole-${self:provider.stage}
         AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service:
-                  - lambda.amazonaws.com
-              Action: sts:AssumeRole
-        Policies:
-          - PolicyName: LogPolicy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - logs:CreateLogGroup
-                    - logs:CreateLogStream
-                    - logs:PutLogEvents
-                    - logs:DescribeLogStreams
-                  Resource: 'arn:aws:logs:${self:provider.region}:*:*'
+          ${file(sls-include/assume-role-policy-doc.yml)}
 
   ######################################################################
   # OUTPUTS
