@@ -179,10 +179,10 @@ resources:
                 Fn::GetAtt:
                   - RouteRawLambdaFunction
                   - Arn
-      DependsOn: LandingBucketRouteRawLambdaPermission
+      DependsOn: RouteRawLambdaPermissionLandingS3
 
     # Permission to invoke the Lambda that routes files from the Landing bucket to the Raw buckets
-    LandingBucketRouteRawLambdaPermission:
+    RouteRawLambdaPermissionLandingS3:
       Type: 'AWS::Lambda::Permission'
       Properties:
         FunctionName:
@@ -216,10 +216,10 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawPiiBucketExtractMetadataLambdaPermission
+      DependsOn: ExtractMetadataLambdaPermissionRawPiiS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
-    RawPiiBucketExtractMetadataLambdaPermission:
+    ExtractMetadataLambdaPermissionRawPiiS3:
       Type: 'AWS::Lambda::Permission'
       Properties:
         FunctionName:

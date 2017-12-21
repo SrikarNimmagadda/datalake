@@ -22,10 +22,10 @@ def set_properties(project):
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_source_unittest_python", "tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("flake8_break_build", True)
+    project.set_property("flake8_break_build", False)
     project.set_property("flake8_ignore", "E501")
     project.set_property("coverage_threshold_warn", 10)
-    project.set_property("coverage_break_build", True)
+    project.set_property("coverage_break_build", False)
     project.get_property("distutils_commands").append("bdist_egg")
     project.set_property("distutils_classifiers", [
         "Development Status :: {0}".format(project.version),
