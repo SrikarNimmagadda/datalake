@@ -16,17 +16,17 @@ def get_bucket_id_by_logical_id(stackname, logical_id):
     )
     return resource['StackResourceDetail']['PhysicalResourceId']
 # Upload File to landing bucket
-def upload_to_landing(landing_bucket, landing_bucket_filename):
-    data = open(landing_bucket_filename, 'rb')
-    s3.Bucket(landing_bucket).put_object(Key=landing_bucket_filename, Body=data)
+def upload_file_to_bucket(bucket, filename):
+    data = open(filename, 'rb')
+    s3.Bucket(bucket).put_object(Key=filename, Body=data)
     print('File uploaded to landing successfully')
 
 # Wait for file in delivery bucket
-def verify_file_exists(delivery_bucket, num_attempts, time_between_attempts):
-    my_delivery_bucket = s3.Bucket(delivery_bucket)
+def verify_file_exists_in_bucket(bucket, num_attempts, time_between_attempts):
+    s3_bucket = s3.Bucket(bucket)
     for x in range(0,num_attempts):
-        print(sum(1 for _ in my_delivery_bucket.objects.all()))
-        if sum(1 for _ in my_delivery_bucket.objects.all())>0:
+        print(sum(1 for _ in s3_bucket.objects.all()))
+        if sum(1 for _ in s3_bucket.objects.all())>0:
             print('File exists in delivery')
             return True
         else:
@@ -36,15 +36,15 @@ def verify_file_exists(delivery_bucket, num_attempts, time_between_attempts):
     return False
 
 # Get the file once it appears
-def download_file(delivery_bucket, delivery_bucket_filename):
-    objs = client.list_objects(Bucket=delivery_bucket)['Contents']
-    obj = s3.Bucket(delivery_bucket).download_file(objs[0]['Key'],delivery_bucket_filename)
+def download_file(bucket, filename):
+    objs = client.list_objects(Bucket=bucket)['Contents']
+    obj = s3.Bucket(bucket).download_file(objs[0]['Key'],filename)
     print('File downloaded successfullly')
 
 # Compare files 
-def compare_files(testfile, delivery_bucket_filename):
+def compare_files(testfile, downloaded_file_name):
     print('Comparing local file with output file from datalake')
-    return filecmp.cmp(testfile, delivery_bucket_filename)
+    return filecmp.cmp(testfile, downloaded_file_name)
 
 def empty_bucket(bucketname):
     bucket = s3.Bucket(bucketname)
@@ -53,21 +53,21 @@ def empty_bucket(bucketname):
 def test_happy_path(stackname):
     print('Running tests in stack: ' + str(stackname))
 
-    landing_bucket_filename = 'testfile'
-    landing_bucket = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
-    delivery_bucket = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
-    delivery_bucket_filename = 'download1.txt'
+    testfile_to_upload = 'testfile'
+    bucket_to_upload_to = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
+    bucket_to_expect_generated_file = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
+    downloaded_file_name = 'download1.txt'
     num_attempts = 3
     time_between_attempts = 30
-    test_downloaded_file = 'testfile'
+    file_to_compare_against = 'testfile'
 
-    upload_to_landing(landing_bucket, landing_bucket_filename)
+    upload_file_to_bucket(bucket_to_upload_to, testfile_to_upload)
 
-    if verify_file_exists(delivery_bucket, num_attempts, time_between_attempts):
-        download_file(delivery_bucket,delivery_bucket_filename)
-    comparision = compare_files(test_downloaded_file,delivery_bucket_filename)
+    if verify_file_exists_in_bucket(bucket_to_expect_generated_file, num_attempts, time_between_attempts):
+        download_file(bucket_to_expect_generated_file,downloaded_file_name)
+    comparision = compare_files(file_to_compare_against,downloaded_file_name)
     print(comparision)
     assert comparision is True, 'Happy Path Functional acceptance test failed'
-    empty_bucket(landing_bucket)
-    empty_bucket(delivery_bucket)
+    empty_bucket(bucket_to_upload_to)
+    empty_bucket(bucket_to_expect_generated_file)
 
