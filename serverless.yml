@@ -81,6 +81,11 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extractMetadata-${self:provider.stage}
     handler: extract-metadata/handler.lambda_handler
+    events:
+      - s3: rawPii
+      - s3: rawHr
+      - s3: rawRegular
+      - s3: delivery
     package:
       include:
         - extractMetadata
@@ -95,6 +100,8 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
     name: ${self:service}-routeRaw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
+    events:
+      - s3: landing
     package:
       include:
         - routeRaw
