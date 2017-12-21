@@ -96,10 +96,6 @@ functions:
 
     name: ${self:service}-routeRaw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
-    events:
-      - s3:
-         bucket: landing
-         event: s3:ObjectCreated:*
     package:
       include:
         - routeRaw
@@ -169,16 +165,12 @@ resources:
         FunctionName:
           Fn::GetAtt:
           - RouteRawLambdaFunction
-          - Arn 
+          - Arn
         Principal: 's3.amazonaws.com'
         Action: 'lambda:InvokeFunction'
         SourceAccount:
           Ref: AWS::AccountId
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.landing}
+        SourceArn: 'arn:aws:s3:::${self:custom.buckets.landing}'
 
     ######################################################################
     # RAW BUCKETS
@@ -211,11 +203,7 @@ resources:
         Action: 'lambda:InvokeFunction'
         SourceAccount:
           Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawPii}
+        SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawPii}'
 
     # RAW HR BUCKET
     # S3 bucket that contains raw (csv) files containing HR data
@@ -244,11 +232,7 @@ resources:
         Action: 'lambda:InvokeFunction'
         SourceAccount:
           Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawHr}
+        SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawHr}'
 
     # RAW REGULAR BUCKET
     # S3 bucket that contains raw (csv) files containing no security-related data
@@ -277,11 +261,7 @@ resources:
         Action: 'lambda:InvokeFunction'
         SourceAccount:
           Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawRegular}
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawRegular}'
 
     ######################################################################
     # DELIVERY BUCKET
