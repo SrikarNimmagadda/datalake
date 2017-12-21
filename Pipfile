@@ -10,8 +10,10 @@ codecov>=2.0.9
 pytest-cov>=2.5.1
 pytest-spark>=0.4.0
 pytest-aws>=0.1.0
-pybuilder
+pybuilder>=0.11.12
 pybuilder_aws_plugin
+flake8>=3.5.0
+mockito>=1.0.12
 
 [packages]
 boto3>=1.4.7

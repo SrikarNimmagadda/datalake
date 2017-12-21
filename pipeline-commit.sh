@@ -23,7 +23,6 @@ pyb start_job_store package_lambda_code
 echo "executing initial build"
 pyb
 
-
 # hmm if serverless is doing the pull of dependencies on package, then the unit tests have to run against the package?
 # or do we have to pull dependencies twice? That would break the principle of "build once"
 #serverless package
