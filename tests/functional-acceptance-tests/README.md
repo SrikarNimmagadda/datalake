@@ -1,7 +1,19 @@
-Inorder to execute functional tests, a brand new environment is automatically created and the tests in the 'tests/functional-acceptance-test' folder of the solution are executed in this new environment.
+# Understanding and writing functional acceptance tests
+Inorder to execute functional tests, a brand new environment is automatically created and the tests in the 'tests/functional-acceptance-test' folder of the solution are executed in this new environment. In this solution pytest is used to execute the tests
 
 There is an example test provided in the solution. In the example, a test file is dropped in the landing bucket of the datalake and an ouput file is expected in a bucket. Here is a breakdown of the happy path test
 
+The example contains 2 file
+
+1. [PyTest Configuration (conftest.py)](#PyTestConfig)
+2. [Happy Path Tests Functions](#HPFunctions)
+3. [Test Details](#TestDetails)
+
+
+## PyTest Configuration <a name="PyTestConfig"></a>
+The purpose of this file is to be able to inject stackname into the pytest fixture so that stackname is available inside the tests
+
+## Happy Path Tests Functions <a name="HPFunctions"></a>
 ```python
 def get_bucket_id_by_logical_id(stackname, logical_id):
     ...
@@ -47,7 +59,8 @@ def test_happy_path(stackname):
 This method is used to run the test
 
 
-## Test details
+# Test details <a name="TestDetails"></a>
+
 
 Defining the source, destination file names and the necessary bucket names
 
@@ -66,11 +79,18 @@ Upload the test file to landing bucket
 upload_file_to_bucket(bucket_to_upload_to, testfile_to_upload)
 ```
 
-Verify file exists or retry, download and compare file with copy to pass the test
+Verify file exists and download or retry
 ```python
 if verify_file_exists_in_bucket(bucket_to_expect_generated_file, num_attempts, time_between_attempts):
     download_file(bucket_to_expect_generated_file,downloaded_file_name)
+```
+
+Compare file with copy to pass the test
+```python
 comparision = compare_files(file_to_compare_against,downloaded_file_name)
-print(comparision)
+```
+
+Assert the files are identical
+```python
 assert comparision is True, 'Happy Path Functional acceptance test failed'
 ```
