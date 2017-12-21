@@ -12,3 +12,6 @@ check out cfn-sphere for cloudformation templates in YAML in upload to S3.
     
 #update
 	aws lambda update-function-code --region $(REGION) --function-name $(FUNCTION_NAME) --zip-file fileb://$(ZIPFILE_NAME) --publish
+
+
+	aws lambda list-functions --max-items 10 --profile preprod --region us-east-1

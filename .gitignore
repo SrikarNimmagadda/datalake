@@ -1,9 +1,8 @@
 *.pyc
 __pycache__
+_build
 target
 target/dist
-target/dist/gs.app.s3triggertest-1.0.dev0/dist/gs.app.s3triggertest-1.0.dev0-py2-none-any.whl
-target/dist/gs.app.s3triggertest-1.0.dev0/dist/gs.app.s3triggertest-1.0.dev0.tar.gz
 .DS_Store
 .coverage
 user

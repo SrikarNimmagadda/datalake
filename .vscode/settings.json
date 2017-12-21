@@ -1,3 +1,7 @@
 {
-    "python.pythonPath": "C:\\Python27\\python.exe"
+    "python.pythonPath": "C:\\Python27\\python.exe",
+    "python.linter": "flake8",
+    "python.maxNumberOfProblems": 100,
+    "python.linting.lintOnSave": true,
+    "files.autoSave": true
 }

@@ -1,7 +1,0 @@
-boto3>=1.4.7
-pybuilder
-pyspark>=2.2.0
-sphinx>=1.4.5
-virtualenv>=15.1.0
-pandas>=0.18.1
-smart_open>=1.5.4

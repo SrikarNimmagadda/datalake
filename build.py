@@ -1,18 +1,70 @@
-"""This module was for pybuilder and might be removed soon."""
-
-from pybuilder.core import use_plugin, init
+from pybuilder.core import task, use_plugin, init
+from pybuilder.vcs import VCSRevision
 
 use_plugin("python.core")
 use_plugin("python.unittest")
 use_plugin("python.install_dependencies")
 use_plugin("python.distutils")
+use_plugin("python.flake8")
+# use_plugin('python.coverage')
+use_plugin("pybuilder_aws_plugin")
+use_plugin("exec")
 
-# https://github.com/pybuilder/pybuilder/issues/245
-name = "gs.app.s3-trigger-lambda"
-default_task = "publish"
+name = "tb.app.datalake"
+extract_metadata_path = "tb-app-datalake-extract-metadata"
+route_raw_path = "tb-app-datalake-route-raw"
+start_job_store_path = "tb-app-datalake-start-job-store"
+version = VCSRevision().get_git_revision_count()
+default_task = ["analyze","publish","package_lambda_code"]
 
 @init
 def set_properties(project):
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_source_unittest_python", "tests/")
     project.set_property("dir_source_main_scripts", "scripts/")
+    project.set_property("flake8_break_build", False)
+    project.set_property("flake8_ignore", "E501")
+    project.set_property("coverage_threshold_warn", 10)
+    project.set_property("coverage_break_build", False)
+    project.get_property("distutils_commands").append("bdist_egg")
+    project.set_property("distutils_classifiers", [
+        "Development Status :: {0}".format(project.version),
+        "Environment :: Other Environment",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        "Topic :: Software Development :: Data Lake",
+        "Topic :: Software Development :: EMR"])
+
+@task
+def extract_metadata(project, logger):
+# extract-metadata
+    logger.info("I am building extract-metadata for {0} in version {1}!".format(project.name, project.version))
+    project.depends_on('mockito')
+    project.set_property("dir_source_main_python", "functions/extract-metadata/")
+    project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests/")
+    project.set_property("dir_source_main_scripts", "scripts/")
+    project.set_property("dir_dist", "_build/dist/{0}".format(extract_metadata_path))
+
+@task
+def route_raw(project, logger):
+# route-raw
+    logger.info("I am building route-raw for {0} in version {1}!".format(project.name, project.version))
+    project.depends_on('mockito')
+    project.set_property("dir_source_main_python", "functions/route-raw/")
+    project.set_property("dir_source_unittest_python", "functions/route-raw/tests/")
+    project.set_property("dir_source_main_scripts", "scripts/")
+    project.set_property("dir_dist", "_build/dist/{0}".format(route_raw_path))
+
+@task
+def start_job_store(project, logger):
+# start-job-store
+    logger.info("I am building start_job_store for {0} in version {1}!".format(project.name, project.version))
+    project.depends_on('flake8')
+    project.depends_on('mockito')
+    project.set_property("dir_source_main_python", "functions/start-job-store/")
+    project.set_property("dir_source_unittest_python", "functions/start-job-store/tests/")
+    project.set_property("dir_source_main_scripts", "scripts/")
+    project.set_property("dir_dist", "_build/dist/{0}".format(start_job_store_path))

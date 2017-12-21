@@ -1,10 +1,2 @@
 boto3>=1.4.7
-pybuilder
 pyspark>=2.2.0
-sphinx>=1.4.5
-virtualenv>=15.1.0
-pytest>=3.3.0
-codecov>=2.0.9
-pytest-cov>=2.5.1
-pytest-spark>=0.4.0
-pytest-aws>=0.1.0
