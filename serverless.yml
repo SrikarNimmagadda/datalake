@@ -414,7 +414,7 @@ resources:
     LogPolicy:
       Type: AWS::IAM::Policy
       Properties:
-        PolicyName: LogPolicy
+        PolicyName: ${self:service}-log-policy-${self:provider.stage}
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -481,7 +481,7 @@ resources:
                   Action:
                     - dynamodb:*
                   Resource:
-                    - GetAtt:
+                    - Fn::GetAtt:
                       - FileMetadataDynamoTable
                       - Arn
 
