@@ -156,7 +156,6 @@ resources:
                 Fn::GetAtt:
                   - RouteRawLambdaFunction
                   - Arn
-      DependsOn: LandingBucketRouteRawLambdaPermission
 
     # Permission to invoke the Lambda that routes files from the Landing bucket to the Raw buckets
     LandingBucketRouteRawLambdaPermission:
@@ -171,7 +170,9 @@ resources:
         SourceAccount:
           Ref: AWS::AccountId
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.landing}'
-      DependsOn: RouteRawLambdaFunction
+      DependsOn: 
+        - S3BucketLanding
+        - RouteRawLambdaFunction
 
     ######################################################################
     # RAW BUCKETS
@@ -190,7 +191,6 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawPiiBucketExtractMetadataLambdaPermission
 
     # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
     RawPiiBucketExtractMetadataLambdaPermission:
@@ -205,7 +205,9 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawPii}'
-      DependsOn: ExtractMetadataLambdaFunction
+      DependsOn:
+        - S3BucketRawPii
+        - ExtractMetadataLambdaFunction
 
     # RAW HR BUCKET
     # S3 bucket that contains raw (csv) files containing HR data
@@ -220,7 +222,6 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawHrBucketExtractMetadataLambdaPermission
 
     # Permission to invoke the Lambda that extracts metadata from the raw hr bucket
     RawHrBucketExtractMetadataLambdaPermission:
@@ -235,7 +236,9 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawHr}'
-      DependsOn: ExtractMetadataLambdaFunction
+      DependsOn:
+        - S3BucketRawHr
+        - ExtractMetadataLambdaFunction
 
     # RAW REGULAR BUCKET
     # S3 bucket that contains raw (csv) files containing no security-related data
@@ -250,7 +253,6 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawRegularBucketExtractMetadataLambdaPermission
 
     # Permission to invoke the Lambda that extracts metadata from the raw regular bucket
     RawRegularBucketExtractMetadataLambdaPermission:
@@ -265,7 +267,9 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: arn:aws:s3:::${self:custom.buckets.rawRegular}'
-      DependsOn: ExtractMetadataLambdaFunction
+      DependsOn:
+        - S3BucketRawRegular
+        - ExtractMetadataLambdaFunction
 
     ######################################################################
     # DELIVERY BUCKET
@@ -283,7 +287,6 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: DeliveryBucketExtractMetadataLambdaPermission
 
     # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
     DeliveryBucketExtractMetadataLambdaPermission:
@@ -298,7 +301,9 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.delivery}'
-      DependsOn: ExtractMetadataLambdaFunction
+      DependsOn:
+        - S3BucketDelivery
+        - ExtractMetadataLambdaFunction
 
     ######################################################################
     # DISCOVERY BUCKETS
