@@ -11,9 +11,10 @@ function install_tools
 }
 export -f install_tools
 
+# pass the output key from the stack as the argument to this function (e.g. get_bucket CodeBucket)
 function get_bucket() {
   QUERY="Stacks[0].Outputs[?OutputKey=='$1'].OutputValue"
-  BUCKET_NAME=$((aws cloudformation describe-stacks --stack-name $STACK_NAME --query $QUERY --output text) 2>&1)
+  BUCKET_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query $QUERY --output text)
   echo $BUCKET_NAME
 }
 export -f get_bucket
@@ -45,14 +46,10 @@ function deploy_app
     done
   fi
 
-  # SECRETS MANAGEMENT
-  # Secrets are kept in an S3 bucket and can be accessed at runtime or at build time.
-  # For instructions on updating secrets and accessing secrets, see https://github.com/GameStopCorp/gs.serverless.support/blob/master/secrets-uploader/README.md
-  # To see an example of client-side encryption/decryption, view the commands at https://github.com/GameStopCorp/gs.aws.pipelines/blob/master/buildspec.yml
   echo PRE DEPLOY - DONE
 
-
   echo DEPLOY - START
+
   serverless deploy -v
 
   CODE_BUCKET=$(get_bucket CodeBucket)
