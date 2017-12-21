@@ -81,19 +81,6 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extractMetadata-${self:provider.stage}
     handler: extract-metadata/handler.lambda_handler
-    events:
-      - s3:
-          bucket: rawPii
-          event: s3:ObjectCreated:*
-      - s3:
-          bucket: rawHr
-          event: s3:ObjectCreated:*
-      - s3:
-          bucket: rawRegular
-          event: s3:ObjectCreated:*
-      - s3:
-          bucket: delivery
-          event: s3:ObjectCreated:*
     package:
       include:
         - extractMetadata
@@ -108,10 +95,6 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
     name: ${self:service}-routeRaw-${self:provider.stage}
     handler: functions/route-raw/handler.lambda_handler
-    events:
-      - s3:
-          bucket: landing
-          event: s3:ObjectCreated:*
     package:
       include:
         - routeRaw
@@ -165,6 +148,13 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.landing}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Function:
+                Fn::GetAtt:
+                  - RouteRawLambdaFunction
+                  - Arn
       DependsOn: RouteRawLambdaPermissionLandingS3
 
     # Permission to invoke the Lambda that routes files from the Landing bucket to the Raw buckets
@@ -191,6 +181,13 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawPii}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Function:
+                Fn::GetAtt:
+                  - ExtractMetadataLambdaFunction
+                  - Arn
       DependsOn: ExtractMetadataLambdaPermissionRawPiiS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
@@ -213,6 +210,13 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHr}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Function:
+                Fn::GetAtt:
+                  - ExtractMetadataLambdaFunction
+                  - Arn
       DependsOn: ExtractMetadataLambdaPermissionRawHrS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw hr bucket
@@ -235,6 +239,13 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawRegular}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Function:
+                Fn::GetAtt:
+                  - ExtractMetadataLambdaFunction
+                  - Arn
       DependsOn: ExtractMetadataLambdaPermissionRawRegularS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw regular bucket
@@ -260,6 +271,13 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.delivery}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: 's3:ObjectCreated:*'
+              Function:
+                Fn::GetAtt:
+                  - ExtractMetadataLambdaFunction
+                  - Arn
       DependsOn: ExtractMetadataLambdaPermissionDeliveryS3
 
     # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
