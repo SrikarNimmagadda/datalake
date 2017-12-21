@@ -171,7 +171,7 @@ resources:
         SourceAccount:
           Ref: AWS::AccountId
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.landing}'
-        DependsOn: RouteRawLambdaFunction
+      DependsOn: RouteRawLambdaFunction
 
     ######################################################################
     # RAW BUCKETS
