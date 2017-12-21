@@ -416,7 +416,7 @@ resources:
       Properties:
         RoleName: ${self:service}-routeRawRole-${self:provider.stage}
         AssumeRolePolicyDocument:
-          Version: '2017'
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
@@ -426,7 +426,7 @@ resources:
         Policies:
           - PolicyName: LogPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -437,7 +437,7 @@ resources:
                   Resource: 'arn:aws:logs:${self:provider.region}:*:*'
           - PolicyName: BucketPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -457,7 +457,7 @@ resources:
       Properties:
         RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
         AssumeRolePolicyDocument:
-          Version: '2017'
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
@@ -467,7 +467,7 @@ resources:
         Policies:
           - PolicyName: LogPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -478,7 +478,7 @@ resources:
                   Resource: 'arn:aws:logs:${self:provider.region}:*:*'
           - PolicyName: BucketPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -490,7 +490,7 @@ resources:
                     - 'arn:aws:s3:::${self:custom.buckets.delivery}/*'
           - PolicyName: DynamoDbPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
@@ -510,7 +510,7 @@ resources:
       Properties:
         RoleName: ${self:service}-startJobRole-${self:provider.stage}
         AssumeRolePolicyDocument:
-          Version: '2017'
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal:
@@ -520,7 +520,7 @@ resources:
         Policies:
           - PolicyName: LogPolicy
             PolicyDocument:
-              Version: '2017'
+              Version: '2012-10-17'
               Statement:
                 - Effect: Allow
                   Action:
