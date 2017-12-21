@@ -22,7 +22,6 @@ custom:
       name: ${self:service}.process-metadata.${self:provider.stage}
       readCapacity: ${env:DYNAMO_PROCESS_META_READ_CAP, self:custom.dynamo.defaultCapacity}
       writeCapacity: ${env:DYNAMO_PROCESS_META_WRITE_CAP, self:custom.dynamo.defaultCapacity}
-  secretsBucket: ${self:service}-secrets-${self:custom.hen}-${self:provider.stage}
   buckets:
     code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
     landing: ${self:service}-landing-${self:custom.hen}-${self:provider.stage}
@@ -54,14 +53,6 @@ provider:
   stage: ${env:STAGE, self:custom.localDeploy.stage}
   region: us-east-1
   deploymentBucket: motherhen-${self:custom.coop}-${self:custom.hen}-deployments
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-        - logs:DescribeLogStreams
-      Resource: 'arn:aws:logs:${self:provider.region}:*:*'
   stackTags:
     GLCODE: '0062'
     bill-glcode: '0062'
@@ -73,27 +64,28 @@ provider:
     tech-deployby: MH-CodePipeline
     LastUpdatedBy: '512883'
   environment:
-    SECRETS_BUCKET: ${self:custom.secretsBucket}
     APP_COMMIT_HASH: ${self:custom.appHash}
     STAGE: ${self:provider.stage}
     # uncomment for local test via sls offline, or define the env var manually in your test shell
     # but do not checkin since it will break the TEST stage of your app's code-pipeline
     # AWS_REGION: ${self:provider.region} # needed for sls offline
 
-# NOTE: You can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
-
 functions:
 
+################################################
+#
+# NOTE: Be EXTREMELY careful with naming here--especially the buckets and lambdapermissions.
+#       We are relying on some serverless framework magic to do things in the right order, 
+#       and not naming things correctly can cause endless frustration and maybe even tears.
+#
+# See: https://gamestop.atlassian.net/wiki/spaces/AA/pages/81494201/Configure+S3+triggered+lambda+via+SLS
+# See also: https://serverless.com/framework/docs/providers/aws/events/s3/
+#           * Pay special attention to the bullets under the "Custom bucket configuration" heading.
+#
+################################################
   extractMetadata:
+    role: ExtractMetadataRole
     environment:
-      SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -101,14 +93,27 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extract-metadata-${self:provider.stage}
     handler: extract-metadata/handler.lambda_handler
+    events:
+      - s3:
+        bucket: rawPii
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: rawHr
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: rawRegular
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: delivery
+        event: s3:ObjectCreated:*
     package:
       include:
         - extractMetadata
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   routeRaw:
+    role: RouteRawRole
     environment:
-      SECRETS_BUCKET: ${self:custom.secretsBucket}
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -118,14 +123,15 @@ functions:
     handler: functions/route-raw/handler.lambda_handler
     events:
       - s3:
-         bucket: landing
-         event: s3:ObjectCreated:*
+        bucket: landing
+        event: s3:ObjectCreated:*
     package:
       include:
         - routeRaw
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
   
   startJobStore:
+    role: StartJobRole
     environment:
       APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
@@ -175,7 +181,7 @@ resources:
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
-              Function: 
+              Function:
                 Fn::GetAtt:
                   - RouteRawLambdaFunction
                   - Arn
@@ -183,21 +189,17 @@ resources:
 
     # Permission to invoke the Lambda that routes files from the Landing bucket to the Raw buckets
     RouteRawLambdaPermissionLandingS3:
-      Type: 'AWS::Lambda::Permission'
+      Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
           Fn::GetAtt:
-          - RouteRawLambdaFunction
-          - Arn 
-        Principal: 's3.amazonaws.com'
-        Action: 'lambda:InvokeFunction'
+            - RouteRawLambdaFunction
+            - Arn
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
         SourceAccount:
           Ref: AWS::AccountId
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.landing}
+        SourceArn: arn:aws:s3:::${self:custom.buckets.landing}
 
     ######################################################################
     # RAW BUCKETS
@@ -220,21 +222,17 @@ resources:
 
     # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
     ExtractMetadataLambdaPermissionRawPiiS3:
-      Type: 'AWS::Lambda::Permission'
+      Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
           Fn::GetAtt:
             - ExtractMetadataLambdaFunction
             - Arn
-        Principal: 's3.amazonaws.com'
-        Action: 'lambda:InvokeFunction'
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
         SourceAccount:
-          Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawPii}
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawPii}
 
     # RAW HR BUCKET
     # S3 bucket that contains raw (csv) files containing HR data
@@ -249,25 +247,21 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawHrBucketExtractMetadataLambdaPermission
+      DependsOn: ExtractMetadataLambdaPermissionRawHrS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw hr bucket
-    RawHrBucketExtractMetadataLambdaPermission:
-      Type: 'AWS::Lambda::Permission'
+    ExtractMetadataLambdaPermissionRawHrS3:
+      Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
           Fn::GetAtt:
             - ExtractMetadataLambdaFunction
             - Arn
-        Principal: 's3.amazonaws.com'
-        Action: 'lambda:InvokeFunction'
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
         SourceAccount:
-          Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawHr}
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawHr}
 
     # RAW REGULAR BUCKET
     # S3 bucket that contains raw (csv) files containing no security-related data
@@ -282,25 +276,21 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: RawRegularBucketExtractMetadataLambdaPermission
+      DependsOn: ExtractMetadataLambdaPermissionRawRegularS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw regular bucket
-    RawRegularBucketExtractMetadataLambdaPermission:
-      Type: 'AWS::Lambda::Permission'
+    ExtractMetadataLambdaPermissionRawRegularS3:
+      Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
           Fn::GetAtt:
             - ExtractMetadataLambdaFunction
             - Arn
-        Principal: 's3.amazonaws.com'
-        Action: 'lambda:InvokeFunction'
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
         SourceAccount:
-          Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.rawRegular}
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawRegular}
 
     ######################################################################
     # DELIVERY BUCKET
@@ -318,25 +308,21 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: DeliveryBucketExtractMetadataLambdaPermission
+      DependsOn: ExtractMetadataLambdaPermissionDeliveryS3
 
     # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
-    DeliveryBucketExtractMetadataLambdaPermission:
-      Type: 'AWS::Lambda::Permission'
+    ExtractMetadataLambdaPermissionDeliveryS3:
+      Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
           Fn::GetAtt:
             - ExtractMetadataLambdaFunction
             - Arn
-        Principal: 's3.amazonaws.com'
-        Action: 'lambda:InvokeFunction'
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
         SourceAccount:
-          Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.delivery}
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.delivery}
 
     ######################################################################
     # DISCOVERY BUCKETS
@@ -393,7 +379,7 @@ resources:
     ######################################################################
 
     FileMetadataDynamoTable:
-      Type: 'AWS::DynamoDB::Table'
+      Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           -
@@ -410,7 +396,7 @@ resources:
         TableName: ${self:custom.dynamo.fileMetadata.name}
 
     ProcessMetadataDynamoTable:
-      Type: 'AWS::DynamoDB::Table'
+      Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           -
@@ -425,6 +411,96 @@ resources:
           WriteCapacityUnits: ${self:custom.dynamo.processMetadata.writeCapacity}
         # NOTE: Must grant access to this TableName in iamRoleStatements section
         TableName: ${self:custom.dynamo.processMetadata.name}
+
+    ######################################################################
+    # IAM ROLES
+    ######################################################################
+
+    LogPolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: ${self:service}-log-policy-${self:provider.stage}
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogStreams
+              Resource: arn:aws:logs:${self:provider.region}:*:*
+        Roles:
+          - Ref: RouteRawRole
+          - Ref: ExtractMetadataRole
+          - Ref: StartJobRole
+
+    RouteRawRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-routeRawRole-${self:provider.stage}
+        AssumeRolePolicyDocument: 
+          ${file(sls-include/assume-role-policy-doc.yml)}
+        Policies:
+          - PolicyName: BucketPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.landing}/*
+                - Effect: Allow
+                  Action:
+                    - s3:PutObject
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+
+    ExtractMetadataRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          ${file(sls-include/assume-role-policy-doc.yml)}
+        Policies:
+          - PolicyName: BucketPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                    - arn:aws:s3:::${self:custom.buckets.delivery}/*
+          - PolicyName: DynamoDbPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:*
+                  Resource:
+                    - Fn::GetAtt:
+                      - FileMetadataDynamoTable
+                      - Arn
+
+    # need to figure out what permissions we need to call the cluster and add steps
+    # hopefully we can also define iam:passrole and provide another role to emr that has
+    # access to the s3 buckets and dynamo table
+    #
+    # This role will be used by all StartJob lambdas
+    StartJobRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-startJobRole-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          ${file(sls-include/assume-role-policy-doc.yml)}
 
   ######################################################################
   # OUTPUTS

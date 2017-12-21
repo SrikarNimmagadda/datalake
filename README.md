@@ -1,6 +1,15 @@
-# Data Lake Processing using S3 Triggered Lambdas
+# Tech Brands Data Lake Application
 
-- Waits for object to exist in S3
-- Invokes processes for logic, filters, formatting, compression
-- Polls processes for status
-- Archives files once completed
+## Lambdas
+
+### route-raw
+
+### extract-metadata
+
+### start-job-xxx
+
+## Spark Code
+
+## Working Locally with Docker
+
+## Getting the Application Deployed
