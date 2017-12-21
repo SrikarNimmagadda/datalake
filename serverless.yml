@@ -171,6 +171,7 @@ resources:
         SourceAccount:
           Ref: AWS::AccountId
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.landing}'
+        DependsOn: RouteRawLambdaFunction
 
     ######################################################################
     # RAW BUCKETS
@@ -204,6 +205,7 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawPii}'
+      DependsOn: ExtractMetadataLambdaFunction
 
     # RAW HR BUCKET
     # S3 bucket that contains raw (csv) files containing HR data
@@ -233,6 +235,7 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: 'arn:aws:s3:::${self:custom.buckets.rawHr}'
+      DependsOn: ExtractMetadataLambdaFunction
 
     # RAW REGULAR BUCKET
     # S3 bucket that contains raw (csv) files containing no security-related data
@@ -262,6 +265,7 @@ resources:
         SourceAccount:
           Ref: 'AWS::AccountId'
         SourceArn: arn:aws:s3:::${self:custom.buckets.rawRegular}'
+      DependsOn: ExtractMetadataLambdaFunction
 
     ######################################################################
     # DELIVERY BUCKET
@@ -293,11 +297,8 @@ resources:
         Action: 'lambda:InvokeFunction'
         SourceAccount:
           Ref: 'AWS::AccountId'
-        SourceArn:
-          Fn::Join:
-            - ''
-            - - 'arn:aws:s3:::'
-              - ${self:custom.buckets.delivery}
+        SourceArn: 'arn:aws:s3:::${self:custom.buckets.delivery}'
+      DependsOn: ExtractMetadataLambdaFunction
 
     ######################################################################
     # DISCOVERY BUCKETS
