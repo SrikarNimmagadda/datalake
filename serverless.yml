@@ -147,6 +147,12 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-start-job-store-${self:provider.stage}
     handler: start-job-store/handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-start-job-store-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-start-job-store-${self:provider.stage} lambda on a schedule'
+          rate: rate(1 hour)
+          enabled: true
     package:
       include:
         - startJobStore
