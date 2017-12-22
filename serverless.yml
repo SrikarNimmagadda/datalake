@@ -47,6 +47,9 @@ custom:
     buildDir: _build/dist
     cleanup: true
 
+package:
+  individually: true
+
 provider:
   name: aws
   runtime: python2.7
@@ -100,7 +103,7 @@ functions:
         event: s3:ObjectCreated:*
     package:
       include:
-        - routeRaw
+        - functions/route-raw/**
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
       
   extractMetadata:
@@ -112,7 +115,7 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extract-metadata-${self:provider.stage}
-    handler: extract-metadata/handler.lambda_handler
+    handler: functions/extract-metadata/handler.lambda_handler
     events:
       - s3:
         bucket: rawPii
@@ -128,7 +131,7 @@ functions:
         event: s3:ObjectCreated:*
     package:
       include:
-        - extractMetadata
+        - functions/extract-metadata/**
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   startJobStore:
@@ -146,7 +149,7 @@ functions:
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-start-job-store-${self:provider.stage}
-    handler: start-job-store/handler.lambda_handler
+    handler: functions/start-job-store/handler.lambda_handler
     events:
       - schedule:
           name: ${self:service}-start-job-store-sched-${self:provider.stage}
@@ -155,7 +158,7 @@ functions:
           enabled: true
     package:
       include:
-        - startJobStore
+        - functions/start-job-store/**
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
