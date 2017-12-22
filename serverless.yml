@@ -83,6 +83,26 @@ functions:
 #           * Pay special attention to the bullets under the "Custom bucket configuration" heading.
 #
 ################################################
+  
+  routeRaw:
+    role: RouteRawRole
+    environment:
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+
+    name: ${self:service}-route-raw-${self:provider.stage}
+    handler: functions/route-raw/handler.lambda_handler
+    events:
+      - s3:
+        bucket: landing
+        event: s3:ObjectCreated:*
+    package:
+      include:
+        - routeRaw
+      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
+      
   extractMetadata:
     role: ExtractMetadataRole
     environment:
@@ -111,25 +131,6 @@ functions:
         - extractMetadata
       #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
-  routeRaw:
-    role: RouteRawRole
-    environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-
-    name: ${self:service}-route-raw-${self:provider.stage}
-    handler: functions/route-raw/handler.lambda_handler
-    events:
-      - s3:
-        bucket: landing
-        event: s3:ObjectCreated:*
-    package:
-      include:
-        - routeRaw
-      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
-  
   startJobStore:
     role: StartJobRole
     environment:
@@ -146,6 +147,12 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-start-job-store-${self:provider.stage}
     handler: start-job-store/handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-start-job-store-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-start-job-store-${self:provider.stage} lambda on a schedule'
+          rate: rate(1 hour)
+          enabled: true
     package:
       include:
         - startJobStore
