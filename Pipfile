@@ -4,19 +4,24 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [dev-packages]
-pytest>=3.3.0
-codecov>=2.0.9
-pytest-cov>=2.5.1
-pytest-spark>=0.4.0
-pytest-aws>=0.1.0
-pybuilder>=0.11.12
-pybuilder_aws_plugin
-flake8>=3.5.0
-mockito>=1.0.12
+
+"boto3" = ">=1.4.7"
+pyspark = ">=2.2.0"
+pytest = ">=3.3.0"
+codecov = ">=2.0.9"
+pytest-cov = ">=2.5.1"
+pytest-spark = ">=0.4.0"
+pytest-aws = ">=0.1.0"
+pybuilder = ">=0.11.12"
+pybuilder-aws-plugin = "*"
+"flake8" = "*"
+mockito = "*"
+
 
 [packages]
-boto3>=1.4.7
-pyspark>=2.2.0
 
+"boto3" = ">=1.4.7"
+pyspark = ">=2.2.0"
 requests = "*"

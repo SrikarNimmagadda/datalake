@@ -104,7 +104,7 @@ functions:
     package:
       include:
         - functions/route-raw/**
-      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
       
   extractMetadata:
     role: ExtractMetadataRole
@@ -132,7 +132,7 @@ functions:
     package:
       include:
         - functions/extract-metadata/**
-      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   startJobStore:
     role: StartJobRole
@@ -158,8 +158,8 @@ functions:
           enabled: true
     package:
       include:
-        - functions/start-job-store/**
-      #artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
+        - startJobStore
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
