@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b4a1a10f607ad793430f1ba80859c8b74a4cce5093f10ac223b98ca42f673cc5"
+            "sha256": "ce6549faf89d29f24ef3942580d46037aa14be4fff90c03a1d4c4a444a61cb3d"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -293,7 +293,6 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "futures": {
@@ -379,6 +378,14 @@
             ],
             "version": "==1.5.2"
         },
+        "py4j": {
+            "hashes": [
+                "sha256:784d57e3e68bf45b6b40b7f7df52109e3f6ee37b553c58574901526b1153400e",
+                "sha256:b49a28c6bd96d334a39c15c3ce52225585332eff5e2659c7dc7aa223aa8bd454",
+                "sha256:406fbfdbcbbb398739f61fafd25724670a405a668eb08c1721d832eadce06aae"
+            ],
+            "version": "==0.10.4"
+        },
         "pybuilder": {
             "hashes": [
                 "sha256:996ac23755608eefdb5b3b783bd35c842e84803561114344d3cb81347c916fa6"
@@ -404,6 +411,10 @@
                 "sha256:8d616a382f243dbf19b54743f280b80198be0bca3a5396f1d2e1fca6223e8805"
             ],
             "version": "==1.6.0"
+        },
+        "pyspark": {
+            "hashes": [],
+            "version": "==2.2.0.post0"
         },
         "pytest": {
             "hashes": [

@@ -13,7 +13,7 @@ use_plugin("python.distutils")
 use_plugin("python.flake8")
 use_plugin("python.pylint")
 #use_plugin('python.coverage')
-use_plugin("pybuilder_aws_plugin")
+#use_plugin("pybuilder_aws_plugin")
 use_plugin("exec")
 use_plugin("source_distribution")
 #use_plugin("python.integrationtest")
@@ -22,7 +22,7 @@ name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
-default_task = ["analyze"]
+default_task = ["analyze", "publish"]
 #, "package_lambda_code","pkg_extract_metadata", "pkg_route_raw", "pkg_start_job_store"
 
 dependencies = [
@@ -35,9 +35,7 @@ deploy_stage = os.getenv('STAGE')
 
 @init
 def initialize(project):
-    pass
-    #project.build_depends_on('boto3', '==1.4.7')
-
+    project.build_depends_on('boto3', '==1.4.7')
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_dist", "$dir_target/dist/")
     project.set_property("flake8_break_build", False)

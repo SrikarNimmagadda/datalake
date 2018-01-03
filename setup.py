@@ -57,7 +57,7 @@ except subprocess.CalledProcessError as e:
 
 try:
     subprocess.check_call(["pyb", "clean", "install_build_dependencies", "package", "-o"])
-    dist_dir = glob.glob(os.path.join(script_dir, "target", "dist", "*"))[0]
+    dist_dir = glob.glob(os.path.join(script_dir, "target", "dist", "extract-metadata", "*"))[0]
     path_check(dist_dir)
     setup_args = sys.argv[1:]
     subprocess.check_call([sys.executable, "setup.py"] + setup_args, cwd=script_dir)
