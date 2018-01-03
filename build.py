@@ -13,25 +13,20 @@ use_plugin("python.distutils")
 use_plugin("python.flake8")
 use_plugin("python.pylint")
 #use_plugin('python.coverage')
-#use_plugin("pybuilder_aws_plugin")
 use_plugin("exec")
 use_plugin("source_distribution")
-#use_plugin("python.integrationtest")
 
 name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
 default_task = ["analyze", "publish"]
-#, "package_lambda_code","pkg_extract_metadata", "pkg_route_raw", "pkg_start_job_store"
 
 dependencies = [
     ('boto3', '==1.4.7')
 ]
 
 deploy_stage = os.getenv('STAGE')
-# Maybe this works better if I can pass in the function name from serverless??
-#function_name = os.getenv('FUNCTION_NAME')
 
 @init
 def initialize(project):
