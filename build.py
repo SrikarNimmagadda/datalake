@@ -65,7 +65,7 @@ def pkg_extract_metadata(project, logger):
         dep_path = os.path.abspath(os.path.dirname(importlib.import_module(names).__file__))
         shutil.copytree(dep_path, vendor_path)
 
-    with zipfile.ZipFile('target/dist/serverless-extract-metadata.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile('target/dist/tb-app-datalake-extract-metadata.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk('target/dist/extract-metadata'):
             for file in files:
                 zipf.write(os.path.join(root, file),
@@ -83,7 +83,7 @@ def pkg_route_raw(project, logger):
         dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
         shutil.copytree(dep_path, vendor_path)
 
-    with zipfile.ZipFile('target/dist/serverless-route-raw.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile('target/dist/tb-app-datalake-route-raw.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk('target/dist/route-raw'):
             for file in files:
                 zipf.write(os.path.join(root, file),
@@ -101,7 +101,7 @@ def pkg_start_job_store(project, logger):
         dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
         shutil.copytree(dep_path, vendor_path)
 
-    with zipfile.ZipFile('target/dist/serverless-start-job-store.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile('target/dist/tb-app-datalake-start-job-store.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk('target/dist/start-job-store'):
             for file in files:
                 zipf.write(os.path.join(root, file),
