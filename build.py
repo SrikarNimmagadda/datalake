@@ -14,28 +14,32 @@ use_plugin("python.flake8")
 use_plugin("python.pylint")
 #use_plugin('python.coverage')
 use_plugin("pybuilder_aws_plugin")
-#use_plugin("exec")
-#use_plugin("source_distribution")
+use_plugin("exec")
+use_plugin("source_distribution")
 #use_plugin("python.integrationtest")
 
 name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
-default_task = ["analyze","publish","package_lambda_code"]
+default_task = ["analyze"]
+#, "package_lambda_code","pkg_extract_metadata", "pkg_route_raw", "pkg_start_job_store"
 
 dependencies = [
-    ('requests', '==2.11.1')
+    ('boto3', '==1.4.7')
 ]
 
 deploy_stage = os.getenv('STAGE')
+# Maybe this works better if I can pass in the function name from serverless??
+#function_name = os.getenv('FUNCTION_NAME')
 
 @init
 def initialize(project):
-    project.build_depends_on('boto3', '==1.4.7')
-    for named, version in dependencies:
-        project.depends_on(named, version)
-    project.set_property("dir_dist", "$dir_target/dist/{0}".format(extract_metadata_path))
+    pass
+    #project.build_depends_on('boto3', '==1.4.7')
+
+    project.set_property("dir_source_main_python", "functions/")
+    project.set_property("dir_dist", "$dir_target/dist/")
     project.set_property("flake8_break_build", False)
     project.set_property('flake8_include_test_sources', True)
     project.set_property("flake8_ignore", "E501")
@@ -44,77 +48,67 @@ def initialize(project):
     project.set_property('integrationtest_inherit_environment', False)
     project.get_property("distutils_commands").append("bdist_egg")
     project.set_property("distutils_classifiers", [
-        "Environment :: {0}".format(deploy_stage),
-        "Intended Audience :: Developers",
-        'Programming Language :: Python :: 2.7',
-        "Topic :: Software Development :: Data Lake",
-        "Topic :: Software Development :: EMR"])
+       "Environment :: {0}".format(deploy_stage),
+       "Intended Audience :: Developers",
+       'Programming Language :: Python :: 2.7',
+       "Topic :: Software Development :: Data Lake",
+       "Topic :: Software Development :: EMR"])
+
 
 @task
-@description("Package the function Extract Metadata for deployment")
+@description('Package extract-metadata for deployment')
 def pkg_extract_metadata(project, logger):
-    #project.build_depends_on('boto3', '==1.4.7')
+    project.set_property("dir_dist", "$dir_target/dist/extract-metadata/")
     logger.info("I am building extract-metadata for {0}!".format(project.name))
-    #project.set_property("dir_source_main_python", "functions/extract-metadata/")
-    #project.set_property("dir_source_unittest_python", "functions/extract-metadata/tests/")
-    #project.set_property("dir_source_main_scripts", "scripts/")
-    #project.set_property("dir_dist", "$dir_target/dist/{0}".format(extract_metadata_path))
-    for name, _ in dependencies:
-        vendor_path = os.path.join('target/dist/{0}'.format("extract-metadata"), name)
-        logger.info("This is the vendor path {0}".format(vendor_path))
+    for names, _ in dependencies:
+        vendor_path = os.path.join('target/dist/extract-metadata', names)
         if os.path.isdir(vendor_path):
             continue
-        derp_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
-        logger.info("this is derp path {0}".format(derp_path))
-        shutil.copytree(derp_path, vendor_path)
-    with zipfile.ZipFile('target/dist/serverless-{0}.zip'.format("extract-metadata"), 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk('target/dist/{0}'.format("extract-metadata")):
+        dep_path = os.path.abspath(os.path.dirname(importlib.import_module(names).__file__))
+        shutil.copytree(dep_path, vendor_path)
+
+    with zipfile.ZipFile('target/dist/serverless-extract-metadata.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk('target/dist/extract-metadata'):
             for file in files:
                 zipf.write(os.path.join(root, file),
-                    os.path.relpath(os.path.join(root, file), 'target/dist/{0}'.format("extract-metadata")))
+                           os.path.relpath(os.path.join(root, file), 'target/dist/extract-metadata'))
 
 @task
-@description("Package the function Route Raw for deployment")
+@description('Package route-raw for deployment')
 def pkg_route_raw(project, logger):
+    project.set_property("dir_dist", "target/dist/route-raw/")
     logger.info("I am building route-raw for {0}!".format(project.name))
-    project.set_property("dir_source_main_python", "functions/route-raw/")
-    project.set_property("dir_source_unittest_python", "functions/route-raw/tests/")
-    project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "$dir_target/dist/{0}".format(route_raw_path))
     for name, _ in dependencies:
-        vendor_path = os.path.join('target/dist/{0}'.format(route_raw_path), name)
+        vendor_path = os.path.join('target/dist/route-raw', name)
         if os.path.isdir(vendor_path):
             continue
         dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
         shutil.copytree(dep_path, vendor_path)
-    with zipfile.ZipFile('target/dist/serverless-{0}.zip'.format("route-raw"), 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk('target/dist/{0}'.format(route_raw_path)):
+
+    with zipfile.ZipFile('target/dist/serverless-route-raw.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk('target/dist/route-raw'):
             for file in files:
                 zipf.write(os.path.join(root, file),
-                    os.path.relpath(os.path.join(root, file), 'target/dist/{0}'.format(route_raw_path)))
+                           os.path.relpath(os.path.join(root, file), 'target/dist/route-raw'))
 
 @task
-@description("Package the function Start Job Store for deployment")
+@description('Package start-job-store for deployment')
 def pkg_start_job_store(project, logger):
-# start-job-store
-    logger.info("I am building start_job_store for {0}!".format(project.name))
-    project.set_property("dir_source_main_python", "functions/start-job-store/")
-    project.set_property("dir_source_unittest_python", "functions/start-job-store/tests/")
-    project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_source_main_scripts", "scripts/")
-    project.set_property("dir_dist", "$dir_target/dist/{0}".format(start_job_store_path))
+    project.set_property("dir_dist", "target/dist/start-job-store/")
+    logger.info("I am building start-job-store for {0}!".format(project.name))
     for name, _ in dependencies:
-        vendor_path = os.path.join('target/dist/{0}'.format(start_job_store_path), name)
+        vendor_path = os.path.join('target/dist/start-job-store', name)
         if os.path.isdir(vendor_path):
             continue
         dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
         shutil.copytree(dep_path, vendor_path)
-    with zipfile.ZipFile('target/dist/serverless-{0}.zip'.format("start-job-store"), 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk('target/dist/{0}'.format(start_job_store_path)):
+
+    with zipfile.ZipFile('target/dist/serverless-start-job-store.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk('target/dist/start-job-store'):
             for file in files:
                 zipf.write(os.path.join(root, file),
-                    os.path.relpath(os.path.join(root, file), 'target/dist/{0}'.format(start_job_store_path)))
+                           os.path.relpath(os.path.join(root, file), 'target/dist/start-job-store'))
+
 
 # Not used unless Serverless fails to do its part again
 @task
