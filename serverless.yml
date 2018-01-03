@@ -47,6 +47,9 @@ custom:
     buildDir: _build/dist
     cleanup: true
 
+package:
+  individually: true
+
 provider:
   name: aws
   runtime: python2.7
@@ -83,33 +86,6 @@ functions:
 #           * Pay special attention to the bullets under the "Custom bucket configuration" heading.
 #
 ################################################
-  extractMetadata:
-    role: ExtractMetadataRole
-    environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: ${self:service}-extract-metadata-${self:provider.stage}
-    handler: extract-metadata/handler.lambda_handler
-    events:
-      - s3:
-        bucket: rawPii
-        event: s3:ObjectCreated:*
-      - s3:
-        bucket: rawHr
-        event: s3:ObjectCreated:*
-      - s3:
-        bucket: rawRegular
-        event: s3:ObjectCreated:*
-      - s3:
-        bucket: delivery
-        event: s3:ObjectCreated:*
-    package:
-      include:
-        - extractMetadata
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   routeRaw:
     role: RouteRawRole
@@ -127,8 +103,36 @@ functions:
         event: s3:ObjectCreated:*
     package:
       include:
-        - routeRaw
+        - functions/route-raw/**
       artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
+      
+  extractMetadata:
+    role: ExtractMetadataRole
+    environment:
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+    name: ${self:service}-extract-metadata-${self:provider.stage}
+    handler: functions/extract-metadata/handler.lambda_handler
+    events:
+      - s3:
+        bucket: rawPii
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: rawHr
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: rawRegular
+        event: s3:ObjectCreated:*
+      - s3:
+        bucket: delivery
+        event: s3:ObjectCreated:*
+    package:
+      include:
+        - functions/extract-metadata/**
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
   
   startJobStore:
     role: StartJobRole
@@ -145,7 +149,13 @@ functions:
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-start-job-store-${self:provider.stage}
-    handler: start-job-store/handler.lambda_handler
+    handler: functions/start-job-store/handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-start-job-store-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-start-job-store-${self:provider.stage} lambda on a schedule'
+          rate: rate(1 hour)
+          enabled: true
     package:
       include:
         - startJobStore
