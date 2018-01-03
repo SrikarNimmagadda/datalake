@@ -65,7 +65,7 @@ provider:
     BuiltBy: eaapplicationarchitects@gamestop.com
     tech-builtby: eaapplicationarchitects@gamestop.com
     tech-deployby: MH-CodePipeline
-    LastUpdatedBy: '512883'
+    LastUpdatedBy: 'dturner'
   environment:
     APP_COMMIT_HASH: ${self:custom.appHash}
     STAGE: ${self:provider.stage}

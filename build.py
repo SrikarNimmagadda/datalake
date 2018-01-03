@@ -23,14 +23,16 @@ start_job_store_path = "tb-app-datalake-start-job-store"
 default_task = ["analyze", "publish"]
 
 dependencies = [
-    ('boto3', '==1.4.7')
+    ('boto3', '==1.4.7'),
+    ('virtualenv', '>=15.1.0')
 ]
 
 deploy_stage = os.getenv('STAGE')
 
 @init
 def initialize(project):
-    project.build_depends_on('boto3', '==1.4.7')
+    for dependent in dependencies:
+        project.build_depends_on(dependent)
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_dist", "$dir_target/dist/")
     project.set_property("flake8_break_build", False)

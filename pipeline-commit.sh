@@ -3,7 +3,7 @@
 # phases:
 #  install:
 #    commands:
-pip install -r dev-dependencies.txt
+#pip install -r dev-dependencies.txt
 
 #  pre_build:
 #    commands:

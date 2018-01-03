@@ -15,7 +15,6 @@ pytest-cov = ">=2.5.1"
 pytest-spark = ">=0.4.0"
 pytest-aws = ">=0.1.0"
 pybuilder = ">=0.11.12"
-pybuilder-aws-plugin = "*"
 "flake8" = "*"
 mockito = "*"
 
