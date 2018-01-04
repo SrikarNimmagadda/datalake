@@ -24,17 +24,22 @@ default_task = ["analyze", "publish"]
 
 dependencies = [
     ('boto3', '==1.4.7'),
-    ('virtualenv', '>=15.1.0')
+    ('virtualenv', '>=15.1.0'),
+    ('pytest', '>=3.3.0')
 ]
 
 deploy_stage = os.getenv('STAGE')
 
 @init
 def initialize(project):
-    for dependent in dependencies:
-        project.build_depends_on(dependent)
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_dist", "$dir_target/dist/")
+    exclude = set(['tests','scripts'])
+    for root, dirs, files in os.walk('target/dist/', topdown=True):
+        for d in dirs: 
+            if d not in exclude:
+                project.depends_on_requirements("functions/{0}/requirements.txt".format(d))
+                project.build_depends_on("functions/{0}/dev-requirements.txt".format(d))
     project.set_property("flake8_break_build", False)
     project.set_property('flake8_include_test_sources', True)
     project.set_property("flake8_ignore", "E501")

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # install virutalenv for pybuilder
+pip install virtualenv
 virtualenv venv
 source venv/Scripts/activate
 
@@ -8,8 +9,8 @@ source venv/Scripts/activate
 echo "installing PyBuilder"
 pip install pybuilder
 pip install pytest
-echo "installing PipEnv"
-pip install pipenv
+#echo "installing PipEnv"
+#pip install pipenv
 #pipenv install requests
 echo "installing boto3"
 pip install boto3
