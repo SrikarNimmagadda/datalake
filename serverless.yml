@@ -39,11 +39,6 @@ custom:
     buckets:
       - ${self:custom.buckets.code}
   pkgPyFuncs: # plugin configuration
-    requirementsFile: 'requirements.txt'
-    globalRequirements:
-      - ./globalRequirements.txt
-    globalIncludes:
-      - ./common_files
     buildDir: target/dist/
     cleanup: true
 
