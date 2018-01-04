@@ -58,20 +58,19 @@ except subprocess.CalledProcessError as e:
 try:
     subprocess.check_call(["pyb", "clean", "install_build_dependencies", "package", "-o"])
     dist_dir = glob.glob(os.path.join(script_dir, "target", "dist", "extract-metadata", "*"))[0]
-    path_check(dist_dir)
+    src_dir = []
+    for src_file in glob.glob(os.path.join(dist_dir, "*")):
+        file_name = os.path.basename(src_file)
+    target_file_name = os.path.join(script_dir, file_name)
+    if os.path.exists(target_file_name):
+        if os.path.isdir(target_file_name):
+            shutil.rmtree(target_file_name)
+        else:
+            os.remove(target_file_name)
+    shutil.move(src_file, script_dir)
     setup_args = sys.argv[1:]
     subprocess.check_call([sys.executable, "setup.py"] + setup_args, cwd=script_dir)
 except subprocess.CalledProcessError as e:
     exit_code = e.returncode
 sys.exit(exit_code)
 
-def path_check(dist_dir):
-    for src_file in glob.glob(os.path.join(dist_dir, "*")):
-        file_name = os.path.basename(src_file)
-        target_file_name = os.path.join(script_dir, file_name)
-        if os.path.exists(target_file_name):
-            if os.path.isdir(target_file_name):
-                shutil.rmtree(target_file_name)
-            else:
-                os.remove(target_file_name)
-        shutil.move(src_file, script_dir)

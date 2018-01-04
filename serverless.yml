@@ -39,12 +39,7 @@ custom:
     buckets:
       - ${self:custom.buckets.code}
   pkgPyFuncs: # plugin configuration
-    requirementsFile: 'requirements.txt'
-    globalRequirements:
-      - ./globalRequirements.txt
-    globalIncludes:
-      - ./common_files
-    buildDir: _build/dist
+    buildDir: target/dist/
     cleanup: true
 
 package:
@@ -65,7 +60,7 @@ provider:
     BuiltBy: eaapplicationarchitects@gamestop.com
     tech-builtby: eaapplicationarchitects@gamestop.com
     tech-deployby: MH-CodePipeline
-    LastUpdatedBy: '512883'
+    LastUpdatedBy: 'dturner'
   environment:
     APP_COMMIT_HASH: ${self:custom.appHash}
     STAGE: ${self:provider.stage}
@@ -96,15 +91,13 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
     name: ${self:service}-route-raw-${self:provider.stage}
-    handler: functions/route-raw/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - s3:
         bucket: landing
         event: s3:ObjectCreated:*
     package:
-      include:
-        - functions/route-raw/**
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.routeRaw.name}/dist/${self:service}-route-raw.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-route-raw.zip
       
   extractMetadata:
     role: ExtractMetadataRole
@@ -115,7 +108,7 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extract-metadata-${self:provider.stage}
-    handler: functions/extract-metadata/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - s3:
         bucket: rawPii
@@ -130,9 +123,7 @@ functions:
         bucket: delivery
         event: s3:ObjectCreated:*
     package:
-      include:
-        - functions/extract-metadata/**
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.extractMetadata.name}/dist/${self:service}-extract-metadata.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-extract-metadata.zip
   
   startJobStore:
     role: StartJobRole
@@ -149,7 +140,7 @@ functions:
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-start-job-store-${self:provider.stage}
-    handler: functions/start-job-store/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - schedule:
           name: ${self:service}-start-job-store-sched-${self:provider.stage}
@@ -157,9 +148,7 @@ functions:
           rate: rate(1 hour)
           enabled: true
     package:
-      include:
-        - startJobStore
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:functions.startJobStore.name}/dist/${self:service}-start-job-store.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-start-job-store.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information

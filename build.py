@@ -1,10 +1,10 @@
 from subprocess import call
 import os
-from pybuilder.core import task, use_plugin, init, depends, description
-from pybuilder.errors import BuildFailedException
 import zipfile
 import shutil
 import importlib
+from pybuilder.core import task, use_plugin, init, depends, description
+from pybuilder.errors import BuildFailedException
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -16,23 +16,30 @@ use_plugin("python.pylint")
 use_plugin("exec")
 use_plugin("source_distribution")
 
+# pylint: disable=invalid-name, unused-variable
 name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
-default_task = ["analyze", "publish"]
+#default_task = ["analyze", "publish"]
 
 dependencies = [
-    ('boto3', '==1.4.7')
+    ('boto3', '==1.4.7'),
+    ('pytest', '>=3.3.0')
 ]
 
 deploy_stage = os.getenv('STAGE')
 
 @init
 def initialize(project):
-    project.build_depends_on('boto3', '==1.4.7')
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_dist", "$dir_target/dist/")
+    exclude = set(['tests','scripts'])
+    for root, dirs, files in os.walk('target/dist/', topdown=True):
+        for d in dirs: 
+            if d not in exclude:
+                project.depends_on_requirements("functions/{0}/requirements.txt".format(d))
+                project.build_depends_on("functions/{0}/dev-requirements.txt".format(d))
     project.set_property("flake8_break_build", False)
     project.set_property('flake8_include_test_sources', True)
     project.set_property("flake8_ignore", "E501")
