@@ -44,7 +44,7 @@ custom:
       - ./globalRequirements.txt
     globalIncludes:
       - ./common_files
-    buildDir: _build/dist
+    buildDir: target/dist
     cleanup: true
 
 package:
