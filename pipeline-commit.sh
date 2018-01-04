@@ -13,6 +13,8 @@ chmod +x *.sh
 echo Build started on `date`
 echo "installing dependencies"
 pyb install_dependencies 
+pyb analyze
+pyb publish
 echo "executing initial build per lambda fucntion"
 pyb "pkg_extract_metadata"
 pyb "pkg_route_raw" 

@@ -6,11 +6,9 @@ virtualenv venv
 source venv/Scripts/activate
 
 # start virtual environment for pybuilder
-echo "installing PyBuilder"
+echo "Installing PyBuilder"
 pip install pybuilder
+echo "Installing PyTest"
 pip install pytest
-#echo "installing PipEnv"
-#pip install pipenv
-#pipenv install requests
-echo "installing boto3"
+echo "Installing Boto3"
 pip install boto3

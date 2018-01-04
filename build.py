@@ -1,10 +1,10 @@
 from subprocess import call
 import os
-from pybuilder.core import task, use_plugin, init, depends, description
-from pybuilder.errors import BuildFailedException
 import zipfile
 import shutil
 import importlib
+from pybuilder.core import task, use_plugin, init, depends, description
+from pybuilder.errors import BuildFailedException
 
 use_plugin("python.core")
 use_plugin("python.unittest")
@@ -16,15 +16,15 @@ use_plugin("python.pylint")
 use_plugin("exec")
 use_plugin("source_distribution")
 
+# pylint: disable=invalid-name, unused-variable
 name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
-default_task = ["analyze", "publish"]
+#default_task = ["analyze", "publish"]
 
 dependencies = [
     ('boto3', '==1.4.7'),
-    ('virtualenv', '>=15.1.0'),
     ('pytest', '>=3.3.0')
 ]
 

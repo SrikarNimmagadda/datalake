@@ -1,8 +1,5 @@
-import pytest
-
-
 def pytest_addoption(parser):
-    parser.addoption("--stackname", action="store", default="defaultStackName")
+    parser.addoption("--stackname", action="store", default="default stack name")
 
 
 def pytest_generate_tests(metafunc):
