@@ -1,6 +1,10 @@
 #!/bin/bash -x
 
 # phases:
+# install:
+#   commands:
+#pip install -r dependencies.txt
+#pip install -r dev-dependencies.txt
 
 #  pre_build:
 #    commands:
@@ -13,6 +17,7 @@ chmod +x *.sh
 echo Build started on `date`
 echo "installing dependencies"
 pyb install_dependencies 
+pip freeze > requirements.txt
 pyb analyze
 pyb publish
 echo "executing initial build per lambda fucntion"

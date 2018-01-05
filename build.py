@@ -23,23 +23,20 @@ route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
 #default_task = ["analyze", "publish"]
 
-dependencies = [
-    ('boto3', '==1.4.7'),
-    ('pytest', '>=3.3.0')
-]
-
 deploy_stage = os.getenv('STAGE')
 
 @init
 def initialize(project):
     project.set_property("dir_source_main_python", "functions/")
     project.set_property("dir_dist", "$dir_target/dist/")
-    exclude = set(['tests','scripts'])
-    for root, dirs, files in os.walk('target/dist/', topdown=True):
+    exclude = set(['tests','scripts','dist','build'])
+    project.depends_on_requirements("requirements.txt")
+    #project.build_depends_on_requirements("requirements-dev.txt")
+    for root, dirs, files in os.walk('target/dist/', topdown=False):
         for d in dirs: 
             if d not in exclude:
                 project.depends_on_requirements("functions/{0}/requirements.txt".format(d))
-                project.build_depends_on("functions/{0}/dev-requirements.txt".format(d))
+                #project.build_depends_on("functions/{0}/dev-requirements.txt".format(d))
     project.set_property("flake8_break_build", False)
     project.set_property('flake8_include_test_sources', True)
     project.set_property("flake8_ignore", "E501")
@@ -58,6 +55,10 @@ def initialize(project):
 @task
 @description('Package extract-metadata for deployment')
 def pkg_extract_metadata(project, logger):
+    dependencies = [
+        ('boto3', '>=1.4.7'),
+        ('pytest', '>=3.3.0')
+    ]
     project.set_property("dir_dist", "$dir_target/dist/extract-metadata/")
     logger.info("I am building extract-metadata for {0}!".format(project.name))
     for names, _ in dependencies:
@@ -76,6 +77,9 @@ def pkg_extract_metadata(project, logger):
 @task
 @description('Package route-raw for deployment')
 def pkg_route_raw(project, logger):
+    dependencies = [
+        ('boto3', '>=1.4.7')
+    ]
     project.set_property("dir_dist", "target/dist/route-raw/")
     logger.info("I am building route-raw for {0}!".format(project.name))
     for name, _ in dependencies:
@@ -94,6 +98,10 @@ def pkg_route_raw(project, logger):
 @task
 @description('Package start-job-store for deployment')
 def pkg_start_job_store(project, logger):
+    dependencies = [
+        ('boto3', '>=1.4.7'),
+        ('pytest', '>=3.3.0')
+    ]
     project.set_property("dir_dist", "target/dist/start-job-store/")
     logger.info("I am building start-job-store for {0}!".format(project.name))
     for name, _ in dependencies:
@@ -108,18 +116,3 @@ def pkg_start_job_store(project, logger):
             for file in files:
                 zipf.write(os.path.join(root, file),
                            os.path.relpath(os.path.join(root, file), 'target/dist/start-job-store'))
-
-
-# Not used unless Serverless fails to do its part again
-@task
-@depends('package')
-@description('Deploy the project to AWS')
-def deploy(logger):
-    if deploy_stage is not None:
-        call_str = 'serverless deploy -s {0}'.format(deploy_stage)
-    else:
-        call_str = 'serverless deploy'
-    ret = call(call_str, shell=True)
-    if ret != 0:
-        logger.error("Error deploying project to AWS")
-        raise BuildFailedException
