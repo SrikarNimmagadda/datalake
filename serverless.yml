@@ -3,7 +3,7 @@
 service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
 
 custom:
-  appHash: ${file(./apphash.txt), 'none'}
+  appHash: ${file(./apphash.txt)}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
   coop: ${env:COOP, self:custom.localDeploy.coop}
   basePath: newapp
