@@ -34,3 +34,5 @@ docs/_templates/
 # Ignore node
 node_modules
 
+# generated file containing the git commit hash of the current commit
+apphash.txt
