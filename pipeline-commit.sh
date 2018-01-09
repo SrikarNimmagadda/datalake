@@ -16,8 +16,8 @@ chmod +x *.sh
 #    commands:
 echo Build started on `date`
 echo "installing dependencies"
-pyb install_dependencies 
 pip freeze > requirements.txt
+pyb install_dependencies 
 pyb analyze
 pyb publish
 echo "executing initial build per lambda fucntion"

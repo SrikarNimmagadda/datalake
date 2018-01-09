@@ -18,9 +18,6 @@ use_plugin("source_distribution")
 
 # pylint: disable=invalid-name, unused-variable
 name = "tb.app.datalake"
-extract_metadata_path = "tb-app-datalake-extract-metadata"
-route_raw_path = "tb-app-datalake-route-raw"
-start_job_store_path = "tb-app-datalake-start-job-store"
 
 deploy_stage = os.getenv('STAGE')
 
@@ -80,11 +77,11 @@ def pkg_route_raw(project, logger):
     ]
     project.set_property("dir_dist", "target/dist/route-raw/")
     logger.info("I am building route-raw for {0}!".format(project.name))
-    for name, _ in dependencies:
-        vendor_path = os.path.join('target/dist/route-raw', name)
+    for names, _ in dependencies:
+        vendor_path = os.path.join('target/dist/route-raw', names)
         if os.path.isdir(vendor_path):
             continue
-        dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
+        dep_path = os.path.abspath(os.path.dirname(importlib.import_module(names).__file__))
         shutil.copytree(dep_path, vendor_path)
 
     with zipfile.ZipFile('target/dist/tb-app-datalake-route-raw.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -101,11 +98,11 @@ def pkg_start_job_store(project, logger):
     ]
     project.set_property("dir_dist", "target/dist/start-job-store/")
     logger.info("I am building start-job-store for {0}!".format(project.name))
-    for name, _ in dependencies:
-        vendor_path = os.path.join('target/dist/start-job-store', name)
+    for names, _ in dependencies:
+        vendor_path = os.path.join('target/dist/start-job-store', names)
         if os.path.isdir(vendor_path):
             continue
-        dep_path = os.path.abspath(os.path.dirname(importlib.import_module(name).__file__))
+        dep_path = os.path.abspath(os.path.dirname(importlib.import_module(names).__file__))
         shutil.copytree(dep_path, vendor_path)
 
     with zipfile.ZipFile('target/dist/tb-app-datalake-start-job-store.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
