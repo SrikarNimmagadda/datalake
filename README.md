@@ -1,6 +1,6 @@
 # Tech Brands Data Lake Application
 
-Here is some fluffy text at the beginning and I mispelt a word.
+Here is some fluffy text at the beginning and I mispelled a word.
 
 ## Lambdas
 
