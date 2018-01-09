@@ -21,7 +21,6 @@ name = "tb.app.datalake"
 extract_metadata_path = "tb-app-datalake-extract-metadata"
 route_raw_path = "tb-app-datalake-route-raw"
 start_job_store_path = "tb-app-datalake-start-job-store"
-#default_task = ["analyze", "publish"]
 
 deploy_stage = os.getenv('STAGE')
 
@@ -32,7 +31,7 @@ def initialize(project):
     exclude = set(['tests','scripts','dist','build'])
     project.depends_on_requirements("requirements.txt")
     #project.build_depends_on_requirements("requirements-dev.txt")
-    for root, dirs, files in os.walk('target/dist/', topdown=False):
+    for root, dirs, files in os.walk('target/dist/', topdown=True):
         for d in dirs: 
             if d not in exclude:
                 project.depends_on_requirements("functions/{0}/requirements.txt".format(d))
@@ -56,8 +55,7 @@ def initialize(project):
 @description('Package extract-metadata for deployment')
 def pkg_extract_metadata(project, logger):
     dependencies = [
-        ('boto3', '>=1.4.7'),
-        ('pytest', '>=3.3.0')
+        ('boto3', '>=1.4.7')
     ]
     project.set_property("dir_dist", "$dir_target/dist/extract-metadata/")
     logger.info("I am building extract-metadata for {0}!".format(project.name))
@@ -99,8 +97,7 @@ def pkg_route_raw(project, logger):
 @description('Package start-job-store for deployment')
 def pkg_start_job_store(project, logger):
     dependencies = [
-        ('boto3', '>=1.4.7'),
-        ('pytest', '>=3.3.0')
+        ('boto3', '>=1.4.7')
     ]
     project.set_property("dir_dist", "target/dist/start-job-store/")
     logger.info("I am building start-job-store for {0}!".format(project.name))
