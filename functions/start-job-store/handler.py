@@ -42,46 +42,23 @@ def lambda_handler(event, context):
     # for file in raw_file_list:
     #    print(file)
 
-    step1 = BuildStepLocationMasterRQ4ToParquet(date_parts['today_time'])
-    step2 = BuildStepDimStoreRefined(discovery_paths, date_parts['today_time'])
-    step3 = BuildStepATTDealerCodeRefined(
-        discovery_paths['dealer'], date_parts['today_time'])
-    step4 = BuildStepStoreDealerCodeAssociationRefine(
-        discovery_paths['dealer'], date_parts['today_time'])
-    step5 = BuildStepDimTechBrandHierarchy(refined_paths)
-    step6 = BuildStepAttDealerCodeDelivery(refined_paths['att_dealer'])
-    step7 = BuildStepStoreDealerCodeAssociationDelivery(
-        refined_paths['association'])
-    step8 = BuildStepDimStoreDelivery(refined_paths)
+    Steps = [
+        BuildStepLocationMasterRQ4ToParquet(date_parts['today_time']),
+        BuildStepDimStoreRefined(discovery_paths, date_parts['today_time']),
+        BuildStepATTDealerCodeRefined(
+            discovery_paths['dealer'], date_parts['today_time']),
+        BuildStepStoreDealerCodeAssociationRefine(
+            discovery_paths['dealer'], date_parts['today_time']),
+        BuildStepDimTechBrandHierarchy(refined_paths),
+        BuildStepAttDealerCodeDelivery(refined_paths['att_dealer']),
+        BuildStepStoreDealerCodeAssociationDelivery(
+            refined_paths['association']),
+        BuildStepDimStoreDelivery(refined_paths)
+    ]
 
-    cluster_id = CONN.run_job_flow(
-        Name='GameStopCluster',
-        Instances={
-            'InstanceGroups': [{
-                'Name': 'Master Instance Group',
-                'InstanceRole': 'MASTER',
-                'InstanceCount': 1,
-                'InstanceType': 'm4.large',
-                'Market': 'ON_DEMAND'
-            }, {
-                'Name': 'Slave Instance Group',
-                'InstanceRole': 'CORE',
-                'InstanceCount': 2,
-                'InstanceType': 'm4.large',
-                'Market': 'ON_DEMAND'
-            }],
-            'Ec2SubnetId': 'subnet-5b38da67',
-            'Ec2KeyName': 'GameStopKeyPair',
-            'KeepJobFlowAliveWhenNoSteps': False,
-            'TerminationProtected': True,
-        },
-        LogUri='s3://gs-us1-sandbox-jar/EMRLogs/',
-        ReleaseLabel='emr-5.8.0',
-        Applications=[{'Name': 'Spark'}],
-        VisibleToAllUsers=True,
-        JobFlowRole='EMR_EC2_DefaultRole',
-        ServiceRole='EMR_DefaultRole',
-        Steps=[step1, step2, step3, step4, step5, step6, step7, step8]
+    cluster_id = CONN.add_job_flow_steps(
+        JobFlowId='????',
+        Steps=Steps
     )
 
     print cluster_id
