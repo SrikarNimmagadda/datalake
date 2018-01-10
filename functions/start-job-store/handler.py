@@ -3,7 +3,7 @@
 #
 
 import os
-#from boto3.client import InstanceGroups
+# from boto3.client import InstanceGroups
 from datetime import datetime
 
 import boto3
@@ -24,199 +24,35 @@ BUCKETS = {
     'delivery': os.getenv('DELIVERY_BUCKET')
 }
 
+
 def lambda_handler(event, context):
 
-    raw_file_list = []
-    # discovery_file_list = []
-    # refined_file_list = []
+    date_parts = {
+        'today_time': datetime.now().strftime('%Y%m%d%H%M'),
+        'today_year': datetime.now().strftime('%Y'),
+        'todaymonth': datetime.now().strftime('%m')
+    }
 
-    update_file("tb-us-east-1-dev-raw-regular",
-                "tb-us-east-1-dev-raw-emr/Store/locationMasterList", raw_file_list)
-    update_file("tb-us-east-1-dev-raw-regular",
-                "tb-us-east-1-dev-raw-emr/Store/BAE", raw_file_list)
-    update_file("tb-us-east-1-dev-raw-regular",
-                "tb-us-east-1-dev-raw-emr/Store/dealer", raw_file_list)
-    update_file("tb-us-east-1-dev-raw-regular",
-                "tb-us-east-1-dev-raw-emr/Store/multiTracker", raw_file_list)
-    update_file("tb-us-east-1-dev-raw-regular",
-                "tb-us-east-1-dev-raw-emr/Store/springMobile", raw_file_list)
+    discovery_paths = build_discovery_paths(
+        BUCKETS['discovery_regular'], date_parts)
 
-    today_time = datetime.now().strftime('%Y%m%d%H%M')
-    today_year = datetime.now().strftime('%Y')
-    todaymonth = datetime.now().strftime('%m')
-
-    dis_location_path = "s3n://tb-us-east-1-dev-discovery-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "location" + today_time + "/*.parquet"
-    dis_dealer_path = "s3n://tb-us-east-1-dev-discovery-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "Dealer" + today_time + "/*.parquet"
-    dis_multi_path = "s3n://tb-us-east-1-dev-discovery-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "multiTracker" + today_time + "/*.parquet"
-    dis_spring_path = "s3n://tb-us-east-1-dev-discovery-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "springMobile" + today_time + "/*.parquet"
-    dis_bae_path = "s3n://tb-us-east-1-dev-discovery-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "BAE" + today_time + "/*.parquet"
-
-    ref_att_dealer_path = "s3n://tb-us-east-1-dev-refined-regular/Store/" + today_year + \
-        "/" + todaymonth + '/' + "ATTDealerCodeRefine" + today_time + "/*.parquet"
-    ref_association_path = "s3n://tb-us-east-1-dev-refined-regular/Store/" + today_year + \
-        "/" + todaymonth + '/' + "StoreDealerAssociationRefine" + today_time + "/*.parquet"
-    ref_store_refine_path = "s3n://tb-us-east-1-dev-refined-regular/Store/" + \
-        today_year + "/" + todaymonth + '/' + "StoreRefined" + today_time + "/*.parquet"
-
-    tech_brand_op_name = "s3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/"
+    refined_paths = build_refined_paths(
+        BUCKETS['refined_regular'], date_parts)
 
     # for file in raw_file_list:
     #    print(file)
 
-    step_arg1 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/LocationMasterRQ4Parquet.py",
-        raw_file_list[0],
-        raw_file_list[1],
-        raw_file_list[2],
-        raw_file_list[3],
-        raw_file_list[4],
-        's3n://tb-us-east-1-dev-discovery-regular/Store',
-        today_time
-    ]
-
-    step_arg2 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreRefined.py",
-        dis_location_path,
-        dis_bae_path,
-        dis_dealer_path,
-        dis_spring_path,
-        dis_multi_path,
-        's3n://tb-us-east-1-dev-refined-regular/Store',
-        today_time
-    ]
-
-    step_arg3 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeRefine.py",
-        dis_dealer_path,
-        's3n://tb-us-east-1-dev-refined-regular/Store',
-        today_time
-    ]
-
-    step_arg4 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationRefine.py",
-        dis_dealer_path,
-        's3n://tb-us-east-1-dev-refined-regular/Store',
-        today_time
-    ]
-
-    step_arg5 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/DimTechBrandHierarchy.py",
-        ref_store_refine_path,
-        ref_att_dealer_path,
-        's3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/']
-
-    step_arg6 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeDelivery.py",
-        ref_att_dealer_path,
-        's3n://tb-us-east-1-dev-delivery-regular/WT_ATT_DELR_CDS/Current'
-    ]
-
-    step_arg7 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationDelivery.py",
-        ref_association_path,
-        's3n://tb-us-east-1-dev-delivery-regular/WT_STORE_DELR_CD_ASSOC/Current/']
-
-    step_arg8 = [
-        "/usr/bin/spark-submit",
-        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-        "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreDelivery.py",
-        ref_att_dealer_path,
-        ref_association_path,
-        ref_store_refine_path,
-        tech_brand_op_name,
-        's3n://tb-us-east-1-dev-delivery-regular/WT_STORE/Current/'
-    ]
-
-    step1 = {
-        "Name": "CSVToParquet",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg1
-        }
-    }
-
-    step2 = {
-        "Name": "StoreRefinery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg2
-        }
-    }
-
-    step3 = {
-        "Name": "ATTDealerRefinery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg3
-        }
-    }
-
-    step4 = {
-        "Name": "StoreDealerAssociationRefinery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg4
-        }
-    }
-
-    step5 = {
-        "Name": "TechBrandHierarchy",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg5
-        }
-    }
-
-    step6 = {
-        "Name": "DealerCodeDelivery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg6
-        }
-    }
-
-    step7 = {
-        "Name": "StoreDealerAssociationDelivery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg7
-        }
-    }
-
-    step8 = {
-        "Name": "DimStoreDelivery",
-        'ActionOnFailure': 'CONTINUE',
-        'HadoopJarStep': {
-            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
-            'Args': step_arg8
-        }
-    }
+    step1 = BuildStepLocationMasterRQ4ToParquet(date_parts['today_time'])
+    step2 = BuildStepDimStoreRefined(discovery_paths, date_parts['today_time'])
+    step3 = BuildStepATTDealerCodeRefined(
+        discovery_paths['dealer'], date_parts['today_time'])
+    step4 = BuildStepStoreDealerCodeAssociationRefine(
+        discovery_paths['dealer'], date_parts['today_time'])
+    step5 = BuildStepDimTechBrandHierarchy(refined_paths)
+    step6 = BuildStepAttDealerCodeDelivery(refined_paths['att_dealer'])
+    step7 = BuildStepStoreDealerCodeAssociationDelivery(
+        refined_paths['association'])
+    step8 = BuildStepDimStoreDelivery(refined_paths)
 
     cluster_id = CONN.run_job_flow(
         Name='GameStopCluster',
@@ -251,10 +87,34 @@ def lambda_handler(event, context):
     print cluster_id
 
 
-def update_file(bucketname, prefix, listname):
+def build_discovery_paths(bucket, date_parts):
+    return {
+        'location': build_path(bucket, date_parts, 'Store', 'location'),
+        'dealer': build_path(bucket, date_parts, 'Store', 'Dealer'),
+        'multi': build_path(bucket, date_parts, 'Store', 'multiTracker'),
+        'spring': build_path(bucket, date_parts, 'Store', 'springMobile'),
+        'bae': build_path(bucket, date_parts, 'Store', 'BAE')
+    }
+
+
+def build_refined_paths(bucket, date_parts):
+    return {
+        'att_dealer': build_path(bucket, date_parts, 'Store', 'ATTDealerCodeRefine'),
+        'association': build_path(bucket, date_parts, 'Store', 'StoreDealerAssociationRefine'),
+        'store_refine': build_path(bucket, date_parts, 'Store', 'StoreRefined')
+    }
+
+
+def build_path(bucket, date_parts, domain, name):
+    return 's3n://' + bucket + '/' + domain + '/' + \
+        date_parts['year'] + '/' + date_parts['month'] + '/' + \
+        name + date_parts['time'] + '/*.parquet'
+
+
+def update_file(bucketname, filter_prefix, listname):
     bucket = S3.Bucket(bucketname)
     data = [obj for obj in list(bucket.objects.filter(
-        Prefix=prefix)) if obj.key != prefix]
+        Prefix=filter_prefix)) if obj.key != filter_prefix]
     length = len(data)
     # print(length)
     i = 0
@@ -263,3 +123,203 @@ def update_file(bucketname, prefix, listname):
         if i == length:
             str1 = "s3n://" + bucketname + '/' + obj.key
             listname.append(str1)
+
+
+def BuildStepLocationMasterRQ4ToParquet(TimePart):
+    raw_file_list = []
+
+    # TODO: refactor these calls to a function that works thru a list of filter prefixes
+    update_file(BUCKETS['raw_regular'],
+                'Store/locationMasterList', raw_file_list)
+    update_file(BUCKETS['raw_regular'],
+                'Store/BAE', raw_file_list)
+    update_file(BUCKETS['raw_regular'],
+                'Store/dealer', raw_file_list)
+    update_file(BUCKETS['raw_regular'],
+                'Store/multiTracker', raw_file_list)
+    update_file(BUCKETS['raw_regular'],
+                'Store/springMobile', raw_file_list)
+
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars",
+        "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/LocationMasterRQ4Parquet.py",
+        raw_file_list[0],
+        raw_file_list[1],
+        raw_file_list[2],
+        raw_file_list[3],
+        raw_file_list[4],
+        's3n://tb-us-east-1-dev-discovery-regular/Store',
+        TimePart
+    ]
+
+    step = {
+        "Name": "CSVToParquet",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepDimStoreRefined(DiscoveryPaths, TimePart):
+
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreRefined.py",
+        DiscoveryPaths['location'],
+        DiscoveryPaths['bae'],
+        DiscoveryPaths['dealer'],
+        DiscoveryPaths['spring'],
+        DiscoveryPaths['multi'],
+        's3n://tb-us-east-1-dev-refined-regular/Store',
+        TimePart
+    ]
+
+    step = {
+        "Name": "StoreRefinery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepATTDealerCodeRefined(DealerPath, TimePart):
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeRefine.py",
+        DealerPath,
+        's3n://tb-us-east-1-dev-refined-regular/Store',
+        TimePart
+    ]
+
+    step = {
+        "Name": "ATTDealerRefinery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepStoreDealerCodeAssociationRefine(DealerPath, TimePart):
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationRefine.py",
+        DealerPath,
+        's3n://tb-us-east-1-dev-refined-regular/Store',
+        TimePart
+    ]
+
+    step = {
+        "Name": "StoreDealerAssociationRefinery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepDimTechBrandHierarchy(RefinedPaths):
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/DimTechBrandHierarchy.py",
+        RefinedPaths['store_refine'],
+        RefinedPaths['att_dealer'],
+        's3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/']
+
+    step = {
+        "Name": "TechBrandHierarchy",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepAttDealerCodeDelivery(AttDealerPath):
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeDelivery.py",
+        AttDealerPath,
+        's3n://tb-us-east-1-dev-delivery-regular/WT_ATT_DELR_CDS/Current'
+    ]
+
+    step = {
+        "Name": "DealerCodeDelivery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepStoreDealerCodeAssociationDelivery(AssociationPath):
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationDelivery.py",
+        AssociationPath,
+        's3n://tb-us-east-1-dev-delivery-regular/WT_STORE_DELR_CD_ASSOC/Current/']
+
+    step = {
+        "Name": "StoreDealerAssociationDelivery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
+
+
+def BuildStepDimStoreDelivery(RefinedPaths):
+    tech_brand_op_name = "s3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/"
+
+    args = [
+        "/usr/bin/spark-submit",
+        "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+        "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreDelivery.py",
+        RefinedPaths['att_dealer'],
+        RefinedPaths['association'],
+        RefinedPaths['store_refine'],
+        tech_brand_op_name,
+        's3n://tb-us-east-1-dev-delivery-regular/WT_STORE/Current/'
+    ]
+
+    step = {
+        "Name": "DimStoreDelivery",
+        'ActionOnFailure': 'CONTINUE',
+        'HadoopJarStep': {
+            'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+            'Args': args
+        }
+    }
+
+    return step
