@@ -6,12 +6,13 @@ custom:
   appHash: ${file(./apphash.txt)}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
   coop: ${env:COOP, self:custom.localDeploy.coop}
-  basePath: newapp
+  emrStackName: ${env:EMR_STACK_NAME, self:custom.localDeploy.emrStackName}
   localDeploy: # Settings used when deploying locally
     stage: local
     hen: local
     coop: local
     service: tb-app-datalake
+    emrStackName: tb-emr-datalake-master
   dynamo:
     defaultCapacity: 1
     fileMetadata:
@@ -139,6 +140,8 @@ functions:
       REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      EMR_STACK_NAME: ${self:custom.emr.stackname}
+
     name: ${self:service}-start-job-store-${self:provider.stage}
     handler: handler.lambda_handler
     events:

@@ -8,9 +8,11 @@ from datetime import datetime
 
 import boto3
 from step_builder import step_builder
+from cluster_finder import cluster_finder
 
 S3 = boto3.resource('s3')
-CONN = boto3.client('emr')
+CFN = boto3.client('cloudformation')
+EMR = boto3.client('emr')
 
 BUCKETS = {
     'raw_pii': os.getenv('RAW_PII_BUCKET'),
@@ -25,18 +27,17 @@ BUCKETS = {
     'delivery': os.getenv('DELIVERY_BUCKET')
 }
 
+EMR_STACK_NAME = os.getenv('EMR_STACK_NAME')
+
 
 def lambda_handler(event, context):
+    finder = cluster_finder(CFN)
+    clusterid = finder.find_cluster(EMR_STACK_NAME)
 
-    # for file in raw_file_list:
-    #    print(file)
     builder = step_builder(S3, BUCKETS, datetime.now())
-
     steps = builder.BuildSteps
 
-    cluster_id = CONN.add_job_flow_steps(
-        JobFlowId='????',
+    EMR.add_job_flow_steps(
+        JobFlowId=clusterid,
         Steps=steps
     )
-
-    print cluster_id
