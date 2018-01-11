@@ -94,7 +94,8 @@ def pkg_route_raw(project, logger):
 @description('Package start-job-store for deployment')
 def pkg_start_job_store(project, logger):
     dependencies = [
-        ('boto3', '>=1.4.7')
+        ('boto3', '>=1.4.7'),
+        ('mock', '>=2.0.0')
     ]
     project.set_property("dir_dist", "target/dist/start-job-store/")
     logger.info("I am building start-job-store for {0}!".format(project.name))

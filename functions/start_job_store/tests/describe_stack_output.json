@@ -1,0 +1,35 @@
+{
+    "Stacks": [
+        {
+            "StackId": "arn:aws:cloudformation:us-east-1:233863465899:stack/tb-emr-datalake-master/0b2ffe60-e6a0-11e7-a7e5-50d5ca6e60e6",
+            "Description": "The AWS CloudFormation template for this Serverless application",
+            "Tags": [
+                {
+                    "Value": "master",
+                    "Key": "STAGE"
+                }
+            ],
+            "Outputs": [
+                {
+                    "Description": "EMR Cluster Id for TB Datalake",
+                    "OutputKey": "ClusterId",
+                    "OutputValue": "j-3I9MFY6R3ETM0"
+                },
+                {
+                    "OutputKey": "ServerlessDeploymentBucketName",
+                    "OutputValue": "motherhen-tb-preprod-deployments"
+                }
+            ],
+            "CreationTime": "2017-12-21T22:41:11.801Z",
+            "Capabilities": [
+                "CAPABILITY_IAM",
+                "CAPABILITY_NAMED_IAM"
+            ],
+            "StackName": "tb-emr-datalake-master",
+            "NotificationARNs": [],
+            "StackStatus": "UPDATE_COMPLETE",
+            "DisableRollback": false,
+            "LastUpdatedTime": "2018-01-09T21:18:54.895Z"
+        }
+    ]
+}
