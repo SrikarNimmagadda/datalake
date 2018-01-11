@@ -30,19 +30,6 @@ class step_builder(object):
 
         return steps
 
-    def update_file(self, bucketname, filter_prefix, listname):
-        bucket = self.s3_client.Bucket(bucketname)
-        data = [obj for obj in list(bucket.objects.filter(
-            Prefix=filter_prefix)) if obj.key != filter_prefix]
-        length = len(data)
-
-        i = 0
-        for obj in data:
-            i = i + 1
-            if i == length:
-                str1 = "s3n://" + bucketname + '/' + obj.key
-                listname.append(str1)
-
     def build_discovery_paths(self, bucket):
         return {
             'location': self.build_path(bucket, 'Store', 'location'),
@@ -64,7 +51,21 @@ class step_builder(object):
             self.date_parts['year'] + '/' + self.date_parts['month'] + '/' + \
             name + self.date_parts['time'] + '/*.parquet'
 
-    def BuildStepLocationMasterRQ4ToParquet(self):
+    def update_file(self, bucketname, filter_prefix, listname):
+        bucket = self.s3_client.Bucket(bucketname)
+        data = [obj for obj in list(bucket.objects.filter(
+            Prefix=filter_prefix)) if obj.key != filter_prefix]
+
+        length = len(data)
+
+        i = 0
+        for obj in data:
+            i = i + 1
+            if i == length:
+                str1 = "s3://" + bucketname + '/' + obj.key
+                listname.append(str1)
+
+    def build_raw_file_list(self):
         raw_file_list = []
 
         # TODO: refactor these calls to a function that works thru a list of filter prefixes
@@ -78,6 +79,9 @@ class step_builder(object):
                          'Store/multiTracker', raw_file_list)
         self.update_file(self.buckets['raw_regular'],
                          'Store/springMobile', raw_file_list)
+
+    def BuildStepLocationMasterRQ4ToParquet(self):
+        raw_file_list = self.build_raw_file_list()
 
         # the raw files list [x] syntax could get ugly if the number of files in the list ever changes
         # I think it'd be better to move the bucket reference to before the file list items and just add the items
