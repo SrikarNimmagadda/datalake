@@ -60,7 +60,7 @@ class step_builder(object):
         }
 
     def build_path(self, bucket, domain, name):
-        return 's3n://' + bucket + '/' + domain + '/' + \
+        return 's3://' + bucket + '/' + domain + '/' + \
             self.date_parts['year'] + '/' + self.date_parts['month'] + '/' + \
             name + self.date_parts['time'] + '/*.parquet'
 
@@ -79,6 +79,9 @@ class step_builder(object):
         self.update_file(self.buckets['raw_regular'],
                          'Store/springMobile', raw_file_list)
 
+        # the raw files list [x] syntax could get ugly if the number of files in the list ever changes
+        # I think it'd be better to move the bucket reference to before the file list items and just add the items
+        # in a loop to the end of the arguments. The script this step is running should take that into account as well. shane.
         args = [
             "/usr/bin/spark-submit",
             "--jars",
