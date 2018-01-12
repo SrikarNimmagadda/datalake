@@ -4,10 +4,12 @@
 		commit-stage
 
 ROOT = $(shell pwd)
+APPNAME = tb-app-datalake
+
 DIST = $(ROOT)/target/dist
-DIST_EXTRACT_METADATA = $(DIST)/extract_metadata.zip
-DIST_ROUTE_RAW = $(DIST)/route_raw.zip
-DIST_START_JOB_STORE = $(DIST)/start_job_store.zip
+DIST_EXTRACT_METADATA = $(DIST)/$(APPNAME)-extract-metadata.zip
+DIST_ROUTE_RAW = $(DIST)/$(APPNAME)-route-raw.zip
+DIST_START_JOB_STORE = $(DIST)/$(APPNAME)-start-job-store.zip
 
 REPORTS = $(ROOT)/target/reports
 LINT_REPORT_LAMBDA = $(REPORTS)/lint_lambda.txt
@@ -46,8 +48,8 @@ pack-start-job-store: clean-start-job-store prep-target
 	cd functions/start_job_store; zip -9Dr $(DIST_START_JOB_STORE) * -x *.pyc **/*.pyc tests/* test_data/* cf.py | tee -a $(PACK_START_JOB_STORE_LOG)
 	# need to remove the dev dependencies (but not remove them from the pipfile)
 	# not including dependencies because only production dependency is boto3, which is already installed on the lambda image
-	@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_START_JOB_STORE_LOG)
-	cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_START_JOB_STORE) * | tee -a $(PACK_START_JOB_STORE_LOG)
+	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_START_JOB_STORE_LOG)
+	#cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_START_JOB_STORE) * | tee -a $(PACK_START_JOB_STORE_LOG)
 
 prep-target:
 	mkdir -p $(DIST)
