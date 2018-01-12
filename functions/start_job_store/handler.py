@@ -3,7 +3,6 @@
 #
 
 import os
-# from boto3.client import InstanceGroups
 from datetime import datetime
 
 import boto3
