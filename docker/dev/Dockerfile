@@ -1,6 +1,6 @@
 # Create the local build environment
 
-FROM python:2
+FROM gamestop/gs.docker.serverless.nodejs.4.3.2
 
 ENV SERVICE_NAME=tb-app-datalake-dev \
     PIPELINE=tb.app.datalake-master \
@@ -13,8 +13,6 @@ ENV SERVICE_NAME=tb-app-datalake-dev \
 
 LABEL "application"="tb-app-datalake-dev"
 
-RUN pip install pybuilder
-
 WORKDIR /app
 
-
+ENTRYPOINT [ "bash" ]
