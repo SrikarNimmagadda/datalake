@@ -1,0 +1,125 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "14eaf737fd78eabbb6ecf4f6328aa70d978cd2d29e81781ed1720564c13ea608"
+        },
+        "host-environment-markers": {
+            "implementation_name": "cpython",
+            "implementation_version": "0",
+            "os_name": "posix",
+            "platform_machine": "x86_64",
+            "platform_python_implementation": "CPython",
+            "platform_release": "4.9.60-linuxkit-aufs",
+            "platform_system": "Linux",
+            "platform_version": "#1 SMP Mon Nov 6 16:00:12 UTC 2017",
+            "python_full_version": "2.7.6",
+            "python_version": "2.7",
+            "sys_platform": "linux2"
+        },
+        "pipfile-spec": 6,
+        "requires": {},
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.python.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "boto3": {
+            "hashes": [],
+            "version": "==1.5.13"
+        },
+        "botocore": {
+            "hashes": [],
+            "version": "==1.8.27"
+        },
+        "docutils": {
+            "hashes": [],
+            "version": "==0.14"
+        },
+        "futures": {
+            "hashes": [],
+            "markers": "python_version == '2.6' or python_version == '2.7'",
+            "version": "==3.2.0"
+        },
+        "jmespath": {
+            "hashes": [],
+            "version": "==0.9.3"
+        },
+        "python-dateutil": {
+            "hashes": [],
+            "version": "==2.6.1"
+        },
+        "s3transfer": {
+            "hashes": [],
+            "version": "==0.1.12"
+        },
+        "six": {
+            "hashes": [],
+            "version": "==1.11.0"
+        }
+    },
+    "develop": {
+        "attrs": {
+            "hashes": [],
+            "version": "==17.4.0"
+        },
+        "configparser": {
+            "hashes": [],
+            "markers": "python_version < '3.2'",
+            "version": "==3.5.0"
+        },
+        "enum34": {
+            "hashes": [],
+            "markers": "python_version < '3.4'",
+            "version": "==1.1.6"
+        },
+        "flake8": {
+            "hashes": [],
+            "version": "==3.5.0"
+        },
+        "funcsigs": {
+            "hashes": [],
+            "markers": "python_version < '3.0'",
+            "version": "==1.0.2"
+        },
+        "mccabe": {
+            "hashes": [],
+            "version": "==0.6.1"
+        },
+        "mock": {
+            "hashes": [],
+            "version": "==2.0.0"
+        },
+        "pbr": {
+            "hashes": [],
+            "version": "==3.1.1"
+        },
+        "pluggy": {
+            "hashes": [],
+            "version": "==0.6.0"
+        },
+        "py": {
+            "hashes": [],
+            "version": "==1.5.2"
+        },
+        "pycodestyle": {
+            "hashes": [],
+            "version": "==2.3.1"
+        },
+        "pyflakes": {
+            "hashes": [],
+            "version": "==1.6.0"
+        },
+        "pytest": {
+            "hashes": [],
+            "version": "==3.3.2"
+        },
+        "six": {
+            "hashes": [],
+            "version": "==1.11.0"
+        }
+    }
+}
