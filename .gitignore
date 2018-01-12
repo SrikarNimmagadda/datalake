@@ -3,6 +3,7 @@ __pycache__
 _build
 target
 target/dist
+dist
 .DS_Store
 .coverage
 user
@@ -15,6 +16,7 @@ ve*
 .idea
 out
 .cache
+.venv
 
 # generated pdoc documentation
 docs
