@@ -10,6 +10,7 @@ name = "pypi"
 "flake8" = "*"
 mock = "*"
 pytest = "*"
+coverage = "*"
 
 
 [packages]
