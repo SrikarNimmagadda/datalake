@@ -44,15 +44,15 @@ pack: pack-extract-metadata pack-route-raw pack-start-job-store
 
 pack-extract-metadata: clean-extract-metadata prep-target
 	@echo '==> Packing extract_metadata lambda...'
-	zip -9Dr $(DIST_EXTRACT_METADATA) functions/extract_metadata/* -x functions/extract_metadata/*.pyc **/*.pyc **/tests/* | tee $(PACK_EXTRACT_METADATA_LOG)
+	zip -9Dr $(DIST_EXTRACT_METADATA) functions/*.py functions/extract_metadata/* -x functions/extract_metadata/*.pyc **/*.pyc **/tests/* | tee $(PACK_EXTRACT_METADATA_LOG)
 
 pack-route-raw: clean-route-raw prep-target
 	@echo '==> Packing route_raw lambda...'
-	zip -9Dr $(DIST_ROUTE_RAW) functions/route_raw/* -x functions/route_raw/*.pyc **/*.pyc **/tests/* | tee $(PACK_ROUTE_RAW_LOG)
+	zip -9Dr $(DIST_ROUTE_RAW) functions/*.py functions/route_raw/* -x functions/route_raw/*.pyc **/*.pyc **/tests/* | tee $(PACK_ROUTE_RAW_LOG)
 
 pack-start-job-store: clean-start-job-store prep-target
 	@echo '==> Packing start_job_store lambda...'
-	zip -9Dr $(DIST_START_JOB_STORE) functions/start_job_store/* -x functions/start_job_store/*.pyc **/*.pyc **/tests/* | tee $(PACK_START_JOB_STORE_LOG)
+	zip -9Dr $(DIST_START_JOB_STORE) functions/*.py functions/start_job_store/* -x functions/start_job_store/*.pyc **/*.pyc **/tests/* | tee $(PACK_START_JOB_STORE_LOG)
 	# need to remove the dev dependencies (but not remove them from the pipfile)
 	# not including dependencies because only production dependency is boto3, which is already installed on the lambda image
 	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_START_JOB_STORE_LOG)
