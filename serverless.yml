@@ -1,6 +1,6 @@
 # NOTE: Service name must match the repository name, but replace all '.' with '-' (this is a restriction of Cloudformation naming conventions)
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
-service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
+service: tb-app-datalake
 
 custom:
   appHash: ${file(./apphash.txt)}
@@ -11,7 +11,6 @@ custom:
     stage: local
     hen: local
     coop: local
-    service: tb-app-datalake
     emrStackName: tb-emr-datalake-master
   dynamo:
     defaultCapacity: 1
@@ -40,7 +39,7 @@ custom:
     buckets:
       - ${self:custom.buckets.code}
   pkgPyFuncs: # plugin configuration
-    buildDir: target/dist/
+    buildDir: target/dist
     cleanup: true
 
 package:
@@ -503,6 +502,34 @@ resources:
         RoleName: ${self:service}-startJobRole-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
+        Policies:
+          - PolicyName: CfPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - cloudformation:DescribeStacks
+                  Resource:
+                    - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - cloudformation
+                        - Ref: AWS::Region
+                        - Ref: AWS::AccountId
+                        - stack/${self:custom.emrStackName}
+          - PolicyName: DynamoDbPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:*
+                  Resource:
+                    - Fn::GetAtt:
+                      - FileMetadataDynamoTable
+                      - Arn
 
   ######################################################################
   # OUTPUTS

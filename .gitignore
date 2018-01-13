@@ -17,6 +17,7 @@ ve*
 out
 .cache
 .venv
+.serverless
 
 # generated pdoc documentation
 docs
