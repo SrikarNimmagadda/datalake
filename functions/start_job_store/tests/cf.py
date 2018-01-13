@@ -4,7 +4,7 @@
 
 import sys
 import boto3
-from cluster_finder import cluster_finder
+from functions.start_job_store.cluster_finder import cluster_finder
 
 print 'Looking for ClusterId output of CloudFormation stack "' + sys.argv[1] + '".'
 
