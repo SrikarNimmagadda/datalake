@@ -15,6 +15,7 @@ docker run `
     -e AWS_SESSION_TOKEN `
     -e AWS_DEFAULT_REGION `
     -e AWS_DEFAULT_OUTPUT `
+    -e SHELL=/bin/bash `
     -it tb-app-datalake-dev
 
 # since we only have a latest tag for our image, we generate some cruft when we recreate it. This line removes the cruft
