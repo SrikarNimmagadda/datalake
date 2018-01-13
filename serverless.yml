@@ -92,7 +92,7 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
     name: ${self:service}-route-raw-${self:provider.stage}
-    handler: functions/route_raw/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - s3:
         bucket: landing
@@ -109,7 +109,7 @@ functions:
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
     name: ${self:service}-extract-metadata-${self:provider.stage}
-    handler: functions/extract_metadata/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - s3:
         bucket: rawPii
@@ -143,7 +143,7 @@ functions:
       EMR_STACK_NAME: ${self:custom.emrStackName}
 
     name: ${self:service}-start-job-store-${self:provider.stage}
-    handler: functions/start_job_store/handler.lambda_handler
+    handler: handler.lambda_handler
     events:
       - schedule:
           name: ${self:service}-start-job-store-sched-${self:provider.stage}
