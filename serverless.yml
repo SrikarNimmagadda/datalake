@@ -527,9 +527,9 @@ resources:
                   Action:
                     - s3:ListObjects
                   Resource:
-                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
-                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
-                    - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}
           - PolicyName: DynamoDbPolicy
             PolicyDocument:
               Version: '2012-10-17'
