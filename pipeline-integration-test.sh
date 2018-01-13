@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO: DELETE THIS EXIT LINE. added this line to bypass this pipeline step for dev testing
+exit
+
 set -e
 
 . deploy.sh
