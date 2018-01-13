@@ -9,7 +9,7 @@ $lf_content = [IO.File]::ReadAllText("apphash.txt") -replace "`r`n", "`n"
 docker build -f docker/dev/Dockerfile -t tb-app-datalake-dev .
 docker run `
     --rm `
-    --mount type=bind,source="$(pwd)",target=/app `
+    --mount type=bind,source="$(Get-Location)",target=/app `
     -e AWS_ACCESS_KEY_ID `
     -e AWS_SECRET_ACCESS_KEY `
     -e AWS_SESSION_TOKEN `
@@ -19,5 +19,5 @@ docker run `
     -it tb-app-datalake-dev
 
 # since we only have a latest tag for our image, we generate some cruft when we recreate it. This line removes the cruft
-echo "Pruning old images for this application"
+Write-Output "Pruning old images for this application"
 docker system prune --force --filter label=application=tb-app-datalake-dev
