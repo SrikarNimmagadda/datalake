@@ -34,7 +34,7 @@ def lambda_handler(event, context):
     clusterid = finder.find_cluster(EMR_STACK_NAME)
 
     builder = step_builder(S3, BUCKETS, datetime.now())
-    steps = builder.BuildSteps
+    steps = builder.BuildSteps()
 
     EMR.add_job_flow_steps(
         JobFlowId=clusterid,
