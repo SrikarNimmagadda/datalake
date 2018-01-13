@@ -18,7 +18,7 @@ class step_builder(object):
 
     def BuildSteps(self):
         steps = [
-            self.BuildStepLocationMasterRQ4ToParquet(),
+            # self.BuildStepLocationMasterRQ4ToParquet(),
             self.BuildStepDimStoreRefined(),
             self.BuildStepATTDealerCodeRefined(),
             self.BuildStepStoreDealerCodeAssociationRefine(),
