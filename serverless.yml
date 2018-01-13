@@ -518,7 +518,7 @@ resources:
                         - cloudformation
                         - Ref: AWS::Region
                         - Ref: AWS::AccountId
-                        - stack/${self:custom.emrStackName}
+                        - stack/${self:custom.emrStackName}/*
           - PolicyName: DynamoDbPolicy
             PolicyDocument:
               Version: '2012-10-17'
