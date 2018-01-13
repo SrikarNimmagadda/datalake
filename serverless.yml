@@ -519,6 +519,17 @@ resources:
                         - Ref: AWS::Region
                         - Ref: AWS::AccountId
                         - stack/${self:custom.emrStackName}/*
+          - PolicyName: S3Policy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:ListObjects
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
           - PolicyName: DynamoDbPolicy
             PolicyDocument:
               Version: '2012-10-17'
