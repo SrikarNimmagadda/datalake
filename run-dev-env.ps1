@@ -5,6 +5,9 @@ git rev-parse --short HEAD | Out-File apphash.txt -Encoding UTF8
 $lf_content = [IO.File]::ReadAllText("apphash.txt") -replace "`r`n", "`n"
 [IO.File]::WriteAllText("apphash.txt", $lf_content)
 
+# the current branch name
+$STAGE = (git symbolic-ref --short HEAD)
+
 # Builds and runs a docker container
 docker build -f docker/dev/Dockerfile -t tb-app-datalake-dev .
 docker run `
@@ -16,6 +19,7 @@ docker run `
     -e AWS_DEFAULT_REGION `
     -e AWS_DEFAULT_OUTPUT `
     -e SHELL=/bin/bash `
+    -e STAGE=$STAGE `
     -it tb-app-datalake-dev
 
 # since we only have a latest tag for our image, we generate some cruft when we recreate it. This line removes the cruft
