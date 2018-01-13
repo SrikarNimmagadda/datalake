@@ -24,14 +24,21 @@ PACK_EXTRACT_METADATA_LOG = $(LOGS)/pack_extract_metadata.txt
 PACK_ROUTE_RAW_LOG = $(LOGS)/pack_route_raw.txt
 PACK_START_JOB_STORE_LOG = $(LOGS)/pack_start_job_store.txt
 
+#
+# Pipeline Rules
+#
 
 commit-stage: | clean bootstrap lint test pack
 
-clean:
-	rm -rf target
+functional-test-stage:
+	@echo not implemented
 
-deepclean: clean
-	pipenv --rm
+deploy-stage:
+	@echo not implemented
+
+#
+# Lambda packaging rules
+#
 
 pack: pack-extract-metadata pack-route-raw pack-start-job-store
 
@@ -51,10 +58,15 @@ pack-start-job-store: clean-start-job-store prep-target
 	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_START_JOB_STORE_LOG)
 	#cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_START_JOB_STORE) * | tee -a $(PACK_START_JOB_STORE_LOG)
 
-prep-target:
-	mkdir -p $(DIST)
-	mkdir -p $(REPORTS)
-	mkdir -p $(LOGS)
+#
+# Cleaning Rules
+#
+
+clean:
+	rm -rf target
+
+deepclean: clean
+	pipenv --rm
 
 clean-extract-metadata:
 	@echo '==> Cleaning old extract-metadata package...'
@@ -68,11 +80,16 @@ clean-start-job-store:
 	@echo '==> Cleaning old start-job-store package...'
 	rm -f $(DIST_START_JOB_STORE)
 
-prune-dev-deps:
-	# pipenv uninstall --dev
+#
+# Test Rules
+#
 
 test: prep-target
 	pipenv run python -m unittest discover -p '*_test.py' 2>&1 | tee $(UNITTEST_REPORT)
+
+#
+# Linting Rules
+#
 
 lint: lint-lambdas lint-spark
 
@@ -84,17 +101,33 @@ lint-spark: prep-target
 	rm -f $(LINT_REPORT_SPARK)
 	pipenv run flake8 spark --statistics --output-file=$(LINT_REPORT_SPARK) --tee --exit-zero # remove --exit-zero to fail build on lint fail
 
+#
+# Dependency installation Rules
+#
+
+pipenv: prep-target
+	pip install pipenv 2>&1 | tee $(PIP_INSTALL_LOG)
+
 deps: deps-dev deps-prod
 
 deps-dev: prep-target
 	@echo '=> Installing development dependencies...'
-	export PIPENV_NOSPIN=true; pipenv install --dev 2>&1 | tee $(PIPENV_DEV_LOG)
+	pipenv install --dev 2>&1 | tee $(PIPENV_DEV_LOG)
 
 deps-prod: prep-target
 	@echo '=> Installing production dependencies...'
-	export PIPENV_NOSPIN=true; pipenv install | tee $(PIPENV_PROD_LOG)
+	pipenv install | tee $(PIPENV_PROD_LOG)
 
-pipenv: prep-target
-	pip install pipenv 2>&1 | tee $(PIP_INSTALL_LOG)
+prune-dev-deps:
+	# pipenv uninstall --dev (this removes the dependencies from pipfile!)
+
+#
+# Setup Rules
+#
+
+prep-target:
+	mkdir -p $(DIST)
+	mkdir -p $(REPORTS)
+	mkdir -p $(LOGS)
 
 bootstrap: | pipenv deps
