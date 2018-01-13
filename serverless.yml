@@ -140,7 +140,7 @@ functions:
       REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-      EMR_STACK_NAME: ${self:custom.emr.stackname}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
 
     name: ${self:service}-start-job-store-${self:provider.stage}
     handler: functions/start_job_store/handler.lambda_handler
