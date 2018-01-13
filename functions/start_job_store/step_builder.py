@@ -51,7 +51,7 @@ class step_builder(object):
             self.date_parts['year'] + '/' + self.date_parts['month'] + '/' + \
             name + self.date_parts['time'] + '/*.parquet'
 
-    def update_file(self, bucketname, filter_prefix, file_list):
+    def find_source_file(self, bucketname, filter_prefix):
         bucket = self.s3_client.Bucket(bucketname)
         data = [obj for obj in list(bucket.objects.filter(
             Prefix=filter_prefix)) if obj.key != filter_prefix]
@@ -61,34 +61,37 @@ class step_builder(object):
         # takes care of the case when no files match the filter.
         # will probably cause problems further downstream unless
         # the case for an empty filename is checked for
-        if length == 0
-            file_list.append('')
+        if length == 0:
+            return None
 
         # appends the last matched item to the list
-        # Are we assuming that all previous files have been processed? 
+        # Are we assuming that all previous files have been processed?
         # That seems like a dangerous assumption
         # I think this is where the dynamo table must come in to track what has been processed.
         i = 0
         for obj in data:
             i = i + 1
             if i == length:
-                str1 = "s3://" + bucketname + '/' + obj.key
-                file_list.append(str1)
+                return "s3://" + bucketname + '/' + obj.key
 
     def build_raw_file_list(self):
         file_list = []
 
-        # TODO: refactor these calls to a function that works thru a list of filter prefixes
-        self.update_file(self.buckets['raw_regular'],
-                         'Store/locationMasterList', file_list)
-        self.update_file(self.buckets['raw_regular'],
-                         'Store/BAE', file_list)
-        self.update_file(self.buckets['raw_regular'],
-                         'Store/dealer', file_list)
-        self.update_file(self.buckets['raw_regular'],
-                         'Store/multiTracker', file_list)
-        self.update_file(self.buckets['raw_regular'],
-                         'Store/springMobile', file_list)
+        filters = [
+            'Store/locationMasterList',
+            'Store/BAE',
+            'Store/dealer',
+            'Store/multiTracker',
+            'Store/springMobile'
+        ]
+
+        for filter in filters:
+            file = self.find_source_file(self.buckets['raw_regular'], filter)
+            if file == None:
+                # since passing as an argument to emr, can't be empty string. Need to use a proxy null value.
+                file_list.append('nofile')
+            else:
+                file_list.append(file)
 
         return file_list
 
