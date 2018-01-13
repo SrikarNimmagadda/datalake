@@ -129,6 +129,7 @@ functions:
     role: StartJobRole
     environment:
       APP_COMMIT_HASH: ${self:custom.appHash}
+      CODE_BUCKET: ${self:customer.buckets.code}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}

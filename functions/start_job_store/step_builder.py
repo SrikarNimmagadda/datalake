@@ -18,7 +18,7 @@ class step_builder(object):
 
     def BuildSteps(self):
         steps = [
-            # self.BuildStepLocationMasterRQ4ToParquet(),
+            self.BuildStepLocationMasterRQ4ToParquet(),
             self.BuildStepDimStoreRefined(),
             self.BuildStepATTDealerCodeRefined(),
             self.BuildStepStoreDealerCodeAssociationRefine(),
@@ -58,6 +58,16 @@ class step_builder(object):
 
         length = len(data)
 
+        # takes care of the case when no files match the filter.
+        # will probably cause problems further downstream unless
+        # the case for an empty filename is checked for
+        if length == 0
+            file_list.append('')
+
+        # appends the last matched item to the list
+        # Are we assuming that all previous files have been processed? 
+        # That seems like a dangerous assumption
+        # I think this is where the dynamo table must come in to track what has been processed.
         i = 0
         for obj in data:
             i = i + 1
@@ -85,20 +95,17 @@ class step_builder(object):
     def BuildStepLocationMasterRQ4ToParquet(self):
         raw_file_list = self.build_raw_file_list()
 
-        # the raw files list [x] syntax could get ugly if the number of files in the list ever changes
-        # I think it'd be better to move the bucket reference to before the file list items and just add the items
-        # in a loop to the end of the arguments. The script this step is running should take that into account as well. shane.
         args = [
             "/usr/bin/spark-submit",
             "--jars",
-            "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/LocationMasterRQ4Parquet.py",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + code_bucket + "/EMRScripts/LocationMasterRQ4Parquet.py",
             raw_file_list[0],
             raw_file_list[1],
             raw_file_list[2],
             raw_file_list[3],
             raw_file_list[4],
-            's3n://tb-us-east-1-dev-discovery-regular/Store',
+            's3://' + self.buckets['discovery_regular'] + '/Store',
             self.date_parts['time']
         ]
 
