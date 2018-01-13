@@ -14,6 +14,7 @@ CFN = boto3.client('cloudformation')
 EMR = boto3.client('emr')
 
 BUCKETS = {
+    'code': os.getenv('CODE_BUCKET'),
     'raw_pii': os.getenv('RAW_PII_BUCKET'),
     'raw_hr': os.getenv('RAW_HR_BUCKET'),
     'raw_regular': os.getenv('RAW_REGULAR_BUCKET'),
