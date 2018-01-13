@@ -51,7 +51,7 @@ class step_builder(object):
             self.date_parts['year'] + '/' + self.date_parts['month'] + '/' + \
             name + self.date_parts['time'] + '/*.parquet'
 
-    def update_file(self, bucketname, filter_prefix, listname):
+    def update_file(self, bucketname, filter_prefix, file_list):
         bucket = self.s3_client.Bucket(bucketname)
         data = [obj for obj in list(bucket.objects.filter(
             Prefix=filter_prefix)) if obj.key != filter_prefix]
@@ -63,22 +63,24 @@ class step_builder(object):
             i = i + 1
             if i == length:
                 str1 = "s3://" + bucketname + '/' + obj.key
-                listname.append(str1)
+                file_list.append(str1)
 
     def build_raw_file_list(self):
-        raw_file_list = []
+        file_list = []
 
         # TODO: refactor these calls to a function that works thru a list of filter prefixes
         self.update_file(self.buckets['raw_regular'],
-                         'Store/locationMasterList', raw_file_list)
+                         'Store/locationMasterList', file_list)
         self.update_file(self.buckets['raw_regular'],
-                         'Store/BAE', raw_file_list)
+                         'Store/BAE', file_list)
         self.update_file(self.buckets['raw_regular'],
-                         'Store/dealer', raw_file_list)
+                         'Store/dealer', file_list)
         self.update_file(self.buckets['raw_regular'],
-                         'Store/multiTracker', raw_file_list)
+                         'Store/multiTracker', file_list)
         self.update_file(self.buckets['raw_regular'],
-                         'Store/springMobile', raw_file_list)
+                         'Store/springMobile', file_list)
+
+        return file_list
 
     def BuildStepLocationMasterRQ4ToParquet(self):
         raw_file_list = self.build_raw_file_list()
