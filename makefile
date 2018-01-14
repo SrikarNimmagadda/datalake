@@ -95,7 +95,7 @@ lint: lint-lambdas lint-spark
 
 lint-lambdas: prep-target
 	rm -f $(LINT_REPORT_LAMBDA)
-	pipenv run flake8 functions --statistics --output-file=$(LINT_REPORT_LAMBDA) --tee --exit-zero # remove --exit-zero to fail build on lint fail
+	pipenv run flake8 functions --statistics --output-file=$(LINT_REPORT_LAMBDA) --tee
 
 lint-spark: prep-target
 	rm -f $(LINT_REPORT_SPARK)
