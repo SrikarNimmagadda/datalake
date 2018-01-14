@@ -102,7 +102,7 @@ class step_builder(object):
             "/usr/bin/spark-submit",
             "--jars",
             "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + code_bucket + "/EMRScripts/LocationMasterRQ4Parquet.py",
+            "s3://" + self.buckets['code'] + "/EMRScripts/LocationMasterRQ4Parquet.py",
             raw_file_list[0],
             raw_file_list[1],
             raw_file_list[2],
