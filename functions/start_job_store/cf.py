@@ -4,13 +4,14 @@
 
 import sys
 import boto3
-from cluster_finder import cluster_finder
+from cluster_finder import ClusterFinder
 
-print 'Looking for ClusterId output of CloudFormation stack "' + sys.argv[1] + '".'
+print ('Looking for ClusterId output of CloudFormation stack '
+    + '"' + sys.argv[1] + '".')
 
 CFN = boto3.client('cloudformation')
 
-finder = cluster_finder(CFN)
+finder = ClusterFinder(CFN)
 clusterid = finder.find_cluster(sys.argv[1])
 
 print clusterid

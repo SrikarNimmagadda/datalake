@@ -1,9 +1,10 @@
-class cluster_finder(object):
+class ClusterFinder(object):
     def __init__(self, cloudFormation):
         self.cloudformation = cloudFormation
 
     def find_cluster(self, emrStackName):
-        response = self.cloudformation.describe_stacks(StackName=emrStackName)
+        response = self.cloudformation.describe_stacks(
+            StackName=emrStackName)
 
         outputs = response['Stacks'][0]['Outputs']
 
