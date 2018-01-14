@@ -28,13 +28,13 @@ PACK_ADD_JOBFLOW_STEPS_LOG = $(LOGS)/pack_add_jobflow_steps.txt
 # Pipeline Rules
 #
 
-commit-stage: | clean bootstrap lint test pack
+pipeline-commit-stage: | clean bootstrap lint test pack
 
-functional-test-stage:
-	@echo not implemented
+pipeline-functional-test-stage:
+	bin/pipeline-functional-test.sh
 
-deploy-stage:
-	@echo not implemented
+pipeline-deploy-stage:
+	bin/pipeline-deploy.sh
 
 #
 # Lambda packaging rules

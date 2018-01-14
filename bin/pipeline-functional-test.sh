@@ -5,7 +5,7 @@ exit
 
 set -e
 
-. deploy.sh
+. bin/deploy.sh
 
 install_tools
 

@@ -3,7 +3,7 @@
 set -e
 
 # include deploy scripts
-. deploy.sh
+. bin/deploy.sh
 
 # Install dependencies
 install_tools
