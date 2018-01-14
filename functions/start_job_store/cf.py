@@ -6,8 +6,8 @@ import sys
 import boto3
 from cluster_finder import ClusterFinder
 
-print ('Looking for ClusterId output of CloudFormation stack '
-    + '"' + sys.argv[1] + '".')
+print ('Looking for ClusterId output of CloudFormation stack ' +
+       '"' + sys.argv[1] + '".')
 
 CFN = boto3.client('cloudformation')
 

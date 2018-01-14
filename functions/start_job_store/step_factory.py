@@ -1,5 +1,6 @@
 """ Contains the class StepFactory"""
 
+
 class StepFactory(object):
     """Creates new EMR job flow steps"""
 
