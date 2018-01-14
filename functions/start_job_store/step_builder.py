@@ -112,14 +112,7 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = {
-            "Name": "CSVToParquet",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('CSVToParquet', args)
 
         return step
 
@@ -138,14 +131,7 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = {
-            "Name": "StoreRefinery",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('StoreRefinery', args)
 
         return step
 
@@ -160,14 +146,7 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = {
-            "Name": "ATTDealerRefinery",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('ATTDealerRefinery', args)
 
         return step
 
@@ -182,14 +161,7 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = {
-            "Name": "StoreDealerAssociationRefinery",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('StoreDealerAssociationRefinery', args)
 
         return step
 
@@ -203,14 +175,7 @@ class step_builder(object):
             self.refined_paths['att_dealer'],
             's3://' + self.buckets['delivery_regular'] + '/Store/Store_Hier/Current/'
 
-        step = {
-            "Name": "TechBrandHierarchy",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('TechBrandHierarchy', args)
 
         return step
 
@@ -224,14 +189,7 @@ class step_builder(object):
             's3://' + self.buckets['delivery_regular'] + '/WT_ATT_DELR_CDS/Current'
         ]
 
-        step = {
-            "Name": "DealerCodeDelivery",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('DealerCodeDelivery', args)
 
         return step
 
@@ -244,14 +202,7 @@ class step_builder(object):
             self.refined_paths['association'],
             's3://' + self.buckets['delivery_regular'] + '/WT_STORE_DELR_CD_ASSOC/Current/'
 
-        step = {
-            "Name": "StoreDealerAssociationDelivery",
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
-            }
-        }
+        step = self.CreateStep('StoreDealerAssociationDelivery', args)
 
         return step
 
@@ -270,14 +221,19 @@ class step_builder(object):
             's3://' + self.buckets['delivery_regular'] + '/WT_STORE/Current/'
         ]
 
+        step = self.CreateStep('DimStoreDelivery', args)
+
+        return step
+
+
+    def CreateStep(self, name, argList):
         step = {
-            "Name": "DimStoreDelivery",
+            'Name': name,
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
                 'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': args
+                'Args': argList
             }
         }
 
         return step
-
