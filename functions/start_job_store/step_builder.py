@@ -41,14 +41,18 @@ class step_builder(object):
 
     def build_refined_paths(self, bucket):
         return {
-            'att_dealer': self.build_path(bucket, 'Store', 'ATTDealerCodeRefine'),
-            'association': self.build_path(bucket, 'Store', 'StoreDealerAssociationRefine'),
-            'store_refine': self.build_path(bucket, 'Store', 'StoreRefined')
+            'att_dealer': self.build_path(
+                bucket, 'Store', 'ATTDealerCodeRefine'),
+            'association': self.build_path(
+                bucket, 'Store', 'StoreDealerAssociationRefine'),
+            'store_refine': self.build_path(
+                bucket, 'Store', 'StoreRefined')
         }
 
     def build_path(self, bucket, domain, name):
         return 's3://' + bucket + '/' + domain + '/' + \
-            self.date_parts['year'] + '/' + self.date_parts['month'] + '/' + \
+            self.date_parts['year'] + '/' + \
+            self.date_parts['month'] + '/' + \
             name + self.date_parts['time'] + '/*.parquet'
 
     def find_source_file(self, bucketname, filter_prefix):
@@ -67,7 +71,8 @@ class step_builder(object):
         # appends the last matched item to the list
         # Are we assuming that all previous files have been processed?
         # That seems like a dangerous assumption
-        # I think this is where the dynamo table must come in to track what has been processed.
+        # I think this is where the dynamo table must come in
+        # to track what has been processed.
         i = 0
         for obj in data:
             i = i + 1
@@ -88,7 +93,9 @@ class step_builder(object):
         for filter in filters:
             file = self.find_source_file(self.buckets['raw_regular'], filter)
             if file == None:
-                # since passing as an argument to emr, can't be empty string. Need to use a proxy null value.
+                # since passing as an argument to emr,
+                # can't be empty string.
+                # Need to use a proxy null value.
                 file_list.append('nofile')
             else:
                 file_list.append(file)
@@ -97,110 +104,144 @@ class step_builder(object):
 
     def BuildStepLocationMasterRQ4ToParquet(self):
         raw_file_list = self.build_raw_file_list()
+        bucket = self.buckets['discovery_regular']
 
-        args = [
+        script_args = [
             raw_file_list[0],
             raw_file_list[1],
             raw_file_list[2],
             raw_file_list[3],
             raw_file_list[4],
-            's3://' + self.buckets['discovery_regular'] + '/Store',
+            's3://' + bucket + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('CSVToParquet', 'LocationMasterRQ4Parquet.py', args)
+        step = self.CreateStep('CSVToParquet',
+                               'LocationMasterRQ4Parquet.py',
+                               script_args)
 
         return step
 
     def BuildStepDimStoreRefined(self):
+        bucket = self.buckets['refined_regular']
+
         script_args = [
             self.discovery_paths['location'],
             self.discovery_paths['bae'],
             self.discovery_paths['dealer'],
             self.discovery_paths['spring'],
             self.discovery_paths['multi'],
-            's3://' + self.buckets['refined_regular'] + '/Store',
+            's3://' + bucket + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('StoreRefinery', 'DimStoreRefined.py', script_args)
+        step = self.CreateStep('StoreRefinery',
+                               'DimStoreRefined.py',
+                               script_args)
 
         return step
 
     def BuildStepATTDealerCodeRefined(self):
+        bucket = self.buckets['refined_regular']
+
         script_args = [
             self.discovery_paths['dealer'],
-            's3://' + self.buckets['refined_regular'] + '/Store',
+            's3://' + bucket + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('ATTDealerRefinery', 'ATTDealerCodeRefine.py', script_args)
+        step = self.CreateStep('ATTDealerRefinery',
+                               'ATTDealerCodeRefine.py',
+                               script_args)
 
         return step
 
     def BuildStepStoreDealerCodeAssociationRefine(self):
+        bucket = self.buckets['refined_regular']
+
         script_args = [
             self.discovery_paths['dealer'],
-            's3://' + self.buckets['refined_regular'] + '/Store',
+            's3://' + bucket + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('StoreDealerAssociationRefinery', 'StoreDealerCodeAssociationRefine.py', script_args)
+        step = self.CreateStep('StoreDealerAssociationRefinery',
+                               'StoreDealerCodeAssociationRefine.py',
+                               script_args)
 
         return step
 
     def BuildStepDimTechBrandHierarchy(self):
+        bucket = self.buckets['delivery_regular']
+
         script_args = [
             self.refined_paths['store_refine'],
             self.refined_paths['att_dealer'],
-            's3://' + self.buckets['delivery_regular'] + '/Store/Store_Hier/Current/'
+            's3://' + bucket + '/Store/Store_Hier/Current/'
+        ]
 
-        step = self.CreateStep('TechBrandHierarchy', 'DimTechBrandHierarchy.py', script_args)
+        step = self.CreateStep('TechBrandHierarchy',
+                               'DimTechBrandHierarchy.py',
+                               script_args)
 
         return step
 
     def BuildStepAttDealerCodeDelivery(self):
+        bucket = self.buckets['delivery_regular']
+
         script_args = [
             self.refined_paths['att_dealer'],
-            's3://' + self.buckets['delivery_regular'] + '/WT_ATT_DELR_CDS/Current'
+            's3://' + bucket + '/WT_ATT_DELR_CDS/Current'
         ]
 
-        step = self.CreateStep('DealerCodeDelivery', 'ATTDealerCodeDelivery.py', script_args)
+        step = self.CreateStep('DealerCodeDelivery',
+                               'ATTDealerCodeDelivery.py',
+                               script_args)
 
         return step
 
     def BuildStepStoreDealerCodeAssociationDelivery(self):
+        bucket = self.buckets['delivery_regular']
+
         script_args = [
             self.refined_paths['association'],
-            's3://' + self.buckets['delivery_regular'] + '/WT_STORE_DELR_CD_ASSOC/Current/'
+            's3://' + bucket + '/WT_STORE_DELR_CD_ASSOC/Current/'
+        ]
 
-        step = self.CreateStep('StoreDealerAssociationDelivery', 'StoreDealerCodeAssociationDelivery.py', script_args)
+        step = self.CreateStep('StoreDealerAssociationDelivery',
+                               'StoreDealerCodeAssociationDelivery.py',
+                               script_args)
 
         return step
 
     def BuildStepDimStoreDelivery(self):
-        tech_brand_op_name = 's3://' + self.buckets['delivery-regular'] + '/Store/Store_Hier/Current/'
+        bucket = self.buckets['delivery_regular']
+
+        tech_brand_op_name = 's3://' + bucket + '/Store/Store_Hier/Current/'
 
         script_args = [
             self.refined_paths['att_dealer'],
             self.refined_paths['association'],
             self.refined_paths['store_refine'],
             tech_brand_op_name,
-            's3://' + self.buckets['delivery_regular'] + '/WT_STORE/Current/'
+            's3://' + bucket + '/WT_STORE/Current/'
         ]
 
-        step = self.CreateStep('DimStoreDelivery', 'DimStoreDelivery.py', script_args)
+        step = self.CreateStep('DimStoreDelivery',
+                               'DimStoreDelivery.py',
+                               script_args)
 
         return step
 
     def CreateStep(self, stepName, scriptName, scriptArgs):
+        jar = 's3://elasticmapreduce/libs/script-runner/script-runner.jar'
         args = BuildStepArgs(scriptName, scriptArgs)
-        
+
         step = {
             'Name': stepName,
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': jar,
                 'Args': args
             }
         }
@@ -208,11 +249,17 @@ class step_builder(object):
         return step
 
     def BuildStepArgs(self, scriptName, scriptArgs):
+        bucket = self.buckets['code']
+
+        csvjar = 's3://' + bucket + '/EMRJars/spark-csv_2.11-1.5.0.jar'
+        exceljar = 's3://' + bucket + '/EMRJars/spark-excel_2.11-0.8.6.jar'
+
+        jars_arg = csvjar + ',' + exceljar
+
         args = [
             '/usr/bin/spark-submit',
-            '--jars',
-            's3://' + self.buckets['code'] + '/EMRJars/spark-csv_2.11-1.5.0.jar,s3://' + self.buckets['code'] + '/EMRJars/spark-excel_2.11-0.8.6.jar',
-            's3://' + self.buckets['code'] + '/EMRScripts/' + scriptName
+            '--jars', jars_arg,
+            's3://' + bucket + '/EMRScripts/' + scriptName
 
         return args + scriptArgs;
 
