@@ -3,14 +3,16 @@
 class StepBuilder(object):
     """Build the steps that will be sent to the EMR cluster."""
 
-    def __init__(self, s3, buckets, now):
+    def __init__(self, step_factory, s3, buckets, now):
         """Construct the StepBuilder
 
         Arguments:
+        step_factory: an instance of the StepFactory
         s3: the boto3 s3 client
         buckets: a dictionary of the bucket names we can use
         now: a datetime object
         """
+        self.step_factory = step_factory
         self.s3_client = s3
         self.buckets = buckets
 
@@ -113,6 +115,10 @@ class StepBuilder(object):
 
         return file_list
 
+    #============================================
+    # Step Definitions
+    #============================================
+
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquet'
         script_name = 'LocationMasterRQ4Parquet.py'
@@ -137,7 +143,7 @@ class StepBuilder(object):
             self.date_parts['time']
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_store_refinery(self, discovery_paths):
         step_name = 'StoreRefinery'
@@ -154,7 +160,7 @@ class StepBuilder(object):
             self.date_parts['time']
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_att_dealer_refinery(self, discovery_paths):
         step_name = 'ATTDealerRefinery'
@@ -167,7 +173,7 @@ class StepBuilder(object):
             self.date_parts['time']
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_store_dealer_assn_refinery(self, discovery_paths):
         step_name = 'StoreDealerAssociationRefinery'
@@ -180,7 +186,7 @@ class StepBuilder(object):
             self.date_parts['time']
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_tech_brand_hierarchy(self, refined_paths):
         step_name = 'TechBrandHierarchy'
@@ -193,7 +199,7 @@ class StepBuilder(object):
             's3://' + bucket + '/Store/Store_Hier/Current/'
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_dealer_code_delivery(self, refined_paths):
         step_name = 'DealerCodeDelivery'
@@ -205,7 +211,7 @@ class StepBuilder(object):
             's3://' + bucket + '/WT_ATT_DELR_CDS/Current'
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_store_dealer_association_delivery(self, refined_paths):
         step_name = 'StoreDealerAssociationDelivery'
@@ -217,7 +223,7 @@ class StepBuilder(object):
             's3://' + bucket + '/WT_STORE_DELR_CD_ASSOC/Current/'
         ]
 
-        return self._create_step(step_name, script_name, script_args)
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_dim_store_delivery(self, refined_paths):
         step_name = 'DimStoreDelivery'
@@ -234,35 +240,4 @@ class StepBuilder(object):
             's3://' + bucket + '/WT_STORE/Current/'
         ]
 
-        return self._create_step(step_name, script_name, script_args)
-
-    def _create_step(self, step_name, script_name, script_args):
-        jar = 's3://elasticmapreduce/libs/script-runner/script-runner.jar'
-        args = self._build_step_args(script_name, script_args)
-
-        step = {
-            'Name': step_name,
-            'ActionOnFailure': 'CONTINUE',
-            'HadoopJarStep': {
-                'Jar': jar,
-                'Args': args
-            }
-        }
-
-        return step
-
-    def _build_step_args(self, script_name, script_args):
-        bucket = self.buckets['code']
-
-        csv_jar = 's3://' + bucket + '/EMRJars/spark-csv_2.11-1.5.0.jar'
-        excel_jar = 's3://' + bucket + '/EMRJars/spark-excel_2.11-0.8.6.jar'
-
-        jars_arg = csv_jar + ',' + excel_jar
-
-        args = [
-            '/usr/bin/spark-submit',
-            '--jars', jars_arg,
-            's3://' + bucket + '/EMRScripts/' + script_name
-        ]
-
-        return args + script_args
+        return self.step_factory.create(step_name, script_name, script_args)

@@ -13,7 +13,7 @@ class SampleTest(unittest.TestCase):
             'refined_regular': 'tb-app-datalake-discovery-regular'
         }
 
-        builder = StepBuilder({}, buckets, stamp)
+        builder = StepBuilder({}, {}, buckets, stamp)
 
         # act
         path = builder._build_path('testbucket', 'store', 'testfile')
