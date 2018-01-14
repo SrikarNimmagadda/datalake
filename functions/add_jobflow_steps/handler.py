@@ -10,9 +10,11 @@ from datetime import datetime
 
 import boto3
 
-from step_builder import StepBuilder
 from cluster_finder import ClusterFinder
 from step_factory import StepFactory
+
+from step_builder_store import StepBuilderStore
+from step_builder_customer import StepBuilderCustomer
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -36,15 +38,28 @@ EMR_STACK_NAME = os.getenv('EMR_STACK_NAME')
 
 
 def lambda_handler(event, context):
-    """ Lambda entry point """
+    """Lambda entry point"""
     finder = ClusterFinder(CFN)
     clusterid = finder.find_cluster(EMR_STACK_NAME)
 
-    factory = StepFactory(BUCKETS['code'])
-    builder = StepBuilder(factory, S3, BUCKETS, datetime.now())
+    builder = choose_builder(event)
     steps = builder.BuildSteps()
 
     EMR.add_job_flow_steps(
         JobFlowId=clusterid,
         Steps=steps
     )
+
+
+def choose_builder(event):
+    """Return a specific step builder based on a switch in the event."""
+    factory = StepFactory(BUCKETS['code'])
+    now = datetime.now()
+    switch = event['builder']
+
+    if switch == 'store':
+        return StepBuilderStore(factory, S3, BUCKETS, now)
+    elif switch == 'customer':
+        return StepBuilderCustomer(factory, S3, BUCKETS, now)
+    else:
+        raise Exception('Could not find a step builder for input: ' + switch)

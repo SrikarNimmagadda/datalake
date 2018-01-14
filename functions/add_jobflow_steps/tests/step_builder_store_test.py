@@ -1,9 +1,9 @@
 from datetime import datetime
 import unittest
-from functions.add_jobflow_steps.step_builder import StepBuilder
+from functions.add_jobflow_steps.step_builder_store import StepBuilderStore
 
 
-class StepBuilderTest(unittest.TestCase):
+class StepBuilderStoreTest(unittest.TestCase):
 
     def test_build_path(self):
         # arrange
@@ -13,7 +13,7 @@ class StepBuilderTest(unittest.TestCase):
             'refined_regular': 'tb-app-datalake-discovery-regular'
         }
 
-        builder = StepBuilder({}, {}, buckets, stamp)
+        builder = StepBuilderStore({}, {}, buckets, stamp)
 
         # act
         path = builder._build_path('testbucket', 'store', 'testfile')
