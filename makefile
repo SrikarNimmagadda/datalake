@@ -1,7 +1,12 @@
-.PHONY: pack-lambdas test lint deps deps-dev deps-prod pipenv bootstrap \
-		pack-extract-metadata pack-route-raw pack-add-jobflow-steps \
+.PHONY: pipeline-commit-stage pipeline-functional-test-stage \
+		pipeline-deploy-stage set-executable \
+		pack pack-extract-metadata pack-route-raw pack-add-jobflow-steps \
+		clean deepclean \
 		clean-extract-metadata clean-route-raw clean-add-jobflow-steps \
-		commit-stage
+		test lint lint-lambdas lint-spark \
+		pipenv deps deps-dev deps-prod prune-dev-deps \
+		prep-target bootstrap \
+		
 
 ROOT = $(shell pwd)
 APPNAME = tb-app-datalake
@@ -30,11 +35,14 @@ PACK_ADD_JOBFLOW_STEPS_LOG = $(LOGS)/pack_add_jobflow_steps.txt
 
 pipeline-commit-stage: | clean bootstrap lint test pack
 
-pipeline-functional-test-stage:
+pipeline-functional-test-stage: set-executable
 	bin/pipeline-functional-test.sh
 
-pipeline-deploy-stage:
+pipeline-deploy-stage: set-executable
 	bin/pipeline-deploy.sh
+
+set-executable:
+	chmod -c +x bin/*.sh
 
 #
 # Lambda packaging rules
