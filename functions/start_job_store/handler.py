@@ -1,13 +1,17 @@
-#
-# Copied from tb-us-east-1-dl-dev-EMR-StoreJobs on D0062 Sandbox account
-#
+""" Lambda entry point for start-job-store function
+
+Acts as the composition root for the application and calls other classes
+to do all the work, which allows for easier unit testing of the other
+components.
+"""
 
 import os
 from datetime import datetime
 
 import boto3
-from step_builder import step_builder
-from cluster_finder import cluster_finder
+
+from step_builder import StepBuilder
+from cluster_finder import ClusterFinder
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -31,10 +35,11 @@ EMR_STACK_NAME = os.getenv('EMR_STACK_NAME')
 
 
 def lambda_handler(event, context):
-    finder = cluster_finder(CFN)
+    """ Lambda entry point """
+    finder = ClusterFinder(CFN)
     clusterid = finder.find_cluster(EMR_STACK_NAME)
 
-    builder = step_builder(S3, BUCKETS, datetime.now())
+    builder = StepBuilder(S3, BUCKETS, datetime.now())
     steps = builder.BuildSteps()
 
     EMR.add_job_flow_steps(

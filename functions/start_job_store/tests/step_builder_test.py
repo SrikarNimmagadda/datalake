@@ -1,6 +1,6 @@
 from datetime import datetime
 import unittest
-from functions.start_job_store.step_builder import step_builder
+from functions.start_job_store.step_builder import StepBuilder
 
 
 class SampleTest(unittest.TestCase):
@@ -13,14 +13,15 @@ class SampleTest(unittest.TestCase):
             'refined_regular': 'tb-app-datalake-discovery-regular'
         }
 
-        builder = step_builder({}, buckets, stamp)
+        builder = StepBuilder({}, buckets, stamp)
 
         # act
-        path = builder.build_path('testbucket', 'store', 'testfile')
+        path = builder._build_path('testbucket', 'store', 'testfile')
 
         # assert
         self.assertEqual(
-            path, 's3://testbucket/store/1999/01/testfile199901071255/*.parquet')
+            path,
+            's3://testbucket/store/1999/01/testfile199901071255/*.parquet')
 
 
 if __name__ == '__main__':
