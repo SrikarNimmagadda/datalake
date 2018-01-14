@@ -126,14 +126,15 @@ class step_builder(object):
     def BuildStepDimStoreRefined(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/DimStoreRefined.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/DimStoreRefined.py",
             self.discovery_paths['location'],
             self.discovery_paths['bae'],
             self.discovery_paths['dealer'],
             self.discovery_paths['spring'],
             self.discovery_paths['multi'],
-            's3://tb-us-east-1-dev-refined-regular/Store',
+            's3://' + self.buckets['refined_regular'] + '/Store',
             self.date_parts['time']
         ]
 
@@ -151,10 +152,11 @@ class step_builder(object):
     def BuildStepATTDealerCodeRefined(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeRefine.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/ATTDealerCodeRefine.py",
             self.discovery_paths['dealer'],
-            's3://tb-us-east-1-dev-refined-regular/Store',
+            's3://' + self.buckets['refined_regular'] + '/Store',
             self.date_parts['time']
         ]
 
@@ -172,10 +174,11 @@ class step_builder(object):
     def BuildStepStoreDealerCodeAssociationRefine(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationRefine.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/StoreDealerCodeAssociationRefine.py",
             self.discovery_paths['dealer'],
-            's3://tb-us-east-1-dev-refined-regular/Store',
+            's3://' + self.buckets['refined_regular'] + '/Store',
             self.date_parts['time']
         ]
 
@@ -193,11 +196,12 @@ class step_builder(object):
     def BuildStepDimTechBrandHierarchy(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/DimTechBrandHierarchy.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/DimTechBrandHierarchy.py",
             self.refined_paths['store_refine'],
             self.refined_paths['att_dealer'],
-            's3://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/']
+            's3://' + self.buckets['delivery_regular'] + '/Store/Store_Hier/Current/'
 
         step = {
             "Name": "TechBrandHierarchy",
@@ -213,10 +217,11 @@ class step_builder(object):
     def BuildStepAttDealerCodeDelivery(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeDelivery.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/ATTDealerCodeDelivery.py",
             self.refined_paths['att_dealer'],
-            's3://tb-us-east-1-dev-delivery-regular/WT_ATT_DELR_CDS/Current'
+            's3://' + self.buckets['delivery_regular'] + '/WT_ATT_DELR_CDS/Current'
         ]
 
         step = {
@@ -233,10 +238,11 @@ class step_builder(object):
     def BuildStepStoreDealerCodeAssociationDelivery(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationDelivery.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/StoreDealerCodeAssociationDelivery.py",
             self.refined_paths['association'],
-            's3://tb-us-east-1-dev-delivery-regular/WT_STORE_DELR_CD_ASSOC/Current/']
+            's3://' + self.buckets['delivery_regular'] + '/WT_STORE_DELR_CD_ASSOC/Current/'
 
         step = {
             "Name": "StoreDealerAssociationDelivery",
@@ -250,17 +256,18 @@ class step_builder(object):
         return step
 
     def BuildStepDimStoreDelivery(self):
-        tech_brand_op_name = "s3://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/"
+        tech_brand_op_name = 's3://' + self.buckets['delivery-regular'] + '/Store/Store_Hier/Current/'
 
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://tb-us-east-1-dev-script/EMRScripts/DimStoreDelivery.py",
+            "--jars",
+            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://" + self.buckets['code'] + "/EMRScripts/DimStoreDelivery.py",
             self.refined_paths['att_dealer'],
             self.refined_paths['association'],
             self.refined_paths['store_refine'],
             tech_brand_op_name,
-            's3://tb-us-east-1-dev-delivery-regular/WT_STORE/Current/'
+            's3://' + self.buckets['delivery_regular'] + '/WT_STORE/Current/'
         ]
 
         step = {
@@ -273,3 +280,4 @@ class step_builder(object):
         }
 
         return step
+
