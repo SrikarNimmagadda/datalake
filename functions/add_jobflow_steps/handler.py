@@ -35,6 +35,7 @@ BUCKETS = {
 }
 
 EMR_STACK_NAME = os.getenv('EMR_STACK_NAME')
+PROCESS_METADATA_TABLE = os.getenv('PROCESS_METADATA_TABLE')
 
 
 def lambda_handler(event, context):

@@ -3,18 +3,17 @@
 #
 
 from __future__ import print_function
-import boto3
-import json
-import datetime
-import string
-import properties
 
-s3 = boto3.client('s3', aws_access_key_id=properties.aws_access_key_id,
-                  aws_secret_access_key=properties.aws_secret_access_key)
-s3r = boto3.resource('s3', aws_access_key_id=properties.aws_access_key_id,
-                     aws_secret_access_key=properties.aws_secret_access_key)
-dynamodb = boto3.resource('dynamodb', region_name=properties.region_name,
-                          aws_access_key_id=properties.aws_access_key_id, aws_secret_access_key=properties.aws_secret_access_key)
+import os
+
+import boto3
+import datetime
+
+s3 = boto3.client('s3')
+s3r = boto3.resource('s3')
+dynamodb = boto3.resource('dynamodb')
+
+FILE_METADATA_TABLE = os.getenv('FILE_METADATA_TABLE')
 
 
 def lambda_handler(event, context):
@@ -49,7 +48,7 @@ def lambda_handler(event, context):
         for row in filedata_formatted:
             if filedata_formatted.index(row) == 0:
                 items = row.split(',')
-        table = dynamodb.Table(properties.dynamodb_table)
+        table = dynamodb.Table(FILE_METADATA_TABLE)
         id = '1'
         columnname = 'Available'
         table.put_item(
@@ -80,9 +79,8 @@ def lambda_handler(event, context):
                 'Columnheaders': items
             }
         )
-
-    except:
-        table = dynamodb.Table(properties.dynamodb_table)
+    except Exception:
+        table = dynamodb.Table(FILE_METADATA_TABLE)
         id = '1'
         items = 'NA'
         columnname = 'NA'
@@ -112,6 +110,5 @@ def lambda_handler(event, context):
                 'ContentLength': ContentLength,
                 'ETag': ETag,
                 'Columnheaders': items
-
             }
         )

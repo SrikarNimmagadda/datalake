@@ -105,6 +105,7 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
     name: ${self:service}-extract-metadata-${self:provider.stage}
     handler: handler.lambda_handler
     events:
@@ -139,6 +140,7 @@ functions:
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       EMR_STACK_NAME: ${self:custom.emrStackName}
+      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
     name: ${self:service}-add-steps-store-${self:provider.stage}
     handler: handler.lambda_handler
     events:
@@ -472,7 +474,7 @@ resources:
         AssumeRolePolicyDocument: 
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: BucketPolicy
+          - PolicyName: RouteRawPolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -496,7 +498,7 @@ resources:
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: BucketPolicy
+          - PolicyName: ExtractMetadataPolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -508,10 +510,6 @@ resources:
                     - arn:aws:s3:::${self:custom.buckets.rawHr}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
                     - arn:aws:s3:::${self:custom.buckets.delivery}/*
-          - PolicyName: DynamoDbPolicy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
                 - Effect: Allow
                   Action:
                     - dynamodb:*
@@ -528,7 +526,7 @@ resources:
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: AddJobFlowStepsRoleMain
+          - PolicyName: AddJobFlowStepsRolePolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:

@@ -10,5 +10,6 @@ class SampleTest(unittest.TestCase):
         """
         self.assertEqual('testme'.capitalize(), 'Testme')
 
+
 if __name__ == '__main__':
     unittest.main()
