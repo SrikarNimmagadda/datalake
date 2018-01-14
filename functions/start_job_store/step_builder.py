@@ -116,7 +116,7 @@ class step_builder(object):
             "Name": "CSVToParquet",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -126,14 +126,14 @@ class step_builder(object):
     def BuildStepDimStoreRefined(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreRefined.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/DimStoreRefined.py",
             self.discovery_paths['location'],
             self.discovery_paths['bae'],
             self.discovery_paths['dealer'],
             self.discovery_paths['spring'],
             self.discovery_paths['multi'],
-            's3n://tb-us-east-1-dev-refined-regular/Store',
+            's3://tb-us-east-1-dev-refined-regular/Store',
             self.date_parts['time']
         ]
 
@@ -141,7 +141,7 @@ class step_builder(object):
             "Name": "StoreRefinery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -151,10 +151,10 @@ class step_builder(object):
     def BuildStepATTDealerCodeRefined(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeRefine.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeRefine.py",
             self.discovery_paths['dealer'],
-            's3n://tb-us-east-1-dev-refined-regular/Store',
+            's3://tb-us-east-1-dev-refined-regular/Store',
             self.date_parts['time']
         ]
 
@@ -162,7 +162,7 @@ class step_builder(object):
             "Name": "ATTDealerRefinery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -172,10 +172,10 @@ class step_builder(object):
     def BuildStepStoreDealerCodeAssociationRefine(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationRefine.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationRefine.py",
             self.discovery_paths['dealer'],
-            's3n://tb-us-east-1-dev-refined-regular/Store',
+            's3://tb-us-east-1-dev-refined-regular/Store',
             self.date_parts['time']
         ]
 
@@ -183,7 +183,7 @@ class step_builder(object):
             "Name": "StoreDealerAssociationRefinery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -193,17 +193,17 @@ class step_builder(object):
     def BuildStepDimTechBrandHierarchy(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/DimTechBrandHierarchy.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/DimTechBrandHierarchy.py",
             self.refined_paths['store_refine'],
             self.refined_paths['att_dealer'],
-            's3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/']
+            's3://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/']
 
         step = {
             "Name": "TechBrandHierarchy",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -213,17 +213,17 @@ class step_builder(object):
     def BuildStepAttDealerCodeDelivery(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeDelivery.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/ATTDealerCodeDelivery.py",
             self.refined_paths['att_dealer'],
-            's3n://tb-us-east-1-dev-delivery-regular/WT_ATT_DELR_CDS/Current'
+            's3://tb-us-east-1-dev-delivery-regular/WT_ATT_DELR_CDS/Current'
         ]
 
         step = {
             "Name": "DealerCodeDelivery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -233,16 +233,16 @@ class step_builder(object):
     def BuildStepStoreDealerCodeAssociationDelivery(self):
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationDelivery.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/StoreDealerCodeAssociationDelivery.py",
             self.refined_paths['association'],
-            's3n://tb-us-east-1-dev-delivery-regular/WT_STORE_DELR_CD_ASSOC/Current/']
+            's3://tb-us-east-1-dev-delivery-regular/WT_STORE_DELR_CD_ASSOC/Current/']
 
         step = {
             "Name": "StoreDealerAssociationDelivery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
@@ -250,24 +250,24 @@ class step_builder(object):
         return step
 
     def BuildStepDimStoreDelivery(self):
-        tech_brand_op_name = "s3n://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/"
+        tech_brand_op_name = "s3://tb-us-east-1-dev-delivery-regular/Store/Store_Hier/Current/"
 
         args = [
             "/usr/bin/spark-submit",
-            "--jars", "s3n://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3n://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3n://tb-us-east-1-dev-script/EMRScripts/DimStoreDelivery.py",
+            "--jars", "s3://tb-us-east-1-dev-jar/EMRJars/spark-csv_2.11-1.5.0.jar,s3://tb-us-east-1-dev-jar/EMRJars/spark-excel_2.11-0.8.6.jar",
+            "s3://tb-us-east-1-dev-script/EMRScripts/DimStoreDelivery.py",
             self.refined_paths['att_dealer'],
             self.refined_paths['association'],
             self.refined_paths['store_refine'],
             tech_brand_op_name,
-            's3n://tb-us-east-1-dev-delivery-regular/WT_STORE/Current/'
+            's3://tb-us-east-1-dev-delivery-regular/WT_STORE/Current/'
         ]
 
         step = {
             "Name": "DimStoreDelivery",
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
-                'Jar': 's3n://elasticmapreduce/libs/script-runner/script-runner.jar',
+                'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
                 'Args': args
             }
         }
