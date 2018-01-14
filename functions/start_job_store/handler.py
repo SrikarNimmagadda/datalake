@@ -12,6 +12,7 @@ import boto3
 
 from step_builder import StepBuilder
 from cluster_finder import ClusterFinder
+from step_factory import StepFactory
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -39,7 +40,8 @@ def lambda_handler(event, context):
     finder = ClusterFinder(CFN)
     clusterid = finder.find_cluster(EMR_STACK_NAME)
 
-    builder = StepBuilder(S3, BUCKETS, datetime.now())
+    factory = StepFactory(BUCKETS['code'])
+    builder = StepBuilder(factory, S3, BUCKETS, datetime.now())
     steps = builder.BuildSteps()
 
     EMR.add_job_flow_steps(
