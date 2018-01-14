@@ -1,17 +1,17 @@
 # NOTE: Service name must match the repository name, but replace all '.' with '-' (this is a restriction of Cloudformation naming conventions)
 # NOTE: See serverless docs at https://serverless.com/framework/docs/providers/aws/guide/quick-start/ for more information on serverless.yml
-service: ${env:SERVICE_NAME, self:custom-localDeploy-service}
+service: tb-app-datalake
 
 custom:
   appHash: ${file(./apphash.txt)}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
   coop: ${env:COOP, self:custom.localDeploy.coop}
-  basePath: newapp
+  emrStackName: ${env:EMR_STACK_NAME, self:custom.localDeploy.emrStackName}
   localDeploy: # Settings used when deploying locally
     stage: local
     hen: local
     coop: local
-    service: tb-app-datalake
+    emrStackName: tb-emr-datalake-master
   dynamo:
     defaultCapacity: 1
     fileMetadata:
@@ -38,12 +38,10 @@ custom:
   remover:
     buckets:
       - ${self:custom.buckets.code}
-  pkgPyFuncs: # plugin configuration
-    buildDir: target/dist/
-    cleanup: true
-
-package:
-  individually: true
+  package:
+    routeRawArtifact: target/dist/${self:service}-route-raw.zip
+    extractMetadataArtifact: target/dist/${self:service}-extract-metadata.zip
+    addStepsArtifact: target/dist/${self:service}-add-jobflow-steps.zip
 
 provider:
   name: aws
@@ -97,8 +95,8 @@ functions:
         bucket: landing
         event: s3:ObjectCreated:*
     package:
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-route-raw.zip
-      
+      artifact: ${self:custom.package.routeRawArtifact}
+
   extractMetadata:
     role: ExtractMetadataRole
     environment:
@@ -107,6 +105,7 @@ functions:
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
     name: ${self:service}-extract-metadata-${self:provider.stage}
     handler: handler.lambda_handler
     events:
@@ -123,12 +122,13 @@ functions:
         bucket: delivery
         event: s3:ObjectCreated:*
     package:
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-extract-metadata.zip
-  
-  startJobStore:
-    role: StartJobRole
+      artifact: ${self:custom.package.extractMetadataArtifact}
+
+  addJobFlowStepsStore:
+    role: AddJobFlowStepsRole
     environment:
       APP_COMMIT_HASH: ${self:custom.appHash}
+      CODE_BUCKET: ${self:custom.buckets.code}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -139,16 +139,49 @@ functions:
       REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
-    name: ${self:service}-start-job-store-${self:provider.stage}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
+    name: ${self:service}-add-steps-store-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-start-job-store-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-start-job-store-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-store-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
           rate: rate(1 hour)
+          input:
+            builder: store
           enabled: true
     package:
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-start-job-store.zip
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsCustomer:
+    role: AddJobFlowStepsRole
+    environment:
+      APP_COMMIT_HASH: ${self:custom.appHash}
+      CODE_BUCKET: ${self:custom.buckets.code}
+      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
+      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_PII_BUCKET: ${self:custom.buckets.discoveryPii}
+      DISCOVERY_HR_BUCKET: ${self:custom.buckets.discoveryHr}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_PII_BUCKET: ${self:custom.buckets.refinedPii}
+      REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-customer-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 5 * * ? *)
+          input:
+            builder: customer
+          enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
@@ -432,7 +465,7 @@ resources:
         Roles:
           - Ref: RouteRawRole
           - Ref: ExtractMetadataRole
-          - Ref: StartJobRole
+          - Ref: AddJobFlowStepsRole
 
     RouteRawRole:
       Type: AWS::IAM::Role
@@ -441,7 +474,7 @@ resources:
         AssumeRolePolicyDocument: 
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: BucketPolicy
+          - PolicyName: RouteRawPolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -465,7 +498,7 @@ resources:
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: BucketPolicy
+          - PolicyName: ExtractMetadataPolicy
             PolicyDocument:
               Version: '2012-10-17'
               Statement:
@@ -477,10 +510,6 @@ resources:
                     - arn:aws:s3:::${self:custom.buckets.rawHr}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
                     - arn:aws:s3:::${self:custom.buckets.delivery}/*
-          - PolicyName: DynamoDbPolicy
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
                 - Effect: Allow
                   Action:
                     - dynamodb:*
@@ -489,17 +518,51 @@ resources:
                       - FileMetadataDynamoTable
                       - Arn
 
-    # need to figure out what permissions we need to call the cluster and add steps
-    # hopefully we can also define iam:passrole and provide another role to emr that has
-    # access to the s3 buckets and dynamo table
-    #
-    # This role will be used by all StartJob lambdas
-    StartJobRole:
+    # This role will be used by all AddJobFlowSteps lambdas
+    AddJobFlowStepsRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-startJobRole-${self:provider.stage}
+        RoleName: ${self:service}-AddJobFlowStepsRole-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
+        Policies:
+          - PolicyName: AddJobFlowStepsRolePolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - cloudformation:DescribeStacks
+                  Resource:
+                    - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - cloudformation
+                        - Ref: AWS::Region
+                        - Ref: AWS::AccountId
+                        - stack/${self:custom.emrStackName}/*
+                - Effect: Allow
+                  Action:
+                    - s3:*
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}
+                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}
+                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                - Effect: Allow
+                  Action:
+                    - dynamodb:*
+                  Resource:
+                    - Fn::GetAtt:
+                      - FileMetadataDynamoTable
+                      - Arn
+                - Effect: Allow
+                  Action:
+                    - elasticmapreduce:AddJobFlowSteps
+                  Resource: '*'
 
   ######################################################################
   # OUTPUTS
