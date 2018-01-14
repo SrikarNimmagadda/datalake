@@ -99,10 +99,6 @@ class step_builder(object):
         raw_file_list = self.build_raw_file_list()
 
         args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/LocationMasterRQ4Parquet.py",
             raw_file_list[0],
             raw_file_list[1],
             raw_file_list[2],
@@ -112,16 +108,12 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('CSVToParquet', args)
+        step = self.CreateStep('CSVToParquet', 'LocationMasterRQ4Parquet.py', args)
 
         return step
 
     def BuildStepDimStoreRefined(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/DimStoreRefined.py",
+        script_args = [
             self.discovery_paths['location'],
             self.discovery_paths['bae'],
             self.discovery_paths['dealer'],
@@ -131,89 +123,65 @@ class step_builder(object):
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('StoreRefinery', args)
+        step = self.CreateStep('StoreRefinery', 'DimStoreRefined.py', script_args)
 
         return step
 
     def BuildStepATTDealerCodeRefined(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/ATTDealerCodeRefine.py",
+        script_args = [
             self.discovery_paths['dealer'],
             's3://' + self.buckets['refined_regular'] + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('ATTDealerRefinery', args)
+        step = self.CreateStep('ATTDealerRefinery', 'ATTDealerCodeRefine.py', script_args)
 
         return step
 
     def BuildStepStoreDealerCodeAssociationRefine(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/StoreDealerCodeAssociationRefine.py",
+        script_args = [
             self.discovery_paths['dealer'],
             's3://' + self.buckets['refined_regular'] + '/Store',
             self.date_parts['time']
         ]
 
-        step = self.CreateStep('StoreDealerAssociationRefinery', args)
+        step = self.CreateStep('StoreDealerAssociationRefinery', 'StoreDealerCodeAssociationRefine.py', script_args)
 
         return step
 
     def BuildStepDimTechBrandHierarchy(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/DimTechBrandHierarchy.py",
+        script_args = [
             self.refined_paths['store_refine'],
             self.refined_paths['att_dealer'],
             's3://' + self.buckets['delivery_regular'] + '/Store/Store_Hier/Current/'
 
-        step = self.CreateStep('TechBrandHierarchy', args)
+        step = self.CreateStep('TechBrandHierarchy', 'DimTechBrandHierarchy.py', script_args)
 
         return step
 
     def BuildStepAttDealerCodeDelivery(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/ATTDealerCodeDelivery.py",
+        script_args = [
             self.refined_paths['att_dealer'],
             's3://' + self.buckets['delivery_regular'] + '/WT_ATT_DELR_CDS/Current'
         ]
 
-        step = self.CreateStep('DealerCodeDelivery', args)
+        step = self.CreateStep('DealerCodeDelivery', 'ATTDealerCodeDelivery.py', script_args)
 
         return step
 
     def BuildStepStoreDealerCodeAssociationDelivery(self):
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/StoreDealerCodeAssociationDelivery.py",
+        script_args = [
             self.refined_paths['association'],
             's3://' + self.buckets['delivery_regular'] + '/WT_STORE_DELR_CD_ASSOC/Current/'
 
-        step = self.CreateStep('StoreDealerAssociationDelivery', args)
+        step = self.CreateStep('StoreDealerAssociationDelivery', 'StoreDealerCodeAssociationDelivery.py', script_args)
 
         return step
 
     def BuildStepDimStoreDelivery(self):
         tech_brand_op_name = 's3://' + self.buckets['delivery-regular'] + '/Store/Store_Hier/Current/'
 
-        args = [
-            "/usr/bin/spark-submit",
-            "--jars",
-            "s3://" + self.buckets['code'] + "/EMRJars/spark-csv_2.11-1.5.0.jar,s3://" + self.buckets['code'] + "/EMRJars/spark-excel_2.11-0.8.6.jar",
-            "s3://" + self.buckets['code'] + "/EMRScripts/DimStoreDelivery.py",
+        script_args = [
             self.refined_paths['att_dealer'],
             self.refined_paths['association'],
             self.refined_paths['store_refine'],
@@ -221,19 +189,30 @@ class step_builder(object):
             's3://' + self.buckets['delivery_regular'] + '/WT_STORE/Current/'
         ]
 
-        step = self.CreateStep('DimStoreDelivery', args)
+        step = self.CreateStep('DimStoreDelivery', 'DimStoreDelivery.py', script_args)
 
         return step
 
-
-    def CreateStep(self, name, argList):
+    def CreateStep(self, stepName, scriptName, scriptArgs):
+        args = BuildStepArgs(scriptName, scriptArgs)
+        
         step = {
-            'Name': name,
+            'Name': stepName,
             'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
                 'Jar': 's3://elasticmapreduce/libs/script-runner/script-runner.jar',
-                'Args': argList
+                'Args': args
             }
         }
 
         return step
+
+    def BuildStepArgs(self, scriptName, scriptArgs):
+        args = [
+            '/usr/bin/spark-submit',
+            '--jars',
+            's3://' + self.buckets['code'] + '/EMRJars/spark-csv_2.11-1.5.0.jar,s3://' + self.buckets['code'] + '/EMRJars/spark-excel_2.11-0.8.6.jar',
+            's3://' + self.buckets['code'] + '/EMRScripts/' + scriptName
+
+        return args + scriptArgs;
+
