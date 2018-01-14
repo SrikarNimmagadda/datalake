@@ -537,6 +537,10 @@ resources:
                     - Fn::GetAtt:
                       - FileMetadataDynamoTable
                       - Arn
+                - Effect: Allow
+                  Action:
+                    - elasticmapreduce:AddJobFlowSteps
+                  Resource: '*'
 
   ######################################################################
   # OUTPUTS
