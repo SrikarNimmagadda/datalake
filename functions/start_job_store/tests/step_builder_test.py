@@ -3,7 +3,7 @@ import unittest
 from functions.start_job_store.step_builder import StepBuilder
 
 
-class SampleTest(unittest.TestCase):
+class StepBuilderTest(unittest.TestCase):
 
     def test_build_path(self):
         # arrange

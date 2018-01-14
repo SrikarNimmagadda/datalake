@@ -1,5 +1,6 @@
 """ Contains the class StepBuilder. Builds EMR Steps."""
 
+
 class StepBuilder(object):
     """Build the steps that will be sent to the EMR cluster."""
 
@@ -43,81 +44,9 @@ class StepBuilder(object):
 
         return steps
 
-    def _build_discovery_paths(self, bucket):
-        return {
-            'location': self._build_path(bucket, 'Store', 'location'),
-            'dealer': self._build_path(bucket, 'Store', 'Dealer'),
-            'multi': self._build_path(bucket, 'Store', 'multiTracker'),
-            'spring': self._build_path(bucket, 'Store', 'springMobile'),
-            'bae': self._build_path(bucket, 'Store', 'BAE')
-        }
-
-    def _build_refined_paths(self, bucket):
-        return {
-            'att_dealer': self._build_path(
-                bucket, 'Store', 'ATTDealerCodeRefine'),
-            'association': self._build_path(
-                bucket, 'Store', 'StoreDealerAssociationRefine'),
-            'store_refine': self._build_path(
-                bucket, 'Store', 'StoreRefined')
-        }
-
-    def _build_path(self, bucket, domain, name):
-        path_parts = [
-            's3://' + bucket,
-            domain,
-            self.date_parts['year'],
-            self.date_parts['month'],
-            name + self.date_parts['time'],
-            '*.parquet'
-        ]
-
-        return '/'.join(path_parts)
-
-    def _find_source_file(self, bucketname, filter_prefix):
-        bucket = self.s3_client.Bucket(bucketname)
-        data = [obj for obj in list(bucket.objects.filter(
-            Prefix=filter_prefix)) if obj.key != filter_prefix]
-
-        length = len(data)
-
-        # appends the last matched item to the list
-        # Are we assuming that all previous files have been processed?
-        # That seems like a dangerous assumption
-        # I think this is where the dynamo table must come in
-        # to track what has been processed.
-        i = 0
-        for obj in data:
-            i = i + 1
-            if i == length:
-                return 's3://' + bucketname + '/' + obj.key
-
-        # takes care of the case when no files match the filter.
-        # will probably cause problems further downstream unless
-        # the case for an empty filename is checked for
-        return None
-
-    def _build_raw_file_list(self, filters):
-        file_list = []
-
-        for file_filter in filters:
-            file_name = self._find_source_file(
-                self.buckets['raw_regular'],
-                file_filter)
-
-            if file_name is None:
-                # since passing as an argument to emr,
-                # can't be empty string.
-                # Need to use a proxy null value.
-                file_list.append('nofile')
-            else:
-                file_list.append(file)
-
-        return file_list
-
-    #============================================
+    # ============================================
     # Step Definitions
-    #============================================
+    # ============================================
 
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquet'
@@ -241,3 +170,79 @@ class StepBuilder(object):
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
+
+    # ============================================
+    # Support Methods
+    # ============================================
+
+    def _build_discovery_paths(self, bucket):
+        return {
+            'location': self._build_path(bucket, 'Store', 'location'),
+            'dealer': self._build_path(bucket, 'Store', 'Dealer'),
+            'multi': self._build_path(bucket, 'Store', 'multiTracker'),
+            'spring': self._build_path(bucket, 'Store', 'springMobile'),
+            'bae': self._build_path(bucket, 'Store', 'BAE')
+        }
+
+    def _build_refined_paths(self, bucket):
+        return {
+            'att_dealer': self._build_path(
+                bucket, 'Store', 'ATTDealerCodeRefine'),
+            'association': self._build_path(
+                bucket, 'Store', 'StoreDealerAssociationRefine'),
+            'store_refine': self._build_path(
+                bucket, 'Store', 'StoreRefined')
+        }
+
+    def _build_path(self, bucket, domain, name):
+        path_parts = [
+            's3://' + bucket,
+            domain,
+            self.date_parts['year'],
+            self.date_parts['month'],
+            name + self.date_parts['time'],
+            '*.parquet'
+        ]
+
+        return '/'.join(path_parts)
+
+    def _find_source_file(self, bucketname, filter_prefix):
+        bucket = self.s3_client.Bucket(bucketname)
+        data = [obj for obj in list(bucket.objects.filter(
+            Prefix=filter_prefix)) if obj.key != filter_prefix]
+
+        length = len(data)
+
+        # appends the last matched item to the list
+        # Are we assuming that all previous files have been processed?
+        # That seems like a dangerous assumption
+        # I think this is where the dynamo table must come in
+        # to track what has been processed.
+        i = 0
+        for obj in data:
+            i = i + 1
+            if i == length:
+                return 's3://' + bucketname + '/' + obj.key
+
+        # takes care of the case when no files match the filter.
+        # will probably cause problems further downstream unless
+        # the case for an empty filename is checked for
+        return None
+
+    def _build_raw_file_list(self, filters):
+        file_list = []
+
+        for file_filter in filters:
+            file_name = self._find_source_file(
+                self.buckets['raw_regular'],
+                file_filter)
+
+            if file_name is None:
+                # since passing as an argument to emr,
+                # can't be empty string.
+                # Need to use a proxy null value.
+                file_list.append('nofile')
+            else:
+                file_list.append(file)
+
+        return file_list
