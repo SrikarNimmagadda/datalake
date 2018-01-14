@@ -1,5 +1,5 @@
 import unittest
-from functions.start_job_store.step_factory import StepFactory
+from functions.add_jobflow_steps.step_factory import StepFactory
 
 
 class StepFactoryHappyPathTest(unittest.TestCase):

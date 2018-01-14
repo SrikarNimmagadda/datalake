@@ -1,6 +1,6 @@
 from datetime import datetime
 import unittest
-from functions.start_job_store.step_builder import StepBuilder
+from functions.add_jobflow_steps.step_builder import StepBuilder
 
 
 class StepBuilderTest(unittest.TestCase):

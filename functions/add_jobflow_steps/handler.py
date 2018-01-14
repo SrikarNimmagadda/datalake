@@ -1,4 +1,4 @@
-""" Lambda entry point for start-job-store function
+""" Lambda entry point for add_jobflow_steps functions
 
 Acts as the composition root for the application and calls other classes
 to do all the work, which allows for easier unit testing of the other

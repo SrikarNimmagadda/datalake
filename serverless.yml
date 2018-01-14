@@ -125,8 +125,8 @@ functions:
     package:
       artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-extract-metadata.zip
   
-  startJobStore:
-    role: StartJobRole
+  addJobFlowStepsStore:
+    role: AddJobFlowStepsRole
     environment:
       APP_COMMIT_HASH: ${self:custom.appHash}
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -142,16 +142,18 @@ functions:
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       EMR_STACK_NAME: ${self:custom.emrStackName}
 
-    name: ${self:service}-start-job-store-${self:provider.stage}
+    name: ${self:service}-add-steps-store-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-start-job-store-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-start-job-store-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-store-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
           rate: rate(1 hour)
+          input:
+            builder: store
           enabled: true
     package:
-      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-start-job-store.zip
+      artifact: ${self:custom.pkgPyFuncs.buildDir}/${self:service}-add-jobflow-steps.zip
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
@@ -435,7 +437,7 @@ resources:
         Roles:
           - Ref: RouteRawRole
           - Ref: ExtractMetadataRole
-          - Ref: StartJobRole
+          - Ref: AddJobFlowStepsRole
 
     RouteRawRole:
       Type: AWS::IAM::Role
@@ -492,19 +494,15 @@ resources:
                       - FileMetadataDynamoTable
                       - Arn
 
-    # need to figure out what permissions we need to call the cluster and add steps
-    # hopefully we can also define iam:passrole and provide another role to emr that has
-    # access to the s3 buckets and dynamo table
-    #
-    # This role will be used by all StartJob lambdas
-    StartJobRole:
+    # This role will be used by all AddJobFlowSteps lambdas
+    AddJobFlowStepsRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-startJobRole-${self:provider.stage}
+        RoleName: ${self:service}-AddJobFlowStepsRole-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
-          - PolicyName: StartJobRoleMain
+          - PolicyName: AddJobFlowStepsRoleMain
             PolicyDocument:
               Version: '2012-10-17'
               Statement:

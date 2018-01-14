@@ -2,7 +2,7 @@ import os
 import unittest
 import json
 from mock import Mock, MagicMock
-from functions.start_job_store.cluster_finder import ClusterFinder
+from functions.add_jobflow_steps.cluster_finder import ClusterFinder
 
 CWD = os.path.split(os.path.abspath(__file__))[0]
 

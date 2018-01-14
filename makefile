@@ -1,6 +1,6 @@
 .PHONY: pack-lambdas test lint deps deps-dev deps-prod pipenv bootstrap \
-		pack-extract-metadata pack-route-raw pack-start-job-store \
-		clean-extract-metadata clean-route-raw clean-start-job-store \
+		pack-extract-metadata pack-route-raw pack-add-jobflow-steps \
+		clean-extract-metadata clean-route-raw clean-add-jobflow-steps \
 		commit-stage
 
 ROOT = $(shell pwd)
@@ -9,7 +9,7 @@ APPNAME = tb-app-datalake
 DIST = $(ROOT)/target/dist
 DIST_EXTRACT_METADATA = $(DIST)/$(APPNAME)-extract-metadata.zip
 DIST_ROUTE_RAW = $(DIST)/$(APPNAME)-route-raw.zip
-DIST_START_JOB_STORE = $(DIST)/$(APPNAME)-start-job-store.zip
+DIST_ADD_JOBFLOW_STEPS = $(DIST)/$(APPNAME)-add-jobflow-steps.zip
 
 REPORTS = $(ROOT)/target/reports
 LINT_REPORT_LAMBDA = $(REPORTS)/lint_lambda.txt
@@ -22,7 +22,7 @@ PIPENV_PROD_LOG = $(LOGS)/pipenv-prod.txt
 PIPENV_DEV_LOG = $(LOGS)/pipenv-dev.txt
 PACK_EXTRACT_METADATA_LOG = $(LOGS)/pack_extract_metadata.txt
 PACK_ROUTE_RAW_LOG = $(LOGS)/pack_route_raw.txt
-PACK_START_JOB_STORE_LOG = $(LOGS)/pack_start_job_store.txt
+PACK_ADD_JOBFLOW_STEPS_LOG = $(LOGS)/pack_add_jobflow_steps.txt
 
 #
 # Pipeline Rules
@@ -40,7 +40,7 @@ deploy-stage:
 # Lambda packaging rules
 #
 
-pack: pack-extract-metadata pack-route-raw pack-start-job-store
+pack: pack-extract-metadata pack-route-raw pack-add-jobflow-steps
 
 pack-extract-metadata: clean-extract-metadata prep-target
 	@echo '==> Packing extract_metadata lambda...'
@@ -50,13 +50,13 @@ pack-route-raw: clean-route-raw prep-target
 	@echo '==> Packing route_raw lambda...'
 	cd functions/route_raw; zip -9Dr $(DIST_ROUTE_RAW) * -x *.pyc tests/* | tee $(PACK_ROUTE_RAW_LOG)
 
-pack-start-job-store: clean-start-job-store prep-target
-	@echo '==> Packing start_job_store lambda...'
-	cd functions/start_job_store; zip -9Dr $(DIST_START_JOB_STORE) * -x *.pyc tests/* tests/*/* | tee $(PACK_START_JOB_STORE_LOG)
+pack-add-jobflow-steps: clean-add-jobflow-steps prep-target
+	@echo '==> Packing add_jobflow_steps lambda...'
+	cd functions/add_jobflow_steps; zip -9Dr $(DIST_ADD_JOBFLOW_STEPS) * -x *.pyc tests/* tests/*/* | tee $(PACK_ADD_JOBFLOW_STEPS_LOG)
 	# need to remove the dev dependencies (but not remove them from the pipfile)
 	# not including dependencies because only production dependency is boto3, which is already installed on the lambda image
-	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_START_JOB_STORE_LOG)
-	#cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_START_JOB_STORE) * | tee -a $(PACK_START_JOB_STORE_LOG)
+	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_ADD_JOBFLOW_STEPS_LOG)
+	#cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_ADD_JOBFLOW_STEPS) * | tee -a $(PACK_ADD_JOBFLOW_STEPS_LOG)
 
 #
 # Cleaning Rules
@@ -76,9 +76,9 @@ clean-route-raw:
 	@echo '==> Cleaning old route-raw package...'
 	rm -f $(DIST_ROUTE_RAW)
 
-clean-start-job-store:
-	@echo '==> Cleaning old start-job-store package...'
-	rm -f $(DIST_START_JOB_STORE)
+clean-add-jobflow-steps:
+	@echo '==> Cleaning old add-jobflow-steps package...'
+	rm -f $(DIST_ADD_JOBFLOW_STEPS)
 
 #
 # Test Rules
