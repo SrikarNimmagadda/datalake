@@ -27,6 +27,7 @@ exclude =
     .git,
     __pycache__,
     venv,
+    .venv,
     target,
     docker,
     .vscode,
