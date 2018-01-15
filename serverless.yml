@@ -215,10 +215,10 @@ resources:
           Rules:
           - Id: Glacier-Expiration-Rule
             Status: Enabled
-            Transition:
+              ExpirationInDays: 3650
+              Transitions:
               - TransitionInDays: 730
                 StorageClass: Glacier
-            ExpirationInDays: 3650    
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -252,10 +252,10 @@ resources:
           Rules:
           - Id: Glacier-Expiration-Rule
             Status: Enabled
-            Transition:
+              ExpirationInDays: 3650
+              Transitions:
               - TransitionInDays: 730
                 StorageClass: Glacier
-            ExpirationInDays: 3650    
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -289,10 +289,10 @@ resources:
           Rules:
           - Id: Glacier-Expiration-Rule
             Status: Enabled
-            Transition:
+              ExpirationInDays: 3650
+              Transitions:
               - TransitionInDays: 730
                 StorageClass: Glacier
-            ExpirationInDays: 3650
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -366,12 +366,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+              ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 			
     # DISCOVERY HR BUCKET
     S3BucketDiscoveryHr:
@@ -382,12 +382,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+              ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 			
     # DISCOVERY REGULAR BUCKET
     S3BucketDiscoveryRegular:
@@ -398,12 +398,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 
     ######################################################################
     # REFINED BUCKETS
@@ -418,12 +418,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 			
     # REFINED HR BUCKET
     S3BucketRefinedHr:
@@ -434,12 +434,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650       
                     
     # REFINED REGULAR BUCKET
     S3BucketRefinedRegular:
@@ -450,12 +450,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 
     ######################################################################
     # DYNAMO TABLES
