@@ -114,7 +114,7 @@ lint-spark: prep-target
 #
 
 pipenv: prep-target
-	pip install pipenv 2>&1 | tee $(PIP_INSTALL_LOG)
+	pip install pipenv==9.0.1 2>&1 | tee $(PIP_INSTALL_LOG)
 
 deps: deps-dev deps-prod
 
