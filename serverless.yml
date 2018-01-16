@@ -79,7 +79,7 @@ functions:
 #           * Pay special attention to the bullets under the "Custom bucket configuration" heading.
 #
 ################################################
-  
+
   routeRaw:
     role: RouteRawRole
     environment:
@@ -200,11 +200,11 @@ resources:
       Properties:
         BucketName: ${self:custom.buckets.code}
         # need to add policy to allow the cluster to read the bucket
-    
+
     ######################################################################
     # LANDING BUCKET
     ######################################################################
-    
+
     # S3 bucket where CSV files enter the data lake
     S3BucketLanding:
       Type: AWS::S3::Bucket
@@ -236,7 +236,7 @@ resources:
     ######################################################################
     # RAW BUCKETS
     ######################################################################
-    
+
     # RAW PII BUCKET
     # S3 bucket that contains raw (csv) files containing PII data
     S3BucketRawPii:
@@ -245,12 +245,12 @@ resources:
         BucketName: ${self:custom.buckets.rawPii}
         LifecycleConfiguration:
           Rules:
-          - Id: Glacier-Expiration-Rule
-            Status: Enabled
-            Transition:
-              - TransitionInDays: 730
-                StorageClass: Glacier
-            ExpirationInDays: 3650    
+            - Id: Glacier-Expiration-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 730
+                  StorageClass: Glacier
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -282,12 +282,12 @@ resources:
         BucketName: ${self:custom.buckets.rawHr}
         LifecycleConfiguration:
           Rules:
-          - Id: Glacier-Expiration-Rule
-            Status: Enabled
-            Transition:
-              - TransitionInDays: 730
-                StorageClass: Glacier
-            ExpirationInDays: 3650    
+            - Id: Glacier-Expiration-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 730
+                  StorageClass: Glacier
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -319,12 +319,12 @@ resources:
         BucketName: ${self:custom.buckets.rawRegular}
         LifecycleConfiguration:
           Rules:
-          - Id: Glacier-Expiration-Rule
-            Status: Enabled
-            Transition:
-              - TransitionInDays: 730
-                StorageClass: Glacier
-            ExpirationInDays: 3650
+            - Id: Glacier-Expiration-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 730
+                  StorageClass: Glacier
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -351,7 +351,7 @@ resources:
     ######################################################################
     # DELIVERY BUCKET
     ######################################################################
-    
+
     # S3 bucket that contains the output of the datalake processing (csv)
     S3BucketDelivery:
       Type: AWS::S3::Bucket
@@ -388,7 +388,7 @@ resources:
     ######################################################################
     # DISCOVERY BUCKETS
     ######################################################################
-    
+
     # DISCOVERY PII BUCKET
     S3BucketDiscoveryPii:
       Type: AWS::S3::Bucket
@@ -396,15 +396,15 @@ resources:
         BucketName: ${self:custom.buckets.discoveryPii}
         LifecycleConfiguration:
           Rules:
-          - Id: IA-Glacier-Expire-Rule
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 730
-                StorageClass: STANDARD_IA
-              - TransitionInDays: 1460
-                StorageClass: Glacier
-            ExpirationInDays: 3650
-			
+            - Id: IA-Glacier-Expire-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 730
+                  StorageClass: STANDARD_IA
+                - TransitionInDays: 1460
+                  StorageClass: Glacier
+
     # DISCOVERY HR BUCKET
     S3BucketDiscoveryHr:
       Type: AWS::S3::Bucket
@@ -412,15 +412,15 @@ resources:
         BucketName: ${self:custom.buckets.discoveryHr}
         LifecycleConfiguration:
           Rules:
-          - Id: IA-Glacier-Expire-Rule
-            Status: Enabled
-            Transitions:
-              - TransitionInDays: 730
-                StorageClass: STANDARD_IA
-              - TransitionInDays: 1460
-                StorageClass: Glacier
-            ExpirationInDays: 3650
-			
+            - Id: IA-Glacier-Expire-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 730
+                  StorageClass: STANDARD_IA
+                - TransitionInDays: 1460
+                  StorageClass: Glacier
+
     # DISCOVERY REGULAR BUCKET
     S3BucketDiscoveryRegular:
       Type: AWS::S3::Bucket
@@ -430,17 +430,17 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 
     ######################################################################
     # REFINED BUCKETS
     ######################################################################
-    
+
     # REFINED PII BUCKET
     S3BucketRefinedPii:
       Type: AWS::S3::Bucket
@@ -450,13 +450,13 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
-			
+
     # REFINED HR BUCKET
     S3BucketRefinedHr:
       Type: AWS::S3::Bucket
@@ -466,13 +466,13 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650       
-                    
+
     # REFINED REGULAR BUCKET
     S3BucketRefinedRegular:
       Type: AWS::S3::Bucket
@@ -482,12 +482,12 @@ resources:
           Rules:
           - Id: IA-Glacier-Expire-Rule
             Status: Enabled
+            ExpirationInDays: 3650
             Transitions:
               - TransitionInDays: 730
                 StorageClass: STANDARD_IA
               - TransitionInDays: 1460
                 StorageClass: Glacier
-            ExpirationInDays: 3650
 
     ######################################################################
     # DYNAMO TABLES
@@ -497,12 +497,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: id
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: id
+          - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.dynamo.fileMetadata.readCapacity}
@@ -514,12 +512,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: id
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: id
+          - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: ${self:custom.dynamo.processMetadata.readCapacity}
