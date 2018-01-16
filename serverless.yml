@@ -151,8 +151,8 @@ functions:
           input:
             builder: store
             enabled: true
-     package:
-       artifact: ${self:custom.package.addStepsArtifact}
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
  
   addJobFlowStepsCustomer:
     role: AddJobFlowStepsRole
