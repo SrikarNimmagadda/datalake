@@ -206,7 +206,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-employee-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-employee-${self:provider.stage} lambda on a schedule'
-          rate: cron(15 * * * * *)
+          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
           input:
             builder: employee
             enabled: true
