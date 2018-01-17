@@ -62,5 +62,7 @@ def choose_builder(event):
         return StepBuilderStore(factory, S3, BUCKETS, now)
     elif switch == 'customer':
         return StepBuilderCustomer(factory, S3, BUCKETS, now)
+    elif switch == 'employee':
+        return StepBuilderEmployee(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
