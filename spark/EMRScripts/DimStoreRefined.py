@@ -1,200 +1,216 @@
 from pyspark.sql import SparkSession
-from pyspark.sql import Row
-from pyspark.sql.functions import split
-import sys,os
+from pyspark.sql.functions import split,udf,regexp_extract,regexp_replace,col
+import sys
+import re
 from datetime import datetime
-import collections
-from pyspark.sql.types import StructType
 from pyspark.sql.types import *
 
-LocationMasterList = sys.argv[1]
-BAELocation = sys.argv[2]
-DealerCodes = sys.argv[3]
-SpringMobileStoreList = sys.argv[4]
-MultiTracker = sys.argv[5]
-StoreTable = sys.argv[6]
-StoreFileTime = sys.argv[7]
 
+class DimStoreRefined:
 
-# Create a SparkSession (Note, the config section is only for Windows!)
+    def __init__(self):
+        self.locationMasterList = sys.argv[1]
+        self.baeLocation = sys.argv[2]
+        self.dealerCodes = sys.argv[3]
+        self.springMobileStoreList = sys.argv[4]
+        self.multiTracker = sys.argv[5]
+        self.storeRefinedPath = sys.argv[6] + '/' + datetime.now().strftime('%Y/%m') + '/' + 'StoreRefined' + '/' + sys.argv[
+            7]
+        print('Refined path 351: ',self.storeRefinedPath)
+        self.sundayTimeExp = "(([U]: Closed) |([U]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.mondayTimeExp = "(([M]: Closed) |([M]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.tuedayTimeExp = "(([T]: Closed) |([T]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.weddayTimeExp = "(([W]: Closed) |([W]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.thudayTimeExp = "(([R]: Closed) |([R]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.fridayTimeExp = "(([F]: Closed) |([F]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.satdayTimeExp = "(([S]: Closed) |([S]: (1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])-(1[0-2]|0?[1-9]):([0-5][0-9]) ([AP][Mm])))"
+        self.openTimeExp = "(1[0-2]|0?[1-9]):([0-5][0-9]) AM"
+        self.closeTimeExp = "(1[0-2]|0?[1-9]):([0-5][0-9]) PM"
 
-spark = SparkSession.builder.\
-        appName("LocationStore").getOrCreate()
-        
-        
-        
-#########################################################################################################
-#                                 Reading the source data files                                         #
-#########################################################################################################
+    def find_time(self,dayTime, time):
+        if 'Closed' not in dayTime:
+            str = dayTime[2:].split('-')
+            if time == 'A':
+                return str[0].strip()
+            elif time == 'P':
+                return str[1].strip()
+        else:
+            return "00:00 AM"
 
+    def loadRefined(self):
+        spark = SparkSession.builder.appName("DimStoreRefined").getOrCreate()
+        dfLocationMaster = spark.read.parquet(self.locationMasterList)
+        spark.read.parquet(self.baeLocation).registerTempTable("BAE")
+        spark.read.parquet(self.dealerCodes).withColumnRenamed("TBLoc", "StoreNo").registerTempTable("Dealer")
 
-dfLocationMaster = spark.read.parquet(LocationMasterList)
-        
-#dfLocationMaster = spark.read.parquet("s3n://tb-us-east-1-dev-discovery-regular/Store/2017/09/location201709281007/")
-		
-dfBAE = spark.read.parquet(BAELocation)
+        dfSpringMobile = spark.read.parquet(self.springMobileStoreList)
+        dfSpringMobile.withColumn("StoreNo", dfSpringMobile["Store"].cast(IntegerType())).registerTempTable("SpringMobile")
 
-#dfBAE = spark.read.parquet("s3n://tb-us-east-1-dev-discovery-regular/Store/2017/09/BAE201709271440/")
-		
-        
-dfBAE = dfBAE.withColumnRenamed("Store Number", "StoreNo").registerTempTable("BAE")
-        
+        spark.read.parquet(self.multiTracker).registerTempTable("RealEstate")
 
-dfDealer = spark.read.parquet(DealerCodes)
+        dfLocationMaster = dfLocationMaster.withColumn('StoreNo', regexp_replace(col('StoreName'), '\D',''))
+        dfLocationMaster = dfLocationMaster.withColumn('Location', regexp_replace(col('StoreName'), '[0-9]',''))
+        dfLocationMaster = dfLocationMaster.withColumn('CnsmrLicNbr', split(col('SaleInvoiceComment'), '#').getItem(1))
 
-#dfDealer = spark.read.parquet("s3n://tb-us-east-1-dev-discovery-regular/Store/2017/09/Dealer201709291421/")
-        
-dfDealer = dfDealer.withColumnRenamed("TBLoc", "StoreNo").registerTempTable("Dealer")
+        dfLocationMaster = dfLocationMaster.withColumn('SunTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.sundayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('SunOpenTm',
+                                                       regexp_extract(col("SunTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('SunCloseTm',
+                                                       regexp_extract(col("SunTm"), self.closeTimeExp, 0))
 
+        dfLocationMaster = dfLocationMaster.withColumn('MonTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.mondayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('MonOpenTm',
+                                                       regexp_extract(col("MonTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('MonCloseTm',
+                                                       regexp_extract(col("MonTm"), self.closeTimeExp, 0))
 
-dfMultiTracker = spark.read.parquet(MultiTracker).registerTempTable("RealEstate")     
+        dfLocationMaster = dfLocationMaster.withColumn('TueTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.tuedayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('TueOpenTm',
+                                                       regexp_extract(col("TueTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('TueCloseTm',
+                                                       regexp_extract(col("TueTm"), self.closeTimeExp, 0))
 
-#dfMultiTracker = spark.read.parquet("s3n://tb-us-east-1-dev-discovery-regular/Store/2017/09/multiTracker201709291421/").registerTempTable("RealEstate") 
-                      
-dfSpringMobile = spark.read.parquet(SpringMobileStoreList)
+        dfLocationMaster = dfLocationMaster.withColumn('WedTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.weddayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('WedOpenTm',
+                                                       regexp_extract(col("WedTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('WedCloseTm',
+                                                       regexp_extract(col("WedTm"), self.closeTimeExp, 0))
 
-#dfSpringMobile = spark.read.parquet("s3n://tb-us-east-1-dev-discovery-regular/Store/2017/09/springMobile201709291421/")
+        dfLocationMaster = dfLocationMaster.withColumn('ThuTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.thudayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('ThuOpenTm',
+                                                       regexp_extract(col("ThuTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('ThuCloseTm',
+                                                       regexp_extract(col("ThuTm"), self.closeTimeExp, 0))
 
-dfSpringMobile = dfSpringMobile.withColumn("StoreNo", dfSpringMobile["StoreNo"].cast(IntegerType())).registerTempTable("SpringMobile")
-		
-        
+        dfLocationMaster = dfLocationMaster.withColumn('FriTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.fridayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('FriOpenTm',
+                                                       regexp_extract(col("FriTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('FriCloseTm',
+                                                       regexp_extract(col("FriTm"), self.closeTimeExp, 0))
 
-#########################################################################################################
-#                                 Spark Transformation begins here                                      #
-#########################################################################################################
+        dfLocationMaster = dfLocationMaster.withColumn('SatTm',
+                                                       regexp_extract(col("GeneralLocationNotes"), self.satdayTimeExp,
+                                                                      0))
+        dfLocationMaster = dfLocationMaster.withColumn('SatOpenTm',
+                                                       regexp_extract(col("SatTm"), self.openTimeExp, 0))
+        dfLocationMaster = dfLocationMaster.withColumn('SatCloseTm',
+                                                       regexp_extract(col("SatTm"), self.closeTimeExp, 0))
+        dfLocationMaster.registerTempTable("API")
+        # dfStore = spark.sql(
+        #     "select a.StoreNo as store_num, '4' as co_cd, a.StoreID as src_store_id, a.Location as loc_name, a.Abbreviation as abbr,  a.GLCode as gl_cd, a.Disabled as store_stat, a.ManagerEmployeeID as sm_emp_id, case when a.ManagerCommissionable = 'TRUE' or a.ManagerCommissionable = 'true' then '1' when a.ManagerCommissionable = 'FALSE' or a.ManagerCommissionable = 'false' then '0' else ' ' end as mgr_cmsnble_ind, d.StreetAddress as addr, e.City as cty, e.State as st_prv, e.Zip as pstl_cd, a.Country as cntry, a.PhoneNumber as ph, a.FaxNumber as fax, a.StoreType as store_typ, a.StaffLevel as staff_lvl, e.SqFtRange as s_ft_rng, d.SquareFeet as sq_ft, a.Latitude as lattd,a.Longitude as lngtd, a.TimeZone as tz, a.AdjustDST as adj_dst_ind, a.EmailAddress as email, a.ConsumerLicenseNumber as cnsmr_lic_nbr, a.Taxes as taxes, d.TotalMonthlyRent as rnt, a.UseLocationEmail as use_loc_email_ind, d.StoreType as loc_typ, a.LandlordNotes as lndlrd_nt, a.LeaseStartDate as lease_start_dt, a.LeaseEndDate as lease_end_dt, c.OpenDate as store_open_dt, c.CloseDate as store_close_dt,  a.RelocationDate as reloc_dt, e.StoreTier as store_tier, case when a.MonTm = 'M: Closed' then '00:00 AM' when a.MonTm = '' then 'null' end as mon_open_tm, case when a.MonTm = 'M: Closed' then '00:00 AM' when a.MonTm = '' then 'null' end as mon_close_tm, case when a.TueTm = 'T: Closed' then '00:00 AM' when a.TueTm = '' then 'null' end as tue_open_tm, case when a.TueTm = 'T: Closed' then '00:00 AM' when a.TueTm = '' then 'null' end as tue_close_tm, case when a.WedTm = 'W: Closed' then '00:00 AM' when a.WedTm = '' then 'null' end as wed_open_tm, case when a.WedTm = 'W: Closed' then '00:00 AM' when a.WedTm = '' then 'null' end as wed_close_tm, case when a.ThuTm = 'R: Closed' then '00:00 AM' when a.ThuTm = '' then 'null' end as thu_open_tm, case when a.ThuTm = 'R: Closed' then '00:00 AM' when a.ThuTm = '' then 'null' end as thu_close_tm, case when a.FriTm = 'F: Closed' then '00:00 AM' when a.FriTm = '' then 'null' end as fri_open_tm, case when a.FriTm = 'F: Closed' then '00:00 AM' when a.FriTm = '' then 'null' end as fri_close_tm, case when a.SatTm = 'S: Closed' then '00:00 AM' when a.SatTm = '' then 'null' end as sat_open_tm, case when a.SatTm = 'S: Closed' then '00:00 AM' when a.SatTm = '' then 'null' end as sat_close_tm, case when a.SunTm = 'U: Closed' then '00:00 AM' when a.SunTm = '' then 'null' end as sun_open_tm, case when a.SunTm = 'U: Closed' then '00:00 AM' when a.SunTm = '' then 'null' end as sun_close_tm, e.AcquisitionName as acn_nm, case when e.Base = 'x' then '1' else '0' end as base_store_ind, case when e.Comp = 'x' then '1' else '0' end as comp_store_ind, case when e.Same = 'x' then '1' else '0' end as same_store_ind, ' ' as frnchs_store_ind, d.LeaseExpiration as lease_exp, d.BuildType as build_type_cd, d.`C&Cdesignation` as c_and_c_dsgn, d.AuthorizedRetailerTagLine as auth_rtl_tag_line_stat_ind, d.Pylon_MonumentPanels as pylon_monmnt_panels, d.SellingWalls as sell_walls, d.MemorableAccessoryWall as memorable_acc_wall, d.cashwrapexpansion as csh_wrap_expnd, d.WindowWrapGrpahics as wndw_wrap_grphc, d.LiveDTV as lve_dtv, d.LearningTables as lrn_tbl, d.CommunityTable as comnty_tbl_ind, d.DiamondDisplays as dmnd_dsp, d.CFixtures as c_fixtures, d.TIOKiosk as tio_ksk_ind, d.ApprovedforFlexBlade as aprv_for_flex_bld, d.CapIndexScore as cap_idx_score, d.SellingWallsNotes as sell_wall_nt, d.RemodelorOpenDate as remdl_dt, ' ' as dtv_now_ind, b.BAEWorkdayID as bae_wrkday_id, b.BSISWorkdayID as bsis_wrkday_id, e.storeTier as store_hier_id, ' ' as cdc_ind_cd, ' ' as edw_batch_id, ' ' as edw_create_dttm, ' ' as edw_update_dttm"
+        #     +" from API a left outer join BAE b on a.StoreNo = b.StoreNo left outer join Dealer c on a.StoreNo = c.StoreNo left outer join RealEstate d on a.StoreNo = d.Loc left outer join SpringMobile e on a.StoreNo = e.StoreNo and a.City = e.City").registerTempTable(
+        #     "store")
 
-split_col = split(dfLocationMaster['StoreName'], ' ')
+        dfStore = spark.sql("select a.StoreNo as store_num "
+                            + ", '4' as co_cd"
+                            + ", a.StoreID as src_store_id"
+                            + ", a.Location as loc_nm"
+                            + ", a.Abbreviation as abbr"
+                            + ",  a.GLCode as gl_cd"
+                            + ", a.Disabled as store_stat"
+                            + ", a.ManagerEmployeeID as sm_emp_id"
+                            + ", case when a.ManagerCommissionable = 'TRUE' or a.ManagerCommissionable = 'true' then '1' when a.ManagerCommissionable = 'FALSE' or a.ManagerCommissionable = 'false' then '0' else ' ' end as mgr_cmsnble_ind"
+                            + ", case when a.Address is null or a.Address = '' then d.StreetAddress else a.Address end as addr"
+                            + ", case when a.City is null or a.City = '' then e.City else a.City end as cty"
+                            + ", case when a.StateProv is null or a.StateProv = '' then e.State else a.StateProv end as st_prv"
+                            + ", case when a.ZipPostal is null or a.ZipPostal = '' then e.Zip else a.ZipPostal end as pstl_cd"
+                            + ", a.Country as cntry"
+                            + ", a.PhoneNumber as ph"
+                            + ", a.FaxNumber as fax"
+                            + ", a.StoreType as store_typ"
+                            + ", a.StaffLevel as staff_lvl"
+                            + ", e.SqFtRange as s_ft_rng"
+                            + ", case when d.SquareFeet is null then a.SquareFootage else d.SquareFeet end as sq_ft"
+                            + ", a.Latitude as lattd"
+                            + ", a.Longitude as lngtd"
+                            + ", a.TimeZone as tz"
+                            + ", case when a.AdjustDST = 'TRUE' or a.AdjustDST = 'true' then '1' when a.AdjustDST = 'FALSE' or a.AdjustDST = 'false' then '0' else ' ' end as adj_dst_ind"
+                            + ", a.EmailAddress as email"
+                            + ", a.CnsmrLicNbr as cnsmr_lic_nbr"
+                            + ", a.Taxes as taxes"
+                            + ", case when d.TotalMonthlyRent is null then a.rent else d.TotalMonthlyRent end as rnt"
+                            + ", a.UseLocationEmail as use_loc_email_ind"
+                            + ", d.StoreType as loc_typ"
+                            + ", a.LandlordNotes as lndlrd_nt"
+                            + ", a.LeaseStartDate as lease_start_dt"
+                            + ", a.LeaseEndDate as lease_end_dt"
+                            + ", c.OpenDate as store_open_dt"
+                            + ", c.CloseDate as store_close_dt"
+                            + ", a.RelocationDate as reloc_dt"
+                            + ", e.StoreTier as store_tier"
+                            + ", case when a.MonTm = 'M: Closed' then '00:00 AM' when a.MonTm = '' then 'null' else a.MonOpenTm end as mon_open_tm"
+                            + ", case when a.MonTm = 'M: Closed' then '00:00 AM' when a.MonTm = '' then 'null' else a.MonCloseTm end as mon_close_tm"
+                            + ", case when a.TueTm = 'T: Closed' then '00:00 AM' when a.TueTm = '' then 'null' else a.TueOpenTm end as tue_open_tm"
+                            + ", case when a.TueTm = 'T: Closed' then '00:00 AM' when a.TueTm = '' then 'null' else a.TueCloseTm end as tue_close_tm"
+                            + ", case when a.WedTm = 'W: Closed' then '00:00 AM' when a.WedTm = '' then 'null' else a.WedOpenTm end as wed_open_tm"
+                            + ", case when a.WedTm = 'W: Closed' then '00:00 AM' when a.WedTm = '' then 'null' else a.WedCloseTm end as wed_close_tm"
+                            + ", case when a.ThuTm = 'R: Closed' then '00:00 AM' when a.ThuTm = '' then 'null' else a.ThuOpenTm end as thu_open_tm"
+                            + ", case when a.ThuTm = 'R: Closed' then '00:00 AM' when a.ThuTm = '' then 'null' else a.ThuCloseTm end as thu_close_tm"
+                            + ", case when a.FriTm = 'F: Closed' then '00:00 AM' when a.FriTm = '' then 'null' else a.FriOpenTm end as fri_open_tm"
+                            + ", case when a.FriTm = 'F: Closed' then '00:00 AM' when a.FriTm = '' then 'null' else a.FriCloseTm end as fri_close_tm"
+                            + ", case when a.SatTm = 'S: Closed' then '00:00 AM' when a.SatTm = '' then 'null' else a.SatOpenTm end as sat_open_tm"
+                            + ", case when a.SatTm = 'S: Closed' then '00:00 AM' when a.SatTm = '' then 'null' else a.SatCloseTm end as sat_close_tm"
+                            + ", case when a.SunTm = 'U: Closed' then '00:00 AM' when a.SunTm = '' then 'null' else a.SunOpenTm end as sun_open_tm"
+                            + ", case when a.SunTm = 'U: Closed' then '00:00 AM' when a.SunTm = '' then 'null' else a.SunCloseTm end as sun_close_tm"
+                            + ", e.AcquisitionName as acn_nm"
+                            + ", case when e.Base = 'x' then '1' else '0' end as base_store_ind"
+                            + ", case when e.Comp = 'x' then '1' else '0' end as comp_store_ind"
+                            + ", case when e.Same = 'x' then '1' else '0' end as same_store_ind"
+                            + ", ' ' as frnchs_store_ind"
+                            + ", d.LeaseExpiration as lease_exp"
+                            + ", d.BuildType as build_type_cd"
+                            + ", d.`C&Cdesignation` as c_and_c_dsgn"
+                            + ", d.AuthorizedRetailerTagLine as auth_rtl_tag_line_stat_ind"
+                            + ", d.PylonMonumentPanels as pylon_monmnt_panels"
+                            + ", d.SellingWalls as sell_walls"
+                            + ", d.MemorableAccessoryWall as memorable_acc_wall"
+                            + ", d.cashwrapexpansion as csh_wrap_expnd"
+                            + ", d.WindowWrapGrpahics as wndw_wrap_grphc"
+                            + ", d.LiveDTV as lve_dtv"
+                            + ", d.LearningTables as lrn_tbl"
+                            + ", d.CommunityTable as comnty_tbl_ind"
+                            + ", d.DiamondDisplays as dmnd_dsp"
+                            + ", d.CFixtures as c_fixtures"
+                            + ", d.TIOKiosk as tio_ksk_ind"
+                            + ", d.ApprovedforFlexBlade as aprv_for_flex_bld"
+                            + ", d.CapIndexScore as cap_idx_score"
+                            + ", d.SellingWallsNotes as sell_wall_nt"
+                            + ", d.RemodelorOpenDate as remdl_dt"
+                            + ", ' ' as dtv_now_ind"
+                            + ", b.BAEWorkdayID as bae_wrkday_id"
+                            + ", b.BSISWorkdayID as bsis_wrkday_id"
+                            + ", e.storeTier as store_hier_id"
+                            + ", e.storeTier as att_hier_id"
+                            + ", ' ' as cdc_ind_cd"
+                            + ", ' ' as edw_batch_id"
+                            + ", ' ' as edw_create_dttm"
+                            + ", ' ' as edw_update_dttm "
+                            + "from API a left outer join BAE b on a.StoreNo = b.StoreNo "
+                            + "left outer join Dealer c on a.StoreNo = c.StoreNo left outer join RealEstate d "
+                            + "on a.StoreNo = d.Loc left outer join SpringMobile e on a.StoreNo = e.StoreNo and "
+                            + "a.City = e.City").dropDuplicates(subset=['store_num']).registerTempTable("store")
 
-dfLocationMaster = dfLocationMaster.withColumn('StoreNo', split_col.getItem(0))
-dfLocationMaster = dfLocationMaster.withColumn('Location', split_col.getItem(1))
-dfLocationMaster.registerTempTable("LocMasterPostAppend")
+        dfStoreWithMaxStoreStatus = spark.sql("select a.* from store a ")
 
+        #dfStoreWithMaxStoreStatus = spark.sql(
+        #    "select a.* from store a INNER JOIN (select store_num, max(store_stat) as value from store group by store_num) as b on a.store_num=b.store_num and a.store_stat=b.store_stat")
 
-finalLocationMaster_DF = spark.sql("select StoreID, StoreName, StoreNo, Location, Disabled, Abbreviation, ManagerEmployeeID, "
-                    + "ManagerCommissionable, Address, City, StateProv, ZipPostal, Country, PhoneNumber, FaxNumber, "
-                    + "DistrictName, RegionName, ChannelName, StoreType, GLCode, SquareFootage, LocationCode, "
-                    + "Latitude, Longitude, AddressVerified, TimeZone, AdjustDST, CashPolicy, MaxCashDrawer, Serial_on_OE, "
-                    + "Phone_on_OE, PAW_on_OE, Comment_on_OE, HideCustomerAddress, EmailAddress, GeneralLocationNotes, "
-                    + "case when SaleInvoiceComment like 'Spring%' then SaleInvoiceComment else ' ' end as ConsumerLicenseNumber, "
-                    + "case when SaleInvoiceComment not like 'Spring%' then SaleInvoiceComment else ' ' end as SaleInvoiceComment, "
-                    + "StaffLevel, BankDetails, Taxes, LeaseStartDate, LeaseEndDate, Rent, PropertyTaxes, "
-                    + "InsuranceAmount, OtherCharges, DepositTaken, InsuranceCompany, LandlordNotes, LandlordName, RelocationDate, "
-                    + "UseLocationEmail, LocationEntityID, DateLastStatusChanged from LocMasterPostAppend  where GeneralLocationNotes != ' '")
-					
-#Testing					
-#finalLocationMaster_DF = spark.sql("select GeneralLocationNotes from LocMasterPostAppend where GeneralLocationNotes != ' '")
-					
-					
-split_col = split(finalLocationMaster_DF['GeneralLocationNotes'], ',')
+        dfStoreWithMaxStoreStatus.coalesce(1).write.mode("overwrite").parquet(self.storeRefinedPath)
+        spark.stop()
+        #df_location_master_csv = spark.read.parquet('s3n://tb-us-east-1-dev-refined-regular/Store/2018/01/StoreRefined/201801151258')
+        #df_location_master_csv.coalesce(1).select("*").write.csv(self.storeRefinedPath)
 
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('mon_to_fri', split_col.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('sat', split_col.getItem(1))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('sun', split_col.getItem(2))
-
-
-split_col2 = split(finalLocationMaster_DF['mon_to_fri'], ' ')
-
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('mon_to_fri2', split_col2.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('time_of_mon_fri', split_col2.getItem(1))
-
-
-split_col3 = split(finalLocationMaster_DF['mon_to_fri2'], '-')
-
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('mon_block', split_col3.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('fri_block', split_col3.getItem(1))
-					
-split_col4 = split(finalLocationMaster_DF['time_of_mon_fri'], '-')
-
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekday_start_time', split_col4.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekday_end_time', split_col4.getItem(1))					
-
-
-split_col5 = split(finalLocationMaster_DF['sat'], ' ')
-
-#finalLocationMaster_DF = finalLocationMaster_DF.withColumn('empty', split_col5.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_day', split_col5.getItem(1))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_time', split_col5.getItem(2))					
-
-
-split_col6 = split(finalLocationMaster_DF['weekend_time'], '-')
-
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_start_time', split_col6.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_end_time', split_col6.getItem(1))
-
-
-split_col7 = split(finalLocationMaster_DF['sun'], ' ')
-
-#finalLocationMaster_DF = finalLocationMaster_DF.withColumn('empty2', split_col7.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_day2', split_col7.getItem(1))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_time2', split_col7.getItem(2))					
-
-
-split_col8 = split(finalLocationMaster_DF['weekend_time2'], '-')
-
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_start_time2', split_col8.getItem(0))
-finalLocationMaster_DF = finalLocationMaster_DF.withColumn('weekend_end_time2', split_col8.getItem(1))
-
-finalLocationMaster_DF = finalLocationMaster_DF.drop("mon_to_fri", "sat", "sun", "empty", "mon_to_fri2", "time_of_mon_fri", "empty2", "weekend_time2", "weekend_time")
-
-finalLocationMaster_DF.registerTempTable("API")
-					
-
-joined_DF = spark.sql("select '' as report_date,a.StoreID as storeid, '4' as companycd, ' ' as source_identifier, a.StoreNo as storenumber, a.Location as locationname, " #d.FormulaLink as locationname, "
-                    + "a.Disabled as storestatus, a.Abbreviation as abbreviation, a.ManagerEmployeeID as storemanageremployeeid, "
-                    + "a.ManagerCommissionable as managercommissionable, d.StreetAddress as address, e.City as city, e.State as stateprovince, e.Zip as zippostal, "
-					+ "a.Country as country, a.PhoneNumber as phone, a.FaxNumber as fax, a.StaffLevel as stafflevel, a.RelocationDate as relocationdate, "
-                    + "d.District as district, d.Region as region, d.SpringMarket as market, a.StoreType as storetype, a.GLCode as glcode, d.SquareFeet as squarefoot, a.LocationCode as locationcode, e.AcquisitionName as acquisitionname, "
-                    + "a.Latitude as latitude, a.Longitude as longitude, a.LeaseStartDate as leasestartdate, a.LeaseEndDate as leaseenddate, "
-					+ "case when a.AddressVerified = 'Verified' or a.AddressVerified = 'verified' then '1' else '0' end as addressverficationstatus, "
-					+ "a.TimeZone as timezone, a.AdjustDST as adjustdst, a.CashPolicy as cashpolicy, a.MaxCashDrawer as maxcashdrawer, a.Serial_on_OE as serialonoe, "
-                    + "a.Phone_on_OE as phoneonoe, a.PAW_on_OE as pawonoe, a.Comment_on_OE as commentonoe, a.HideCustomerAddress as hidecustomeraddress, a.EmailAddress as emailaddress, a.Taxes as taxes, " #a.GeneralLocationNotes as generallocationnotes, "
-                    + "d.TotalMonthlyRent as rent, a.PropertyTaxes as propertytaxes, a.InsuranceAmount as insuranceamount, a.InsuranceCompany as insurancecompanyname, "
-					+ "a.OtherCharges as othercharges, a.DepositTaken as deposit, a.LandlordName as landlordname, d.`C&Cdesignation` as c_n_cdesignation, "
-                    + "a.UseLocationEmail as uselocationemail, a.LocationEntityID as locationentityid, d.StoreType as locationtype, a.DateLastStatusChanged as datelaststatuschanged, a.LandlordNotes as landlordnotes, a.ConsumerLicenseNumber as consumerlicensenumber, "
-                    + "a.SaleInvoiceComment as saleinvoicecomment, ' ' as notes, ' ' as notes2, c.OpenDate as opendate, c.CloseDate as closedate, "
-                    + "e.Classification as classification, e.StoreTier as storetier, "
-                    + "case when a.mon_block = 'Mon' then a.weekday_start_time else ' ' end as monday_open_time,  "
-                    + "case when a.mon_block = 'Mon' then a.weekday_end_time else ' ' end as monday_close_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_start_time else ' ' end as tuesday_open_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_end_time else ' ' end as tuesday_close_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_start_time else ' ' end as wednesday_open_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_end_time else ' ' end as wednesday_close_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_start_time else ' ' end as thursday_open_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' or a.fri_block = 'Thu' then a.weekday_end_time else ' ' end as thursday_close_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' then a.weekday_start_time else ' ' end as friday_open_time, "
-                    + "case when a.fri_block = 'Fri' or a.fri_block = 'Sat' then a.weekday_end_time else ' ' end as friday_close_time, "
-                    + "case when a.fri_block = 'Sat' then a.weekday_start_time when a.weekend_day = 'Sat' then a.weekend_start_time else ' ' end as saturday_open_time, "
-                    + "case when a.fri_block = 'Sat' then a.weekday_end_time when a.weekend_day = 'Sat' and a.weekend_start_time != 'Closed' then a.weekend_end_time else a.weekend_start_time end as saturday_close_time, "
-                    + "case when a.weekend_day = 'Sun' then a.weekday_start_time when a.weekend_day2 = 'Sun' then a.weekend_start_time2 else ' ' end as sunday_open_time, "
-                    + "case when a.weekend_day = 'Sun' then a.weekday_end_time when a.weekend_day2 = 'Sun' and a.weekend_start_time2 != 'Closed' then a.weekend_end_time2 else a.weekend_start_time2 end as sunday_close_time, "
-					+ "' ' as storeclosed, ' ' as franchisestore, e.SqFtRange as squarefootrange, 'TestString' as attribute, 'BaseStore' as basestore, "
-                    + "'Comp Store' as compstore, 'Same Store' as samestore, d.LeaseExpiration as leaseexpiration, d.BuildType as buildtype, d.RemodelorOpenDate as remodeldate, "
-                    + "d.AuthorizedRetailerTagLine as authorizedretailertagline, d.`Pylon/MonumentPanels` as pylonormonumentpanels, e.DistrictManager as springdistrictmanager, "
-                    + "d.SellingWalls as sellingwalls, d.MemorableAccessoryWall as memorableaccessorywall, d.cashwrapexpansion, d.WindowWrapGrpahics as windowwrapgrpahics, d.LiveDTV as dtvnowindicator, d.LearningTables as learningtables, e.MarketVP as springmarketvp, e.RegionDirector as springregiondirector, "
-                    + "d.CommunityTable as communitytable, d.DiamondDisplays as diamonddisplays, d.`_C_Fixtures` as c_fixtures, d.TIOKiosk as tickiosk, d.ApprovedforFlexBlade as approvedforflexblade, d.CapIndexScore as capindexscore, d.SellingWallsNotes as sellingwallsnotes, b.BAEWorkdayID as baeworkdayid, b.BSISWorkdayID as bsisworkdayid "
-                    + "from API a "
-                    + "left outer join BAE b "
-                    + "on a.StoreNo = b.StoreNo "
-                    + "left outer join Dealer c "
-                    + "on a.StoreNo = c.StoreNo "
-                    + "left outer join RealEstate d "
-                    + "on a.StoreNo = d.Loc "
-		            + "left outer join SpringMobile e "
-		            + "on a.StoreNo = e.StoreNo and a.City = e.City").registerTempTable("store")
-
-#joined_DF1 = spark.sql("select * from store a where a.StoreNumber!='215' and a.Disabled!=1")
-joined_DF1= spark.sql("select a.* from store a INNER JOIN (select storenumber, max(storestatus) as value from store group by storenumber) as b on a.storenumber=b.storenumber and a.storestatus=b.value");
-
-
-todayyear = datetime.now().strftime('%Y')
-todaymonth = datetime.now().strftime('%m')
-TodayFolderName = datetime.now().strftime('%Y%m%d%H%M')
-
-#joined_DF1.coalesce(1). \
-#        write.format("com.databricks.spark.csv").\
-#        option("header", "true").mode("overwrite").save(StoreTable)
-        
-joined_DF1.coalesce(1).write.mode("overwrite").parquet(StoreTable + '/' + todayyear + '/' + todaymonth + '/' + 'StoreRefined' + StoreFileTime)
-
-
-spark.stop()
+if __name__ == "__main__":
+    DimStoreRefined().loadRefined()
