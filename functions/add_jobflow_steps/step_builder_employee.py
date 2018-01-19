@@ -6,7 +6,7 @@ Builds EMR Steps for employee files.
 class StepBuilderEmployee(object):
     """Build the steps that will be sent to the EMR cluster."""
 
-		def __init__(self, step_factory, s3, buckets, now):
+    def __init__(self, step_factory, s3, buckets, now):
         """Construct the StepBuilder
         Arguments:
         step_factory: an instance of the StepFactory
@@ -14,15 +14,12 @@ class StepBuilderEmployee(object):
         buckets: a dictionary of the bucket names we can use
         now: a datetime object
         """
-		self.step_factory = step_factory
+        self.step_factory = step_factory
         self.s3_client = s3
         self.buckets = buckets
-
-        self.date_parts = {
-            'time': now.strftime('%Y%m%d%H%M'),
-            'year': now.strftime('%Y'),
-            'month': now.strftime('%m')
-        }
+        self.date_parts = {'time': now.strftime('%Y%m%d%H%M'),
+                           'year': now.strftime('%Y'),
+                           'month': now.strftime('%m')}
 
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
@@ -49,8 +46,8 @@ class StepBuilderEmployee(object):
         script_name = 'EmployeeCSVToParquet.py'
         bucket = self.buckets['discovery_regular']
 
-              script_args = [
-            's3://tb-us-east-1-dev-raw-regular/Employee/' ,
+        script_args = [
+            's3://tb-us-east-1-dev-raw-regular/Employee/',
             's3://' + bucket + '/Employee/working/',
             self.date_parts['time']
         ]
@@ -70,14 +67,11 @@ class StepBuilderEmployee(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-   
-
     def _build_step_employee_delivery(self, refined_paths):
         step_name = 'EmployeeDelivery'
         script_name = 'EmployeeRefinedToDelivery.py '
         bucket = self.buckets['delivery_regular']
 
-       
         script_args = [
             refined_paths['Employee'],
             's3://' + bucket + '/WT_EMP/Current/'
@@ -90,16 +84,19 @@ class StepBuilderEmployee(object):
     # ============================================
 
     def _build_discovery_paths(self, bucket):
-        return {
-            'employee': self._build_path(bucket, 'Employee', 'working')
-            
+        return
+        {
+            'employee': self._build_path(
+                bucket, 'Employee', 'working')
+
         }
 
     def _build_refined_paths(self, bucket):
-        return {
+        return
+        {
             'employee': self._build_path(
                 bucket, 'Employee', 'working')
-           
+
         }
 
     def _build_path(self, bucket, domain, name):
@@ -151,6 +148,6 @@ class StepBuilderEmployee(object):
                 # Need to use a proxy null value.
                 file_list.append('nofile')
             else:
-                file_list.append(file)
+                file_list.append('file')
 
-        return file_list
+                return file_list
