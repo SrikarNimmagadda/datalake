@@ -3,7 +3,6 @@
 service: tb-app-datalake
 
 custom:
-  appHash: ${file(./apphash.txt)}
   hen: ${env:HEN_NAME, self:custom.localDeploy.hen}
   coop: ${env:COOP, self:custom.localDeploy.coop}
   emrStackName: ${env:EMR_STACK_NAME, self:custom.localDeploy.emrStackName}
@@ -60,11 +59,13 @@ provider:
     tech-deployby: MH-CodePipeline
     LastUpdatedBy: 'dturner'
   environment:
-    APP_COMMIT_HASH: ${self:custom.appHash}
     STAGE: ${self:provider.stage}
     # uncomment for local test via sls offline, or define the env var manually in your test shell
     # but do not checkin since it will break the TEST stage of your app's code-pipeline
     # AWS_REGION: ${self:provider.region} # needed for sls offline
+
+package:
+  individually: true
 
 functions:
 
@@ -83,7 +84,6 @@ functions:
   routeRaw:
     role: RouteRawRole
     environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -100,7 +100,6 @@ functions:
   extractMetadata:
     role: ExtractMetadataRole
     environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -127,7 +126,6 @@ functions:
   addJobFlowStepsStore:
     role: AddJobFlowStepsRole
     environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
       CODE_BUCKET: ${self:custom.buckets.code}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -157,7 +155,6 @@ functions:
   addJobFlowStepsCustomer:
     role: AddJobFlowStepsRole
     environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
       CODE_BUCKET: ${self:custom.buckets.code}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -186,7 +183,6 @@ functions:
   addJobFlowStepsEmployee:
     role: AddJobFlowStepsRole
     environment:
-      APP_COMMIT_HASH: ${self:custom.appHash}
       CODE_BUCKET: ${self:custom.buckets.code}
       RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
       RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
@@ -211,7 +207,7 @@ functions:
             builder: employee
             enabled: true
     package:
-      artifact: ${self:custom.package.addStepsArtifact}  
+      artifact: ${self:custom.package.addStepsArtifact}
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information

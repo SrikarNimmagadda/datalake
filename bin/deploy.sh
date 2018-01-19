@@ -31,8 +31,8 @@ function deploy_app
 {
   echo PRE DEPLOY - START
   # Get github commit hash for application repository
-  aws codepipeline --region us-east-1 get-pipeline-state --name $PIPELINE | jq -r '.stageStates[0].actionStates[0].currentRevision.revisionId' | cut -c 1-7 > apphash.txt
-  echo "apphash is $(cat apphash.txt)"
+  # aws codepipeline --region us-east-1 get-pipeline-state --name $PIPELINE | jq -r '.stageStates[0].actionStates[0].currentRevision.revisionId' | cut -c 1-7 > apphash.txt
+  # echo "apphash is $(cat apphash.txt)"
 
   # Check to see if stack is in ROLLBACK_COMPLETE. If it is, delete it first.
   STACK_STATUS=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query Stacks[0].StackStatus --output text || echo "NOT_FOUND")
