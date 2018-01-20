@@ -1,6 +1,5 @@
 import boto3
-import pytest
-from botocore.client import Config
+
 import filecmp
 import time
 
@@ -33,7 +32,8 @@ def verify_file_exists_in_bucket(bucket, num_attempts, time_between_attempts):
             print('File exists in delivery')
             return True
         else:
-            print('Wait #' + str(x + 1) + ' for ' + str(time_between_attempts) + ' sec')
+            print('Wait #' + str(x + 1) + ' for ' +
+                  str(time_between_attempts) + ' sec')
             time.sleep(time_between_attempts)
     print('File not found in delivery after ' + str(num_attempts) + ' tries')
     return False
@@ -42,11 +42,11 @@ def verify_file_exists_in_bucket(bucket, num_attempts, time_between_attempts):
 # Get the file once it appears
 def download_file(bucket, filename):
     objs = client.list_objects(Bucket=bucket)['Contents']
-    obj = s3.Bucket(bucket).download_file(objs[0]['Key'], filename)
+    s3.Bucket(bucket).download_file(objs[0]['Key'], filename)
     print('File downloaded successfullly')
 
 
-# Compare files 
+# Compare files
 def compare_files(testfile, downloaded_file_name):
     print('Comparing local file with output file from datalake')
     return filecmp.cmp(testfile, downloaded_file_name)
@@ -61,8 +61,10 @@ def test_happy_path(stackname):
     print('Running tests in stack: ' + str(stackname))
 
     testfile_to_upload = 'testfile'
-    bucket_to_upload_to = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
-    bucket_to_expect_generated_file = get_bucket_id_by_logical_id(stackname, 'S3BucketLanding')
+    bucket_to_upload_to = get_bucket_id_by_logical_id(
+        stackname, 'S3BucketLanding')
+    bucket_to_expect_generated_file = get_bucket_id_by_logical_id(
+        stackname, 'S3BucketLanding')
     downloaded_file_name = 'download1.txt'
     num_attempts = 3
     time_between_attempts = 30
@@ -77,4 +79,3 @@ def test_happy_path(stackname):
     assert comparision is True, 'Happy Path Functional acceptance test failed'
     empty_bucket(bucket_to_upload_to)
     empty_bucket(bucket_to_expect_generated_file)
-

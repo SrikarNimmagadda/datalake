@@ -161,7 +161,7 @@ make lint-lambdas
 make lint-spark
 ```
 
-There are currently lots of rules defined. The ones prefixed with `pipeline`
+There are currently lots of rules defined. The ones suffixed with `-stage`
 are called by the CodePipeline automation. See the [makefile](makefile)
 for more details.
 
@@ -214,12 +214,34 @@ of the container.
 
 ## Getting the Application Deployed
 
-The application should only be deployed by the automation suite. Changes to the
+The application should only be deployed to non-ephemeral environments by the automation suite. Changes to the
 master branch are deployed automatically to the d0063 account, with all
 resources suffixed by the branch name. You can deploy other branches as
 well for testing by changing the [`deploy.sh`](https://github.com/GameStopCorp/tb.aws.pipelines.datalake/blob/master/app/tb.app.datalake/deploy.sh) file in the [`app/tb.app.datalake`](https://github.com/GameStopCorp/tb.aws.pipelines.datalake/tree/master/app/tb.app.datalake) directory of the [pipelines repository](https://github.com/GameStopCorp/tb.aws.pipelines.datalake).
 Be careful to set up the environment variables correctly in that file for
 your deployment.
+
+If you just need to test some changes in AWS, fire up the docker container while you have your development branch is current and run the pipeline rules from the makefile.
+
+```sh
+make commit-stage
+make deploy
+```
+
+will build and deploy the application for your branch. Be sure to remove it when you are done with
+
+```sh
+make remove
+```
+
+If you have functional tests written for your changes, you can do
+
+```sh
+make commit-stage
+make test-stage
+```
+
+and the test stage will deploy, run the functional tests and remove the application when it is done. These are the same steps that will be run by the automation, and you'll be running them in the exact same container that CodeBuild is using.
 
 Also, use the same Pull Request process as usual to make changes to the pipelines repository.
 
