@@ -12,9 +12,6 @@ function verify_environment_vars {
 
   : "${STAGE:?Need to set STAGE env var to the branch name of the code being deployed.}"
   echo "Stage: $STAGE"
-
-  : "${SERVICE_NAME:?Need to set SERVICE_NAME env var for serverless.yml to identify the application.}"
-  echo "Service Name: $SERVICE_NAME"
 }
 export -f verify_environment_vars
 
