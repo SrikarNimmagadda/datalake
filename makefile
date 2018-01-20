@@ -22,6 +22,7 @@ DIST_ADD_JOBFLOW_STEPS = $(DIST)/$(APPNAME)-add-jobflow-steps.zip
 REPORTS = $(ROOT)/target/reports
 LINT_REPORT_LAMBDA = $(REPORTS)/lint_lambda.txt
 LINT_REPORT_SPARK = $(REPORTS)/lint_spark.txt
+LINT_REPORT_TESTS = $(REPORTS)/lint_tests.txt
 UNITTEST_REPORT = $(REPORTS)/unittest.txt
 
 LOGS = $(ROOT)/target/logs
@@ -131,7 +132,7 @@ functional-test: set-executable
 # Linting Rules
 #
 
-lint: lint-lambdas lint-spark
+lint: lint-lambdas lint-spark lint-tests
 
 lint-lambdas: prep-target
 	rm -f $(LINT_REPORT_LAMBDA)
@@ -140,6 +141,10 @@ lint-lambdas: prep-target
 lint-spark: prep-target
 	rm -f $(LINT_REPORT_SPARK)
 	pipenv run flake8 spark --statistics --output-file=$(LINT_REPORT_SPARK) --tee --exit-zero # remove --exit-zero to fail build on lint fail
+
+lint-tests: prep-target
+	rm -f $(LINT_REPORT_TESTS)
+	pipenv run flake8 tests --statistics --output-file=$(LINT_REPORT_TESTS) --tee
 
 #
 # Deployment Rules
