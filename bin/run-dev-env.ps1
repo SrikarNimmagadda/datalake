@@ -25,7 +25,6 @@ docker run `
   -e AWS_SESSION_TOKEN `
   -e AWS_DEFAULT_REGION=$REGION `
   -e AWS_DEFAULT_OUTPUT=json `
-  -e IS_HUMAN=true `
   -e COOP=$COOP `
   -e HEN_NAME=$HEN_NAME `
   -e STAGE=$STAGE `
