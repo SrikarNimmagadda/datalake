@@ -50,22 +50,22 @@ commit-stage: clean
 
 test-stage:
 	@echo "=============================================================="
-	@echo "= BEGIN: Pipeline Test Stage"
+	@echo "== BEGIN: Pipeline Test Stage"
 	@echo "=============================================================="
 	$(MAKE) deploy
 	$(MAKE) functional-test
 	$(MAKE) remove
 	@echo "=============================================================="
-	@echo "= END: Pipeline Test Stage"
+	@echo "== END: Pipeline Test Stage"
 	@echo "=============================================================="
 
 deploy-stage:
 	@echo "=============================================================="
-	@echo "= BEGIN: Pipeline Deploy Stage"
+	@echo "== BEGIN: Pipeline Deploy Stage"
 	@echo "=============================================================="
 	$(MAKE) deploy
 	@echo "=============================================================="
-	@echo "= END: Pipeline Deploy Stage"
+	@echo "== END: Pipeline Deploy Stage"
 	@echo "=============================================================="
 
 #
