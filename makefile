@@ -1,9 +1,12 @@
-.PHONY: pipeline-commit-stage pipeline-functional-test-stage \
-		pipeline-deploy-stage set-executable \
+.PHONY: \
+		commit-stage test-stage deploy-stage \
+		set-executable \
 		pack pack-extract-metadata pack-route-raw pack-add-jobflow-steps \
 		clean deepclean \
 		clean-extract-metadata clean-route-raw clean-add-jobflow-steps \
-		test lint lint-lambdas lint-spark \
+		test functional-test \
+		lint lint-lambdas lint-spark \
+		deploy remove \
 		pipenv deps deps-dev deps-prod prune-dev-deps \
 		prep-target bootstrap \
 		
@@ -33,16 +36,37 @@ PACK_ADD_JOBFLOW_STEPS_LOG = $(LOGS)/pack_add_jobflow_steps.txt
 # Pipeline Rules
 #
 
-pipeline-commit-stage: | clean bootstrap lint test pack
+commit-stage: clean
+	@echo "=============================================================="
+	@echo "== BEGIN: Pipeline Commit Stage"
+	@echo "=============================================================="
+	$(MAKE) bootstrap
+	$(MAKE) lint
+	$(MAKE) test
+	$(MAKE) pack
+	@echo "=============================================================="
+	@echo "== END: Pipeline Commit Stage"
+	@echo "=============================================================="
 
-pipeline-functional-test-stage: set-executable
-	bin/pipeline-functional-test.sh
+test-stage:
+	@echo "=============================================================="
+	@echo "= BEGIN: Pipeline Test Stage"
+	@echo "=============================================================="
+	$(MAKE) deploy
+	$(MAKE) functional-test
+	$(MAKE) remove
+	@echo "=============================================================="
+	@echo "= END: Pipeline Test Stage"
+	@echo "=============================================================="
 
-pipeline-deploy-stage: set-executable
-	bin/pipeline-deploy.sh
-
-set-executable:
-	chmod -c +x bin/*.sh
+deploy-stage:
+	@echo "=============================================================="
+	@echo "= BEGIN: Pipeline Deploy Stage"
+	@echo "=============================================================="
+	$(MAKE) deploy
+	@echo "=============================================================="
+	@echo "= END: Pipeline Deploy Stage"
+	@echo "=============================================================="
 
 #
 # Lambda packaging rules
@@ -61,10 +85,6 @@ pack-route-raw: clean-route-raw prep-target
 pack-add-jobflow-steps: clean-add-jobflow-steps prep-target
 	@echo '==> Packing add_jobflow_steps lambda...'
 	cd functions/add_jobflow_steps; zip -9Dr $(DIST_ADD_JOBFLOW_STEPS) * -x *.pyc tests/* tests/*/* | tee $(PACK_ADD_JOBFLOW_STEPS_LOG)
-	# need to remove the dev dependencies (but not remove them from the pipfile)
-	# not including dependencies because only production dependency is boto3, which is already installed on the lambda image
-	#@echo '--> Adding dependencies from virtual env...' | tee -a $(PACK_ADD_JOBFLOW_STEPS_LOG)
-	#cd $(shell pipenv --venv)/lib/python2.7/site-packages; zip -9r $(DIST_ADD_JOBFLOW_STEPS) * | tee -a $(PACK_ADD_JOBFLOW_STEPS_LOG)
 
 #
 # Cleaning Rules
@@ -95,6 +115,9 @@ clean-add-jobflow-steps:
 test: prep-target
 	pipenv run python -m unittest discover -p '*_test.py' 2>&1 | tee $(UNITTEST_REPORT)
 
+functional-test: set-executable
+	bin/test.sh
+
 #
 # Linting Rules
 #
@@ -108,6 +131,16 @@ lint-lambdas: prep-target
 lint-spark: prep-target
 	rm -f $(LINT_REPORT_SPARK)
 	pipenv run flake8 spark --statistics --output-file=$(LINT_REPORT_SPARK) --tee --exit-zero # remove --exit-zero to fail build on lint fail
+
+#
+# Deployment Rules
+#
+
+deploy: set-executable
+	bin/deploy.sh
+
+remove: set-executable
+	bin/remove.sh
 
 #
 # Dependency installation Rules
@@ -139,3 +172,10 @@ prep-target:
 	mkdir -p $(LOGS)
 
 bootstrap: | pipenv deps
+
+#
+# Utility Rules
+#
+
+set-executable:
+	chmod -c +x bin/*.sh

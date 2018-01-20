@@ -2,10 +2,6 @@
 
 set -e
 
-. bin/deploy.sh
-
-install_tools
-
 echo "************************"
 echo "*** Exiting functional test script since there are no functional tests."
 echo "*** Restore the commented code when we have valid tests."
@@ -13,8 +9,8 @@ echo "*** Otherwise spinning the environment up and down is a waste of time and 
 echo "************************"
 
 
-# echo "Deploying app for integration testing"
-# deploy_app
+# app should be deployed as a separate step.
+# This script should just runs the tests, assuming a valid deployment
 
 
 # echo "Running integration tests"
@@ -28,5 +24,8 @@ echo "************************"
 
 # echo "Tearing down integration testing stack"
 
+# The remove step should be separate, just like the deployment.
+# Hmm. maybe this is just the script that glues the 3 pieces together
+# or perhaps that's a make rule
 # remove_app
 
