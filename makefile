@@ -36,6 +36,10 @@ PACK_ADD_JOBFLOW_STEPS_LOG = $(LOGS)/pack_add_jobflow_steps.txt
 # Pipeline Rules
 #
 
+# You should run at least this rule and make sure it passes locally
+# before opening a pull request to master. Preferably, also run the
+# test-stage rule (which will be far more effective once we have tests)
+
 commit-stage: clean
 	@echo "=============================================================="
 	@echo "== BEGIN: Pipeline Commit Stage"
@@ -47,6 +51,11 @@ commit-stage: clean
 	@echo "=============================================================="
 	@echo "== END: Pipeline Commit Stage"
 	@echo "=============================================================="
+
+# The pipeline will invoke the test-stage rule with an altered service
+# name environment variable, suffixed with "test". If you are in a dev
+# branch, it is safe to run this rule, as it will deploy to a stage
+# named after your branch then test it, then remove the deployment.
 
 test-stage:
 	@echo "=============================================================="
