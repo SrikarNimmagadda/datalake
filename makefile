@@ -61,9 +61,9 @@ test-stage:
 	@echo "=============================================================="
 	@echo "== BEGIN: Pipeline Test Stage"
 	@echo "=============================================================="
-	$(MAKE) deploy
-	$(MAKE) functional-test
-	$(MAKE) remove
+	# $(MAKE) deploy
+	# $(MAKE) functional-test
+	# $(MAKE) remove
 	@echo "=============================================================="
 	@echo "== END: Pipeline Test Stage"
 	@echo "=============================================================="
