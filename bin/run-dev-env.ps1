@@ -28,7 +28,6 @@ docker run `
   -e SLS_DEBUG=true `
   -e COOP=$COOP `
   -e HEN_NAME=$HEN_NAME `
-  -e SERVICE_NAME=$SERVICE_NAME `
   -e STAGE=$STAGE `
   -e STACK_NAME=$STACK_NAME `
   -w /app `
