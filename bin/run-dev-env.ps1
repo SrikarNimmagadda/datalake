@@ -26,7 +26,6 @@ docker run `
   -e AWS_DEFAULT_REGION=$REGION `
   -e AWS_DEFAULT_OUTPUT=json `
   -e IS_HUMAN=true `
-  -e SLS_DEBUG=true `
   -e COOP=$COOP `
   -e HEN_NAME=$HEN_NAME `
   -e STAGE=$STAGE `

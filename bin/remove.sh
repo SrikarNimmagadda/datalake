@@ -44,6 +44,8 @@ function remove {
 
   clean_bucket CodeBucket
 
+  export SLS_DEBUG=true
+
   serverless remove --verbose
 
   echo REMOVE - DONE

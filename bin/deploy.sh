@@ -27,6 +27,8 @@ function clean_stack {
 function deploy {
   echo DEPLOY - START
 
+  export SLS_DEBUG=true
+
   serverless deploy -v
 
   echo "######################"
