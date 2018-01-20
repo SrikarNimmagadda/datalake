@@ -1,10 +1,11 @@
 # RUN THIS FROM THE ROOT OF THE PROJECT: > bin/run-dev-env
 
 # Set up the environment variables that change between projects
-$HEN_NAME = "d0062"
 $COOP = "tbdatalake"
+$HEN_NAME = "d0062"
 $SERVICE_NAME = "tb-app-datalake"
 $IMAGE = "gamestop/gs.docker.buildenv.serverless:1.25.0"
+$REGION = "us-east-1"
 
 #
 # from here down should be all template--shouldn't change per project
@@ -22,7 +23,7 @@ docker run `
   -e AWS_ACCESS_KEY_ID `
   -e AWS_SECRET_ACCESS_KEY `
   -e AWS_SESSION_TOKEN `
-  -e AWS_DEFAULT_REGION=us-east-1 `
+  -e AWS_DEFAULT_REGION=$REGION `
   -e AWS_DEFAULT_OUTPUT=json `
   -e IS_HUMAN=true `
   -e SLS_DEBUG=true `
