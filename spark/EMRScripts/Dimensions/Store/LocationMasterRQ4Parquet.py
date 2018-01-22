@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.types import *
 import sys
 import csv
 from datetime import datetime
@@ -13,16 +14,19 @@ class LocationMasterRQ4Parquet:
         self.dealerCodes = sys.argv[3]
         self.multiTrackerStore = sys.argv[4]
         self.springMobileStoreList = sys.argv[5]
+        self.dtvLocationMasterList = sys.argv[6]
         self.todayYearWithMonth = datetime.now().strftime('%Y/%m')
-        self.locationStoreFilePath = sys.argv[6] + '/' + \
-                                     self.todayYearWithMonth + '/' + 'location' + '/' + sys.argv[7]
-        self.baeStoreFilePath = sys.argv[6] + '/' + self.todayYearWithMonth + '/' + 'bae' + '/' + sys.argv[7]
-        self.dealerStoreFilePath = sys.argv[6] + '/' + \
-                                   self.todayYearWithMonth + '/' + 'dealer' + '/' + sys.argv[7]
-        self.multiTrackerStoreFilePath = sys.argv[6] + '/' \
-                                         + self.todayYearWithMonth + '/' + 'multi_tracker' + '/' + sys.argv[7]
-        self.springMobileStoreFilePath = sys.argv[6] + '/' \
-                                         + self.todayYearWithMonth + '/' + 'spring_mobile' + '/' + sys.argv[7]
+        self.locationStoreFilePath = sys.argv[7] + '/' + \
+                                     self.todayYearWithMonth + '/' + 'location' + '/' + sys.argv[8]
+        self.baeStoreFilePath = sys.argv[7] + '/' + self.todayYearWithMonth + '/' + 'bae' + '/' + sys.argv[8]
+        self.dealerStoreFilePath = sys.argv[7] + '/' + \
+                                   self.todayYearWithMonth + '/' + 'dealer' + '/' + sys.argv[8]
+        self.multiTrackerStoreFilePath = sys.argv[7] + '/' \
+                                         + self.todayYearWithMonth + '/' + 'multi_tracker' + '/' + sys.argv[8]
+        self.springMobileStoreFilePath = sys.argv[7] + '/' \
+                                         + self.todayYearWithMonth + '/' + 'spring_mobile' + '/' + sys.argv[8]
+        self.dtvLocationStoreFilePath = sys.argv[7] + '/' \
+                                         + self.todayYearWithMonth + '/' + 'dtv_location' + '/' + sys.argv[8]
 
     def load_parquet(self):
         spark = SparkSession.builder.appName("LocationMasterRQ4Parquet").getOrCreate()
@@ -79,7 +83,8 @@ class LocationMasterRQ4Parquet:
             withColumnRenamed("SMF Market", "SMFMarket"). \
             withColumnRenamed("DC status", "DCstatus"). \
             withColumnRenamed("Sorting Rank", "SortingRank"). \
-            withColumnRenamed("Rank Description", "RankDescription")
+            withColumnRenamed("Rank Description", "RankDescription").\
+            withColumnRenamed("Company\r","Company")
 
         dfMultiTrackerStore = spark.sparkContext.textFile(self.multiTrackerStore). \
             mapPartitions(lambda partition: csv.
@@ -106,6 +111,19 @@ class LocationMasterRQ4Parquet:
                   'DistrictManager', 'Classification', 'AcquisitionName', 'StoreTier', 'SqFt',
                   'SqFtRange', 'ClosedDate', 'Status', 'Attribute', 'Base', 'Comp', 'Same']).drop('State_delete')
 
+        dtvLocationSchema = StructType([StructField("Location", StringType(), True),
+                                        StructField("DTVNowLocation", StringType(), True)])
+        dfDTVLocation = spark.read.format("com.crealytics.spark.excel"). \
+            option("location", self.dtvLocationMasterList).\
+            option("treatEmptyValuesAsNulls", "true").\
+            option("useHeader", "true").\
+            option("sheetName", "Sheet1").\
+            load(schema=dtvLocationSchema)
+            #.registerTempTable("dtv_location")
+
+        #dfDTVLocation = spark.sql("select * from dtv_location")
+        #dfDTVLocation.withColumnRenamed("DTV Now Location", "DTVNowLocation")
+
         #########################################################################################################
         # Reading the source data files #
         #########################################################################################################
@@ -119,6 +137,8 @@ class LocationMasterRQ4Parquet:
         dfMultiTrackerStore.coalesce(1).select("*").write.parquet(self.multiTrackerStoreFilePath)
 
         dfSpringMobileStoreList.coalesce(1).select("*").write.parquet(self.springMobileStoreFilePath)
+
+        dfDTVLocation.coalesce(1).select("*").write.parquet(self.dtvLocationStoreFilePath)
 
         spark.stop()
 
