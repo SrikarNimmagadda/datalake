@@ -246,6 +246,6 @@ class StepBuilderStore(object):
                 # Need to use a proxy null value.
                 file_list.append('nofile')
             else:
-                file_list.append(file)
+                file_list.append(file_name)
 
         return file_list
