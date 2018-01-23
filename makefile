@@ -6,7 +6,7 @@
 		clean-extract-metadata clean-route-raw clean-add-jobflow-steps \
 		test functional-test \
 		lint lint-lambdas lint-spark \
-		deploy remove \
+		deploy teardown \
 		pipenv deps deps-dev deps-prod prune-dev-deps \
 		prep-target bootstrap \
 		
@@ -64,7 +64,7 @@ test-stage:
 	@echo "=============================================================="
 	# $(MAKE) deploy
 	# $(MAKE) functional-test
-	# $(MAKE) remove
+	# $(MAKE) teardown
 	@echo "=============================================================="
 	@echo "== END: Pipeline Test Stage"
 	@echo "=============================================================="
@@ -153,8 +153,8 @@ lint-tests: prep-target
 deploy: set-executable
 	bin/deploy.sh
 
-remove: set-executable
-	bin/remove.sh
+teardown: set-executable
+	bin/teardown.sh
 
 #
 # Dependency installation Rules
