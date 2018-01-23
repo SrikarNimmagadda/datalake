@@ -123,7 +123,7 @@ clean-add-jobflow-steps:
 #
 
 test: prep-target
-	pipenv run python -m unittest discover -p '*_test.py' 2>&1 | tee $(UNITTEST_REPORT)
+	pipenv run python run-unit-tests.py 2>&1 $(UNITTEST_REPORT)
 
 functional-test: set-executable
 	bin/test.sh
