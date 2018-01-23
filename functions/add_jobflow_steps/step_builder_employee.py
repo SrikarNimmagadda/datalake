@@ -70,7 +70,7 @@ class StepBuilderEmployee(object):
     def _build_step_employee_delivery(self, refined_paths):
         step_name = 'EmployeeDelivery'
         script_name = 'EmployeeRefinedToDelivery.py '
-        bucket = self.buckets['delivery_regular']
+        bucket = self.buckets['delivery']
 
         script_args = [
             refined_paths['Employee'],
