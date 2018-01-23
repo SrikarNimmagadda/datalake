@@ -123,7 +123,7 @@ class StepBuilderStore(object):
     def _build_step_tech_brand_hierarchy(self, refined_paths):
         step_name = 'TechBrandHierarchy'
         script_name = 'DimTechBrandHierarchy.py'
-        bucket = self.buckets['delivery_regular']
+        bucket = self.buckets['delivery']
 
         script_args = [
             refined_paths['store_refine'],
@@ -136,7 +136,7 @@ class StepBuilderStore(object):
     def _build_step_dealer_code_delivery(self, refined_paths):
         step_name = 'DealerCodeDelivery'
         script_name = 'ATTDealerCodeDelivery.py'
-        bucket = self.buckets['delivery_regular']
+        bucket = self.buckets['delivery']
 
         script_args = [
             refined_paths['att_dealer'],
@@ -148,7 +148,7 @@ class StepBuilderStore(object):
     def _build_step_store_dealer_association_delivery(self, refined_paths):
         step_name = 'StoreDealerAssociationDelivery'
         script_name = 'StoreDealerCodeAssociationDelivery.py'
-        bucket = self.buckets['delivery_regular']
+        bucket = self.buckets['delivery']
 
         script_args = [
             refined_paths['association'],
@@ -160,7 +160,7 @@ class StepBuilderStore(object):
     def _build_step_dim_store_delivery(self, refined_paths):
         step_name = 'DimStoreDelivery'
         script_name = 'DimStoreDelivery.py'
-        bucket = self.buckets['delivery_regular']
+        bucket = self.buckets['delivery']
 
         tech_brand_op_name = 's3://' + bucket + '/Store/Store_Hier/Current/'
 
