@@ -47,7 +47,8 @@ class StepFactory(object):
 
         args = [
             '/usr/bin/spark-submit',
-            '--deploy-mode cluster',
+            '--deploy-mode',
+            'cluster',
             '--jars', jars_arg,
             's3://' + self.bucket + '/EMRScripts/' + script_name
         ]
