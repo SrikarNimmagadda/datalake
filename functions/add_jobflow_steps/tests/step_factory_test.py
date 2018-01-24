@@ -24,7 +24,7 @@ class StepFactoryHappyPathTest(unittest.TestCase):
             's3://elasticmapreduce/libs/script-runner/script-runner.jar')
 
     def test_create_args_length(self):
-        self.assertEqual(len(self.step['HadoopJarStep']['Args']), 8)
+        self.assertEqual(len(self.step['HadoopJarStep']['Args']), 9)
 
     def test_create_args_command(self):
         self.assertEqual(
@@ -33,26 +33,30 @@ class StepFactoryHappyPathTest(unittest.TestCase):
 
     def test_create_args_deploymode_opt(self):
         self.assertEqual(self.step['HadoopJarStep']
-                         ['Args'][1], '--deploy-mode cluster')
+                         ['Args'][1], '--deploy-mode')
+
+    def test_create_args_deploymode_val(self):
+        self.assertEqual(self.step['HadoopJarStep']
+                         ['Args'][2], 'cluster')
 
     def test_create_args_jars_opt(self):
-        self.assertEqual(self.step['HadoopJarStep']['Args'][2], '--jars')
+        self.assertEqual(self.step['HadoopJarStep']['Args'][3], '--jars')
 
     def test_create_args_jars_opt_val(self):
         self.assertEqual(
-            self.step['HadoopJarStep']['Args'][3],
+            self.step['HadoopJarStep']['Args'][4],
             's3://code_bucket/EMRJars/spark-csv_2.11-1.5.0.jar,' +
             's3://code_bucket/EMRJars/spark-excel_2.11-0.8.6.jar')
 
     def test_create_args_script(self):
         self.assertEqual(
-            self.step['HadoopJarStep']['Args'][4],
+            self.step['HadoopJarStep']['Args'][5],
             's3://code_bucket/EMRScripts/test.py')
 
     def test_create_args_script_args(self):
-        self.assertEqual(self.step['HadoopJarStep']['Args'][5], 'arg1')
-        self.assertEqual(self.step['HadoopJarStep']['Args'][6], 'arg2')
-        self.assertEqual(self.step['HadoopJarStep']['Args'][7], 'arg3')
+        self.assertEqual(self.step['HadoopJarStep']['Args'][6], 'arg1')
+        self.assertEqual(self.step['HadoopJarStep']['Args'][7], 'arg2')
+        self.assertEqual(self.step['HadoopJarStep']['Args'][8], 'arg3')
 
 
 if __name__ == '__main__':
