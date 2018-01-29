@@ -1,12 +1,11 @@
 """Route s3 objects from the landing bucket to the correct raw bucket."""
-#
 # Originally copied from tb-us-east-1-dl-dev-copy-extraction on D0062 Sandbox
 # account
-#
 
-import os
-import logging
+
 import boto3
+import logging
+import os
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
@@ -28,11 +27,11 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     # no logic in the main handler except passing the S3 boto object.
     # this will allow us to unit test the main logic with a mock of that
     # service
-    #handle_event(event, S3)
+    # handle_event(event, S3)
 
 
 def handle_event(event, s3_service):
-    # Based on incoming object's key prefix,
+    """Based on incoming object's key prefix"""
     # determines output bucket and copies object.
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
