@@ -241,5 +241,4 @@ class StepBuilderStore(object):
             else:
                 file_list.append(file_name)
 
-        return file_list
-    
+                return file_list
