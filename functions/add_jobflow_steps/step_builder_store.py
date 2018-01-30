@@ -56,12 +56,12 @@ class StepBuilderStore(object):
         bucket = self.buckets['discovery_regular']
 
         filters = [
-            'store/locationmasterlist',
-            'store/bae',
-            'store/dealerCodes',
-            'store/multiTracker',
-            'store/springmobile',
-            'store/dtv_location'
+            'store/Location',
+            'store/BAE',
+            'store/DealerCodes',
+            'store/Multi',
+            'store/SpringMobile',
+            'store/DTV'
         ]
         raw_file_list = self._build_raw_file_list(filters)
 
@@ -96,8 +96,8 @@ class StepBuilderStore(object):
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         script_args = [
-           's3://' + input_bucket,
-           's3://' + output_bucket
+            's3://' + input_bucket,
+            's3://' + output_bucket
         ]
         return self.step_factory.create(step_name, script_name, script_args)
 
@@ -108,8 +108,8 @@ class StepBuilderStore(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-           's3://' + input_bucket,
-           's3://' + output_bucket
+            's3://' + input_bucket,
+            's3://' + output_bucket
         ]
         return self.step_factory.create(step_name, script_name, script_args)
 
@@ -120,8 +120,8 @@ class StepBuilderStore(object):
         output_bucket = self.buckets['delivery']
 
         script_args = [
-           's3://' + input_bucket,
-           's3://' + output_bucket
+            's3://' + input_bucket,
+            's3://' + output_bucket
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
