@@ -669,6 +669,81 @@ resources:
                     - elasticmapreduce:AddJobFlowSteps
                   Resource: '*'
 
+    # This role will be used to query Pii Hr regular buckets via Athena
+    AthenaaccessPiibucketsRole:
+      Type: AWS::IAM::Role
+      Properties:
+         RoleName: ${self:service}-AthenaaccessPiibucketsRole-${self:provider.stage}
+         AssumeRolePolicyDocument:
+           ${file(sls-include/assume-athena-role-policy-doc.yml)}
+         Policies:
+           - PolicyName: AthenaaccessPiibucketsPolicy
+             PolicyDocument:
+               Version: '2012-10-17'
+               Statement:
+                - Effect: Allow
+                  Action:
+                    - athena:*
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - s3:ListBucket
+                    - s3:ListObjects
+                    - s3:GetObject
+                  Resource:
+                      - arn:aws:s3:::${self:custom.buckets.rawPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.discoveryPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.refinedPii}/*
+
+    AthenaaccessHrbucketsRole:
+      Type: AWS::IAM::Role
+      Properties:
+         RoleName: ${self:service}-AthenaaccessHrbucketsRole-${self:provider.stage}
+         AssumeRolePolicyDocument:
+           ${file(sls-include/assume-athena-role-policy-doc.yml)}
+         Policies:
+           - PolicyName: AthenaaccessHrbucketsPolicy
+             PolicyDocument:
+               Version: '2012-10-17'
+               Statement:
+                - Effect: Allow
+                  Action:
+                    - athena:*
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - s3:ListBucket
+                    - s3:ListObjects
+                    - s3:GetObject
+                  Resource:
+                      - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                      - arn:aws:s3:::${self:custom.buckets.discoveryHr}/*
+                      - arn:aws:s3:::${self:custom.buckets.refinedHr}/*
+
+    AthenaaccessRegularbucketsRole:
+      Type: AWS::IAM::Role
+      Properties:
+         RoleName: ${self:service}-AthenaaccessRegularbucketsRole-${self:provider.stage}
+         AssumeRolePolicyDocument:
+           ${file(sls-include/assume-athena-role-policy-doc.yml)}
+         Policies:
+           - PolicyName: AthenaaccessRegularbucketsPolicy
+             PolicyDocument:
+               Version: '2012-10-17'
+               Statement:
+                - Effect: Allow
+                  Action:
+                    - athena:*
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - s3:ListBucket
+                    - s3:ListObjects
+                    - s3:GetObject
+                  Resource:
+                      - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                      - arn:aws:s3:::${self:custom.buckets.discoveryRegular}/*
+                      - arn:aws:s3:::${self:custom.buckets.refinedRegular}/*
   ######################################################################
   # OUTPUTS
   ######################################################################
@@ -678,4 +753,3 @@ resources:
       Description: Bucket where the spark code is deployed--the location where EMR steps get their code
       Value:
         Ref: S3BucketCode
-
