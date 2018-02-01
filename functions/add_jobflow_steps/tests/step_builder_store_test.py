@@ -52,7 +52,6 @@ class StepBuilderStoreTest(unittest.TestCase):
             'DimStoreHierDelivery.py',
             ['s3://tb-app-datalake-discovery-regular', 's3://tb-app-datalake-delivery']
         )
-        
 
 
 if __name__ == '__main__':
