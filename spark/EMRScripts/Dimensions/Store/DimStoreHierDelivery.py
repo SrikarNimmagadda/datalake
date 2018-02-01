@@ -1,8 +1,10 @@
-import sys, datetime, boto3
+import sys
+import datetime
+import boto3
 from pyspark.sql import SparkSession
 
 
-class DimStoreHierDelivery:
+class DimStoreHierDelivery(object):
 
     def __init__(self):
         self.dimStoreRefined = sys.argv[1]

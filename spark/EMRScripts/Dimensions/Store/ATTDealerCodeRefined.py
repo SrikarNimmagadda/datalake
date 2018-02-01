@@ -1,8 +1,5 @@
 from pyspark.sql import SparkSession
 import sys
-from datetime import datetime
-from pyspark.sql.types import *
-from pyspark.sql.functions import udf
 
 
 DealerCodeIn = sys.argv[1]

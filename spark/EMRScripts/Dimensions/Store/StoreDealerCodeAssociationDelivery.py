@@ -1,9 +1,11 @@
 from pyspark.sql import SparkSession
-import sys, boto3, datetime
+import sys
+import boto3
+import datetime
 from pyspark.sql.functions import col, hash
 
 
-class StoreDealerCodeAssociationDelivery:
+class StoreDealerCodeAssociationDelivery(object):
 
     def __init__(self):
         self.storeAssociationInput = sys.argv[1]
@@ -62,19 +64,19 @@ class StoreDealerCodeAssociationDelivery:
             + "CO_CD,a.AssociationType as ASSOC_TYP, a.AssociationStatus as ASSOC_STAT from storeAss a "
             + "where AssociationType != '' or AssociationStatus != '' ")
 
-        dfStoreDealerAssocCurr1 = dfStoreDealerAssocCurr.\
+        dfStoreDealerAssocCurr.\
             withColumn("Hash_Column", hash('STORE_NUM', 'DLR_CD', 'CO_CD', 'ASSOC_TYP', 'ASSOC_STAT')).\
             registerTempTable("store_dealercode_assoc_curr")
 
         lastPrevUpdatedStoreAssocFile = self.findLastModifiedFile(refinedBucketNode, storeAssocPrefixPath, self.refinedBucket, 0)
 
         spark.read.parquet(lastPrevUpdatedStoreAssocFile).filter(col("DealerCode") != '').registerTempTable("storeAss1")
-        dfStoreDealerAssocPrev = spark.sql(
+        spark.sql(
             "select cast(a.StoreNumber as integer) as STORE_NUM,a.DealerCode as DLR_CD,a.CompanyCode as CO_CD,"
             + "a.AssociationType as ASSOC_TYP, a.AssociationStatus as ASSOC_STAT from storeAss1 a "
             + "where AssociationType != '' or AssociationStatus != '' ")
 
-        dfStoreDealerAssocPrev1 = dfStoreDealerAssocCurr.\
+        dfStoreDealerAssocCurr.\
             withColumn("Hash_Column", hash('STORE_NUM', 'DLR_CD', 'CO_CD', 'ASSOC_TYP', 'ASSOC_STAT')).\
             registerTempTable("store_dealercode_assoc_prev")
 

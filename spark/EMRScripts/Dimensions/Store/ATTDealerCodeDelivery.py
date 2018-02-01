@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 import sys
-from pyspark.sql.types import *
+
 
 DealerCodeIn = sys.argv[1]
 DealerCodeOutput = sys.argv[2]
@@ -16,7 +16,7 @@ dfDealerCode = spark.read.parquet(DealerCodeIn)
 
 dfDealerCode.registerTempTable("Dealer")
 
-dfDealerCode = spark.sql("select a.dealercode as DLR_CD,a.companycode as CO_CD,a.dealercodeorigin as DL_CD_ORIG, "
+dfDealerCode = spark.sql("select a.dealercode as DLR_CD,a.companycode as CO_CD,a.dealercodeorigin as DL_CD_ORIG,"
                          + "a.dfcode as DF_CD,a.dcstatus as DC_STAT, a.dfindicator as DF_IND,a.candc as C_AND_C,"
                          + "a.opendate as OPEN_DT, a.closedate as CLOSE_DT, a.whitestoreindicator as WS_IND,"
                          + "a.whitestoreexpirationdate as WS_EXP_DT,a.sortrank as SRT_RNK,a.rankdescription as RNK_DESC,"
@@ -27,6 +27,6 @@ dfDealerCode = spark.sql("select a.dealercode as DLR_CD,a.companycode as CO_CD,a
 
 dfDealerCode.coalesce(1).select("*").\
         write.format("com.databricks.spark.csv").\
-        option("header", "true").mode("overwrite").save(DealerCodeOutput+'/'+'current')
+        option("header", "true").mode("overwrite").save(DealerCodeOutput + '/' + 'current')
 
 spark.stop()

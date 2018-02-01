@@ -1,10 +1,11 @@
 from pyspark.sql import SparkSession
-import sys, boto3
+import sys
+import boto3
 from datetime import datetime
 from pyspark.sql.functions import col, when, from_unixtime, unix_timestamp, year, substring
 
 
-class StoreDealerCodeAssociationRefine:
+class StoreDealerCodeAssociationRefine(object):
 
     def __init__(self):
 

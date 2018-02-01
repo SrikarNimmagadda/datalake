@@ -1,13 +1,13 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, regexp_extract
 from pyspark.sql.functions import regexp_replace, col, when, hash
-from pyspark.sql.types import *
+from pyspark.sql.types import IntegerType
 
 import sys, boto3
 from datetime import datetime
 
 
-class DimStoreRefined:
+class DimStoreRefined(object):
 
     def __init__(self):
 
@@ -219,7 +219,7 @@ class DimStoreRefined:
                                                                  getItem(1)))
         dfLocationMaster.registerTempTable("API")
 
-        dfStore = spark.sql("select a.StoreNo as store_num "
+        spark.sql("select a.StoreNo as store_num "
                             + ", '4' as co_cd"
                             + ", a.StoreID as src_store_id"
                             + ", a.Location as loc_nm"
@@ -338,8 +338,8 @@ class DimStoreRefined:
                             + " a.City = e.City left outer join dtvLocation f on a.StoreName = f.Location").\
             dropDuplicates(subset=['store_num']).registerTempTable("store")
 
-        dfStoreSource = spark.sql("select " + self.storeColumns+" from store")
-        dfStoreCurr = spark.sql("select a.* from store a").\
+        dfStoreSource = spark.sql("select " + self.storeColumns + " from store")
+        spark.sql("select a.* from store a").\
             withColumn("Hash_Column", hash(self.storeColumns)).registerTempTable("store_curr")
 
         refinedBucketNode = s3.Bucket(name=self.refinedBucket)
@@ -350,7 +350,7 @@ class DimStoreRefined:
                                                                 hash(self.storeColumns)).registerTempTable(
                 "store_prev")
 
-            dfStoreNoChange = spark.sql("select " + self.storeColumnsWithAlias +
+            spark.sql("select " + self.storeColumnsWithAlias +
                                         " from store_prev a left join store_curr b on a.store_num = b.store_num "
                                         + "where a.Hash_Column = b.Hash_Column").\
                 registerTempTable("store_no_change_data")
@@ -359,17 +359,17 @@ class DimStoreRefined:
                                        " from store_curr a left join store_prev b on a.store_num = b.store_num "
                                        + "where a.Hash_Column <> b.Hash_Column")
             updateRowsCount = dfStoreUpdated.count()
-            dfStoreUpdated = dfStoreUpdated.registerTempTable("store_updated_data")
+            dfStoreUpdated.registerTempTable("store_updated_data")
 
             dfStoreNew = spark.sql("select " + self.storeColumnsWithAlias +
                                    " from store_curr a left join store_prev b on a.store_num = b.store_num "
                                    + "where b.store_num = null")
             newRowsCount = dfStoreNew.count()
-            dfStoreNew = dfStoreNew.registerTempTable("store_new_data")
+            dfStoreNew.registerTempTable("store_new_data")
 
             # print to be deleted cc
-            dfUpdatedCount = spark.sql("select a.* from store_updated_data a")
-            dfNewCount = spark.sql("select a.* from store_new_data a")
+            spark.sql("select a.* from store_updated_data a")
+            spark.sql("select a.* from store_new_data a")
             print('Updated rows are')
             dfStoreUpdatedPrint = spark.sql("select store_num from store_updated_data")
             print(dfStoreUpdatedPrint.show())

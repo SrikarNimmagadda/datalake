@@ -1,11 +1,11 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import *
+from pyspark.sql.types import StringType, StructField, StructType
 import sys
 import csv
 from pyspark.sql.functions import unix_timestamp, year, substring, from_unixtime
 
 
-class LocationMasterRQ4Parquet:
+class LocationMasterRQ4Parquet(object):
 
     def __init__(self):
 

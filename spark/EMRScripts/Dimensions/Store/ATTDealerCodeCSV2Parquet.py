@@ -1,17 +1,8 @@
-from pyspark.sql import SparkSession, SQLContext
-from pyspark.sql import Row
-from pyspark.sql.functions import split
-import os
+from pyspark.sql import SparkSession
 import sys
-import logging
 from datetime import datetime
-import collections
-from pyspark.sql.types import StructType, StringType, IntegerType, StructField
-from pyspark.sql.types import ByteType, DateType
-from pyspark.sql.types import *
-from pyspark.sql.functions import col, lit
-from py4j.protocol import Py4JJavaError
-import pyspark.sql.functions as sf
+from pyspark.sql.types import StructField, StructType, StringType, ByteType, DateType, IntegerType
+
 
 spark = SparkSession.builder.\
         appName("AttDealerCode").getOrCreate()

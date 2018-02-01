@@ -1,8 +1,10 @@
 from pyspark.sql import SparkSession
-import sys, boto3, datetime
+import sys
+import boto3
+import datetime
 
 
-class DimStoreDelivery:
+class DimStoreDelivery(object):
 
     def __init__(self):
 
@@ -148,7 +150,7 @@ class DimStoreDelivery:
         if lastUpdatedStoreFile != '' and lastPrevUpdatedStoreFile != '':
             print('current and previous refined data files are found. So processing for delivery layer starts.')
 
-            dfStoreNoChange = spark.sql(
+            spark.sql(
                 "select " + self.storeColumnsWithAlias +
                 " from store_prev a left join store_curr b on a.store_num = b.store_num where "
                 + "a.Hash_Column = b.Hash_Column").registerTempTable("store_no_change_data")
@@ -160,7 +162,7 @@ class DimStoreDelivery:
 
             rowCountUpdateRecords = dfStoreUpdated.count()
 
-            dfStoreUpdated = dfStoreUpdated.registerTempTable("store_updated_data")
+            dfStoreUpdated.registerTempTable("store_updated_data")
 
             dfStoreNew = spark.sql(
                 "select " + self.storeColumnsWithAlias +
@@ -168,7 +170,7 @@ class DimStoreDelivery:
 
             rowCountNewRecords = dfStoreNew.count()
 
-            dfStoreNew = dfStoreNew.registerTempTable("store_new_data")
+            dfStoreNew.registerTempTable("store_new_data")
 
             dfStoreDelta = spark.sql(
                 "select " + self.storeColumns + " from store_updated_data union all select " + self.storeColumns
