@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 import sys
 import csv
-from datetime import datetime
+from pyspark.sql.functions import unix_timestamp, year, substring, from_unixtime
 
 
 class LocationMasterRQ4Parquet:
@@ -15,21 +15,28 @@ class LocationMasterRQ4Parquet:
         self.multiTrackerStore = sys.argv[4]
         self.springMobileStoreList = sys.argv[5]
         self.dtvLocationMasterList = sys.argv[6]
-        self.todayYearWithMonth = datetime.now().strftime('%Y/%m')
-        self.locationStoreFilePath = sys.argv[7] + '/' + \
-                                     self.todayYearWithMonth + '/' + 'location' + '/' + sys.argv[8]
-        self.baeStoreFilePath = sys.argv[7] + '/' + self.todayYearWithMonth + '/' + 'bae' + '/' + sys.argv[8]
-        self.dealerStoreFilePath = sys.argv[7] + '/' + \
-                                   self.todayYearWithMonth + '/' + 'dealer' + '/' + sys.argv[8]
-        self.multiTrackerStoreFilePath = sys.argv[7] + '/' \
-                                         + self.todayYearWithMonth + '/' + 'multi_tracker' + '/' + sys.argv[8]
-        self.springMobileStoreFilePath = sys.argv[7] + '/' \
-                                         + self.todayYearWithMonth + '/' + 'spring_mobile' + '/' + sys.argv[8]
-        self.dtvLocationStoreFilePath = sys.argv[7] + '/' \
-                                         + self.todayYearWithMonth + '/' + 'dtv_location' + '/' + sys.argv[8]
+
+        self.locationStoreFilePath = sys.argv[7] + '/Store/Location'
+        self.baeStoreFilePath = sys.argv[7] + '/Store/BAE'
+        self.dealerStoreFilePath = sys.argv[7] + '/Store/Dealer'
+        self.multiTrackerStoreFilePath = sys.argv[7] + '/Store/MultiTracker'
+        self.springMobileStoreFilePath = sys.argv[7] + '/Store/SpringMobile'
+        self.dtvLocationStoreFilePath = sys.argv[7] + '/Store/DTVLocation'
+
+        self.locationStoreWorkingFilePath = sys.argv[7] + '/Store/Location/Working'
+        self.baeStoreWorkingFilePath = sys.argv[7] + '/Store/BAE/Working'
+        self.dealerStoreWorkingFilePath = sys.argv[7] + '/Store/Dealer/Working'
+        self.multiTrackerWorkingStoreFilePath = sys.argv[7] + '/Store/MultiTracker/Working'
+        self.springMobileStoreWorkingFilePath = sys.argv[7] + '/Store/SpringMobile/Working'
+        self.dtvLocationStoreWorkingFilePath = sys.argv[7] + '/Store/DTVLocation/Working'
 
     def load_parquet(self):
         spark = SparkSession.builder.appName("LocationMasterRQ4Parquet").getOrCreate()
+
+        #########################################################################################################
+        # Reading the source data files #
+        #########################################################################################################
+
         dfLocationMasterList = spark.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
@@ -37,18 +44,21 @@ class LocationMasterRQ4Parquet:
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(self.locationMasterList)
+            load(self.locationMasterList).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
-        dfBAELocation= spark.read.format("com.databricks.spark.csv"). \
+        dfBAELocation = spark.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(self.baeLocation)
+            load(self.baeLocation).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
-        dfBAELocation = dfBAELocation.withColumnRenamed("Store Number", "StoreNo").withColumnRenamed("BSISWorkdayID\r","BSISWorkdayID")
+        dfBAELocation = dfBAELocation.withColumnRenamed("Store Number", "StoreNo").\
+            withColumnRenamed("BSISWorkdayID\r", "BSISWorkdayID")
 
         dfDealerCodes = spark.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
@@ -57,7 +67,8 @@ class LocationMasterRQ4Parquet:
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(self.dealerCodes)
+            load(self.dealerCodes).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
         dfDealerCodes = dfDealerCodes.withColumnRenamed("Dealer Code", "DealerCode"). \
             withColumnRenamed("Loc #", "Loc#"). \
@@ -84,14 +95,16 @@ class LocationMasterRQ4Parquet:
             withColumnRenamed("DC status", "DCstatus"). \
             withColumnRenamed("Sorting Rank", "SortingRank"). \
             withColumnRenamed("Rank Description", "RankDescription").\
-            withColumnRenamed("Company\r","Company")
+            withColumnRenamed("Company\r", "Company").\
+            withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
         dfMultiTrackerStore = spark.sparkContext.textFile(self.multiTrackerStore). \
             mapPartitions(lambda partition: csv.
                           reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: ''.join(line).strip() != '' and
                                 line[1] != 'Formula Link' and line[2] != 'Spring Mobile Multi-Tracker').\
-            toDF(['delete', 'FormulaLink', 'AT&TMarket', 'SpringMarket','Region', 'District',
+            toDF(['delete', 'FormulaLink', 'AT&TMarket', 'SpringMarket', 'Region', 'District',
                   'Loc', 'AT&TRegion', 'StoreName', 'StreetAddress', 'City_State_Zip',
                   'SquareFeet', 'TotalMonthlyRent', 'LeaseExpiration', 'November2017TotalOps',
                   'AverageLast12MonthsOps', 'AverageTrafficCountLast12Months', 'OctoberSMF',
@@ -101,15 +114,19 @@ class LocationMasterRQ4Parquet:
                   'CashWrapExpansion', 'WindowWrapGrpahics', 'LiveDTV', 'LearningTables',
                   'CommunityTable', 'DiamondDisplays', 'CFixtures', 'TIOKiosk',
                   'ApprovedforFlexBlade', 'CapIndexScore', 'SellingWallsNotes']).drop('delete')
+        dfMultiTrackerStore = dfMultiTrackerStore.withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
         dfSpringMobileStoreList = spark.sparkContext.textFile(self.springMobileStoreList).\
             mapPartitions(lambda partition: csv.
-                          reader([line.encode('utf-8') for line in partition],delimiter=',', quotechar='"')).\
+                          reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: line[0] not in {'Spring Mobile - AT&T', 'Store #'}).\
             toDF(['Store', 'StoreName', 'Address', 'City', 'State', 'Zip', 'Market', 'Region',
                   'District', 'State_delete', 'OpenDate', 'MarketVP', 'RegionDirector',
                   'DistrictManager', 'Classification', 'AcquisitionName', 'StoreTier', 'SqFt',
                   'SqFtRange', 'ClosedDate', 'Status', 'Attribute', 'Base', 'Comp', 'Same']).drop('State_delete')
+        dfSpringMobileStoreList = dfSpringMobileStoreList.withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(from_unixtime(unix_timestamp())), 6, 2))
 
         dtvLocationSchema = StructType([StructField("Location", StringType(), True),
                                         StructField("DTVNowLocation", StringType(), True)])
@@ -118,29 +135,53 @@ class LocationMasterRQ4Parquet:
             option("treatEmptyValuesAsNulls", "true").\
             option("useHeader", "true").\
             option("sheetName", "Sheet1").\
-            load(schema=dtvLocationSchema)
-            #.registerTempTable("dtv_location")
-
-        #dfDTVLocation = spark.sql("select * from dtv_location")
-        #dfDTVLocation.withColumnRenamed("DTV Now Location", "DTVNowLocation")
+            load(schema=dtvLocationSchema).\
+            withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
         #########################################################################################################
-        # Reading the source data files #
+        # Saving the parquet source data files in working #
         #########################################################################################################
 
-        dfLocationMasterList.coalesce(1).select("*").write.parquet(self.locationStoreFilePath)
+        dfLocationMasterList.coalesce(1).write.mode('overwrite').format('parquet').\
+            save(self.locationStoreWorkingFilePath)
 
-        dfBAELocation.coalesce(1).select("*").write.parquet(self.baeStoreFilePath)
+        dfBAELocation.coalesce(1).write.mode('overwrite').format('parquet').save(self.baeStoreWorkingFilePath)
 
-        dfDealerCodes.coalesce(1).select("*").write.parquet(self.dealerStoreFilePath)
+        dfDealerCodes.coalesce(1).write.mode('overwrite').format('parquet').save(self.dealerStoreWorkingFilePath)
 
-        dfMultiTrackerStore.coalesce(1).select("*").write.parquet(self.multiTrackerStoreFilePath)
+        dfMultiTrackerStore.coalesce(1).write.mode('overwrite').format('parquet').\
+            save(self.multiTrackerWorkingStoreFilePath)
 
-        dfSpringMobileStoreList.coalesce(1).select("*").write.parquet(self.springMobileStoreFilePath)
+        dfSpringMobileStoreList.coalesce(1).write.mode('overwrite').format('parquet').\
+            save(self.springMobileStoreWorkingFilePath)
 
-        dfDTVLocation.coalesce(1).select("*").write.parquet(self.dtvLocationStoreFilePath)
+        dfDTVLocation.coalesce(1).write.mode('overwrite').format('parquet').save(self.dtvLocationStoreWorkingFilePath)
+
+        #########################################################################################################
+        # Saving the parquet source data files in partition #
+        #########################################################################################################
+
+        dfLocationMasterList.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.locationStoreFilePath)
+
+        dfBAELocation.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.baeStoreFilePath)
+
+        dfDealerCodes.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.dealerStoreFilePath)
+
+        dfMultiTrackerStore.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.multiTrackerStoreFilePath)
+
+        dfSpringMobileStoreList.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.springMobileStoreFilePath)
+
+        dfDTVLocation.coalesce(1).write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.dtvLocationStoreFilePath)
 
         spark.stop()
+
 
 if __name__ == "__main__":
     LocationMasterRQ4Parquet().load_parquet()
