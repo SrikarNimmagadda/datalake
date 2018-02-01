@@ -122,8 +122,8 @@ clean-add-jobflow-steps:
 # Test Rules
 #
 
-# test: prep-target
-#	pipenv run python run-unit-tests.py 2>&1 $(UNITTEST_REPORT)
+test: prep-target
+	pipenv run python run-unit-tests.py 2>&1 $(UNITTEST_REPORT)
 
 functional-test: set-executable
 	bin/test.sh
