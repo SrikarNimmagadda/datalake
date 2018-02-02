@@ -2,7 +2,6 @@
 # Originally copied from tb-us-east-1-dl-dev-copy-extraction on D0062 Sandbox
 # account
 
-
 import boto3
 import logging
 import os
