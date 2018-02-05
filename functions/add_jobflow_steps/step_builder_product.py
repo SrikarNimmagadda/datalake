@@ -1,9 +1,9 @@
-"""Contains the class StepBuilderStore.
-Builds EMR Steps for store files.
+"""Contains the class StepBuilderProduct.
+Builds EMR Steps for Product files.
 """
 
 
-class StepBuilderStore(object):
+class StepBuilderProduct(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
