@@ -47,8 +47,8 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['discovery_HrPii']
 
         script_args = [
-           's3://' + output_bucket,
-           's3://' + input_bucket + 'Employee'
+            's3://' + output_bucket,
+            's3://' + input_bucket + 'Employee'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -60,9 +60,9 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['refined_HrPii']
 
         script_args = [
-           's3://' + output_bucket,
-           's3://' + input_bucket + 'Employee',
-           's3://' + input_bucket + 'Employee/working'
+            's3://' + output_bucket,
+            's3://' + input_bucket + 'Employee',
+            's3://' + input_bucket + 'Employee/working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -74,8 +74,8 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['delivery']
 
         script_args = [
-           input_bucket,
-           's3://' + output_bucket + '/WT_EMP'
+            input_bucket,
+            's3://' + output_bucket + '/WT_EMP'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
