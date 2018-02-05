@@ -24,14 +24,14 @@ custom:
   buckets:
     code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
     landing: ${self:service}-landing-${self:custom.hen}-${self:provider.stage}
-    rawPii: ${self:service}-raw-pii-${self:custom.hen}-${self:provider.stage}
-    rawHr: ${self:service}-raw-hr-${self:custom.hen}-${self:provider.stage}
+    rawCustomerPii: ${self:service}-raw-customer-pii-${self:custom.hen}-${self:provider.stage}
+    rawHrPii: ${self:service}-raw-hr-pii-${self:custom.hen}-${self:provider.stage}
     rawRegular: ${self:service}-raw-regular-${self:custom.hen}-${self:provider.stage}
-    discoveryPii: ${self:service}-discovery-pii-${self:custom.hen}-${self:provider.stage}
-    discoveryHr: ${self:service}-discovery-hr-${self:custom.hen}-${self:provider.stage}
+    discoveryCustomerPii: ${self:service}-discovery-cutomer-pii-${self:custom.hen}-${self:provider.stage}
+    discoveryHrPii: ${self:service}-discovery-hr-pii-${self:custom.hen}-${self:provider.stage}
     discoveryRegular: ${self:service}-discovery-regular-${self:custom.hen}-${self:provider.stage}
-    refinedPii: ${self:service}-refined-pii-${self:custom.hen}-${self:provider.stage}
-    refinedHr: ${self:service}-refined-hr-${self:custom.hen}-${self:provider.stage}
+    refinedCustomerPii: ${self:service}-refined-customer-pii-${self:custom.hen}-${self:provider.stage}
+    refinedHrPii: ${self:service}-refined-hr-pii-${self:custom.hen}-${self:provider.stage}
     refinedRegular: ${self:service}-refined-regular-${self:custom.hen}-${self:provider.stage}
     delivery: ${self:service}-delivery-${self:custom.hen}-${self:provider.stage}
   remover:
@@ -84,8 +84,8 @@ functions:
   routeRaw:
     role: RouteRawRole
     environment:
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
     name: ${self:service}-route-raw-${self:provider.stage}
@@ -100,8 +100,8 @@ functions:
   extractMetadata:
     role: ExtractMetadataRole
     environment:
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
@@ -109,10 +109,10 @@ functions:
     handler: handler.lambda_handler
     events:
       - s3:
-        bucket: rawPii
+        bucket: rawCustomerPii
         event: s3:ObjectCreated:*
       - s3:
-        bucket: rawHr
+        bucket: rawHrPii
         event: s3:ObjectCreated:*
       - s3:
         bucket: rawRegular
@@ -127,14 +127,14 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_PII_BUCKET: ${self:custom.buckets.discoveryPii}
-      DISCOVERY_HR_BUCKET: ${self:custom.buckets.discoveryHr}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
       DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_PII_BUCKET: ${self:custom.buckets.refinedPii}
-      REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       EMR_STACK_NAME: ${self:custom.emrStackName}
@@ -156,14 +156,14 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_PII_BUCKET: ${self:custom.buckets.discoveryPii}
-      DISCOVERY_HR_BUCKET: ${self:custom.buckets.discoveryHr}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
       DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_PII_BUCKET: ${self:custom.buckets.refinedPii}
-      REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       EMR_STACK_NAME: ${self:custom.emrStackName}
@@ -184,14 +184,14 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
-      RAW_PII_BUCKET: ${self:custom.buckets.rawPii}
-      RAW_HR_BUCKET: ${self:custom.buckets.rawHr}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_PII_BUCKET: ${self:custom.buckets.discoveryPii}
-      DISCOVERY_HR_BUCKET: ${self:custom.buckets.discoveryHr}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
       DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_PII_BUCKET: ${self:custom.buckets.refinedPii}
-      REFINED_HR_BUCKET: ${self:custom.buckets.refinedHr}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
       DELIVERY_BUCKET: ${self:custom.buckets.delivery}
       EMR_STACK_NAME: ${self:custom.emrStackName}
@@ -208,6 +208,35 @@ functions:
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
+    
+  addJobFlowStepsProduct:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-product-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-product-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 * /8 * * *)
+          input:
+            builder: product
+          enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}  
+     
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
@@ -263,12 +292,12 @@ resources:
     # RAW BUCKETS
     ######################################################################
 
-    # RAW PII BUCKET
-    # S3 bucket that contains raw (csv) files containing PII data
-    S3BucketRawPii:
+    # RAW CUSTOMER PII BUCKET
+    # S3 bucket that contains raw (csv) files containing Customer PII data
+    S3BucketRawCustomerPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.rawPii}
+        BucketName: ${self:custom.buckets.rawCustomerPii}
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -284,10 +313,10 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: ExtractMetadataLambdaPermissionRawPiiS3
+      DependsOn: ExtractMetadataLambdaPermissionRawCustomerPiiS3
 
-    # Permission to invoke the Lambda that extracts metadata from the raw pii bucket
-    ExtractMetadataLambdaPermissionRawPiiS3:
+    # Permission to invoke the Lambda that extracts metadata from the raw customer pii bucket
+    ExtractMetadataLambdaPermissionRawCustomerPiiS3:
       Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
@@ -298,14 +327,14 @@ resources:
         Action: lambda:InvokeFunction
         SourceAccount:
           Ref: AWS::AccountId
-        SourceArn: arn:aws:s3:::${self:custom.buckets.rawPii}
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawCustomerPii}
 
-    # RAW HR BUCKET
-    # S3 bucket that contains raw (csv) files containing HR data
-    S3BucketRawHr:
+    # RAW HR PII BUCKET
+    # S3 bucket that contains raw (csv) files containing HR PII data
+    S3BucketRawHrPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.rawHr}
+        BucketName: ${self:custom.buckets.rawHrPii}
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -321,10 +350,10 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: ExtractMetadataLambdaPermissionRawHrS3
+      DependsOn: ExtractMetadataLambdaPermissionRawHrPiiS3
 
     # Permission to invoke the Lambda that extracts metadata from the raw hr bucket
-    ExtractMetadataLambdaPermissionRawHrS3:
+    ExtractMetadataLambdaPermissionRawHrPiiS3:
       Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
@@ -335,7 +364,7 @@ resources:
         Action: lambda:InvokeFunction
         SourceAccount:
           Ref: AWS::AccountId
-        SourceArn: arn:aws:s3:::${self:custom.buckets.rawHr}
+        SourceArn: arn:aws:s3:::${self:custom.buckets.rawHrPii}
 
     # RAW REGULAR BUCKET
     # S3 bucket that contains raw (csv) files containing no security-related data
@@ -415,11 +444,11 @@ resources:
     # DISCOVERY BUCKETS
     ######################################################################
 
-    # DISCOVERY PII BUCKET
-    S3BucketDiscoveryPii:
+    # DISCOVERY CUSTOMER PII BUCKET
+    S3BucketDiscoveryCustomerPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.discoveryPii}
+        BucketName: ${self:custom.buckets.discoveryCustomerPii}
         LifecycleConfiguration:
           Rules:
             - Id: IA-Glacier-Expire-Rule
@@ -431,11 +460,11 @@ resources:
                 - TransitionInDays: 1460
                   StorageClass: Glacier
 
-    # DISCOVERY HR BUCKET
-    S3BucketDiscoveryHr:
+    # DISCOVERY HR PII BUCKET
+    S3BucketDiscoveryHrPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.discoveryHr}
+        BucketName: ${self:custom.buckets.discoveryHrPii}
         LifecycleConfiguration:
           Rules:
             - Id: IA-Glacier-Expire-Rule
@@ -467,11 +496,11 @@ resources:
     # REFINED BUCKETS
     ######################################################################
 
-    # REFINED PII BUCKET
-    S3BucketRefinedPii:
+    # REFINED CUSTOMER PII BUCKET
+    S3BucketRefinedCustomerPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.refinedPii}
+        BucketName: ${self:custom.buckets.refinedCustomerPii}
         LifecycleConfiguration:
           Rules:
           - Id: IA-Glacier-Expire-Rule
@@ -483,11 +512,11 @@ resources:
               - TransitionInDays: 1460
                 StorageClass: Glacier
 
-    # REFINED HR BUCKET
-    S3BucketRefinedHr:
+    # REFINED HR PII BUCKET
+    S3BucketRefinedHrPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.refinedHr}
+        BucketName: ${self:custom.buckets.refinedHrPii}
         LifecycleConfiguration:
           Rules:
           - Id: IA-Glacier-Expire-Rule
@@ -592,8 +621,8 @@ resources:
                   Action:
                     - s3:PutObject
                   Resource:
-                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
-                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
 
     ExtractMetadataRole:
@@ -611,8 +640,8 @@ resources:
                   Action:
                     - s3:GetObject
                   Resource:
-                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
-                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
                     - arn:aws:s3:::${self:custom.buckets.delivery}/*
                 - Effect: Allow
@@ -651,10 +680,10 @@ resources:
                   Action:
                     - s3:*
                   Resource:
-                    - arn:aws:s3:::${self:custom.buckets.rawPii}
-                    - arn:aws:s3:::${self:custom.buckets.rawPii}/*
-                    - arn:aws:s3:::${self:custom.buckets.rawHr}
-                    - arn:aws:s3:::${self:custom.buckets.rawHr}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}
+                    - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHrPii}
+                    - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
                 - Effect: Allow
@@ -669,11 +698,11 @@ resources:
                     - elasticmapreduce:AddJobFlowSteps
                   Resource: '*'
 
-    # This role will be used to query Pii Hr regular buckets via Athena
-    AthenaaccessPiibucketsRole:
+    # This role will be used to query CustomerPii and HrPii and regular buckets via Athena
+    AthenaaccessCustomerPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessPiibucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessCustomerPiibucketsRole-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -691,14 +720,14 @@ resources:
                     - s3:ListObjects
                     - s3:GetObject
                   Resource:
-                      - arn:aws:s3:::${self:custom.buckets.rawPii}/*
-                      - arn:aws:s3:::${self:custom.buckets.discoveryPii}/*
-                      - arn:aws:s3:::${self:custom.buckets.refinedPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.discoveryCustomerPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.refinedCustomerPii}/*
 
-    AthenaaccessHrbucketsRole:
+    AthenaaccessHrPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessHrbucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessHrPiibucketsRole-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -716,9 +745,9 @@ resources:
                     - s3:ListObjects
                     - s3:GetObject
                   Resource:
-                      - arn:aws:s3:::${self:custom.buckets.rawHr}/*
-                      - arn:aws:s3:::${self:custom.buckets.discoveryHr}/*
-                      - arn:aws:s3:::${self:custom.buckets.refinedHr}/*
+                      - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.discoveryHrPii}/*
+                      - arn:aws:s3:::${self:custom.buckets.refinedHrPii}/*
 
     AthenaaccessRegularbucketsRole:
       Type: AWS::IAM::Role
