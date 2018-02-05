@@ -7,13 +7,12 @@ class StepBuilderEmployee(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
-        """Construct the StepBuilder
-        Arguments:
-        step_factory: an instance of the StepFactory
-        s3: the boto3 s3 client
-        buckets: a dictionary of the bucket names we can use
-        now: a datetime object
-        """
+        """Construct the StepBuilder Arguments:"""
+        # step_factory: an instance of the StepFactory
+        # s3: the boto3 s3 client
+        # buckets: a dictionary of the bucket names we can use
+        # now: a datetime object
+
         self.step_factory = step_factory
         self.s3_client = s3
         self.buckets = buckets
@@ -24,10 +23,10 @@ class StepBuilderEmployee(object):
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
         discovery_paths = self._build_discovery_paths(
-            self.buckets['discovery_regular'])
+            self.buckets['discovery_HrPii'])
 
         refined_paths = self._build_refined_paths(
-            self.buckets['refined_regular'])
+            self.buckets['refined_HrPii'])
 
         steps = [
             self._build_step_csv_to_parquet(),
@@ -44,12 +43,12 @@ class StepBuilderEmployee(object):
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquet'
         script_name = 'EmployeeCSVToParquet.py'
-        bucket = self.buckets['discovery_regular']
+        input_bucket = self.buckets['raw_HrPii']
+        output_bucket = self.buckets['discovery_HrPii']
 
         script_args = [
-            's3://tb-us-east-1-dev-raw-regular/Employee/',
-            's3://' + bucket + '/Employee/working/',
-            self.date_parts['time']
+           's3://' + output_bucket,
+           's3://' + input_bucket + 'Employee'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -57,12 +56,13 @@ class StepBuilderEmployee(object):
     def _build_step_employee_refinery(self, discovery_paths):
         step_name = 'EmployeeRefinery'
         script_name = 'EmployeeDiscoveryToRefined.py'
-        bucket = self.buckets['refined_regular']
+        input_bucket = self.buckets['discovery_HrPii']
+        output_bucket = self.buckets['refined_HrPii']
 
         script_args = [
-            discovery_paths['Employee'],
-            's3://' + bucket + '/Employee/working/',
-            self.date_parts['time']
+           's3://' + output_bucket,
+           's3://' + input_bucket + 'Employee',
+           's3://' + input_bucket + 'Employee/working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -70,11 +70,12 @@ class StepBuilderEmployee(object):
     def _build_step_employee_delivery(self, refined_paths):
         step_name = 'EmployeeDelivery'
         script_name = 'EmployeeRefinedToDelivery.py '
-        bucket = self.buckets['delivery']
+        input_bucket = self.buckets['refined_HrPii']
+        output_bucket = self.buckets['delivery']
 
         script_args = [
-            refined_paths['Employee'],
-            's3://' + bucket + '/WT_EMP/Current/'
+           input_bucket,
+           's3://' + output_bucket + '/WT_EMP'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -139,7 +140,7 @@ class StepBuilderEmployee(object):
 
         for file_filter in filters:
             file_name = self._find_source_file(
-                self.buckets['raw_regular'],
+                self.buckets['raw_HrPii'],
                 file_filter)
 
             if file_name is None:
