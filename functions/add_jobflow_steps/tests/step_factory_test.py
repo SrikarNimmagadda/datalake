@@ -46,7 +46,8 @@ class StepFactoryHappyPathTest(unittest.TestCase):
         self.assertEqual(
             self.step['HadoopJarStep']['Args'][4],
             's3://code_bucket/EMRJars/spark-csv_2.11-1.5.0.jar,' +
-            's3://code_bucket/EMRJars/spark-excel_2.11-0.8.6.jar')
+            's3://code_bucket/EMRJars/spark-excel_2.11-0.8.6.jar,' +
+            's3://code_bucket/EMRJars/univocity-parsers-2.5.9.jar')
 
     def test_create_args_script(self):
         self.assertEqual(
