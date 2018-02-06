@@ -1,5 +1,5 @@
-"""Contains the class StepBuilderProduct.
-Builds EMR Steps for Product files.
+"""Contains the class StepBuilderStoreCustomerExperience.
+Builds EMR Steps for Store Customer Experience files.
 """
 
 
