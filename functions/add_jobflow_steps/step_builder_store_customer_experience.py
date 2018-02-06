@@ -3,7 +3,7 @@ Builds EMR Steps for Product files.
 """
 
 
-class StepBuilderProduct(object):
+class StepBuilderStoreCustomerExperience(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -29,12 +29,9 @@ class StepBuilderProduct(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_product(),
-            self._build_step_product_refinery(),
-            self._build_step_product_delivery(),
-            self._build_step_csv_to_parquet_productcategory(),
-            self._build_step_productcategory_refinery(),
-            self._build_step_productcategory_delivery()
+            self._build_step_csv_to_parquet_store_customer_experience(),
+            self._build_step_store_customer_experience_refinery(),
+            self._build_step_store_customer_experience_delivery()
         ]
 
         return steps
@@ -43,89 +40,42 @@ class StepBuilderProduct(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_product(self):
-        step_name = 'CSVToParquetProduct'
-        script_name = 'ProductCSVToParquet.py'
+    def _build_step_csv_to_parquet_store_customer_experience(self):
+        step_name = 'CSVToParquetStoreCustomerExperience'
+        script_name = 'StoreCustExpCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
 
             's3://' + output_bucket,
-            's3://' + input_bucket + '/Product',
-            's3://' + input_bucket + '/ProductIdentifier',
-            's3://' + input_bucket + '/Coupons'
+            's3://' + input_bucket + '/StoreCustomerExperience'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_product_refinery(self):
-        step_name = 'ProductRefinery'
-        script_name = 'ProductDiscoveryToRefined.py'
+    def _build_step_store_customer_experience_refinery(self):
+        step_name = 'StoreCustomerExperienceRefined'
+        script_name = 'StoreCustExpDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
             's3://' + output_bucket,
-            output_bucket,
-            's3://' + input_bucket + '/Product/Working',
-            's3://' + input_bucket + '/ProductIdentifier/Working',
-            's3://' + input_bucket + '/Coupons/Working'
+            's3://' + input_bucket + 'StoreCustomerExperience/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_product_delivery(self):
-        step_name = 'ProductDelivery'
-        script_name = 'ProductRefinedToDelivery.py'
+    def _build_step_store_customer_experience_delivery(self):
+        step_name = 'StoreCustomerExperienceDelivery'
+        script_name = 'StoreCustExpRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery']
 
         script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_PROD'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_csv_to_parquet_productcategory(self):
-        step_name = 'CSVToParquetProductCategory'
-        script_name = 'ProductCategoryCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-
-        script_args = [
-
-            's3://' + output_bucket,
-            's3://' + input_bucket + '/ProductCategory'
-
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_productcategory_refinery(self):
-        step_name = 'ProductCategoryRefinery'
-        script_name = 'ProductCategoryDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-
-        script_args = [
-            's3://' + output_bucket,
-            output_bucket,
-            's3://' + input_bucket + '/ProductCateogry/Working'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_productcategory_delivery(self):
-        step_name = 'ProductCategoryDelivery'
-        script_name = 'ProductRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
-
-        script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_PROD_CAT'
+            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC',
+            's3://' + input_bucket + '/StoreCustomerExperience/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
