@@ -133,6 +133,18 @@ class StepBuilderStore(object):
     # Support Methods
     # ============================================
 
+    def _build_path(self, bucket, domain, name):
+        path_parts = [
+            's3://' + bucket,
+            domain,
+            self.date_parts['year'],
+            self.date_parts['month'],
+            name + self.date_parts['time'],
+            '*.parquet'
+        ]
+
+        return '/'.join(path_parts)
+
     def _find_source_file(self, bucketname, filter_prefix):
         bucket = self.s3_client.Bucket(bucketname)
         data = [obj for obj in list(bucket.objects.filter(
