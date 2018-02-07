@@ -18,6 +18,7 @@ from step_builder_customer import StepBuilderCustomer
 from step_builder_employee import StepBuilderEmployee
 from step_builder_product import StepBuilderProduct
 from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
+from step_builder_goalskpi import StepBuilderGoalskpi
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -25,14 +26,14 @@ EMR = boto3.client('emr')
 
 BUCKETS = {
     'code': os.getenv('CODE_BUCKET'),
-    'raw_pii': os.getenv('RAW_PII_BUCKET'),
-    'raw_hr': os.getenv('RAW_HR_BUCKET'),
+    'raw_customer_pii': os.getenv('RAW_CUSTOMER_PII_BUCKET'),
+    'raw_hr_pii': os.getenv('RAW_HR_PII_BUCKET'),
     'raw_regular': os.getenv('RAW_REGULAR_BUCKET'),
-    'discovery_pii': os.getenv('DISCOVERY_PII_BUCKET'),
-    'discovery_hr': os.getenv('DISCOVERY_HR_BUCKET'),
+    'discovery_customer_pii': os.getenv('DISCOVERY_CUSTOMER_PII_BUCKET'),
+    'discovery_hr_pii': os.getenv('DISCOVERY_HR_PII_BUCKET'),
     'discovery_regular': os.getenv('DISCOVERY_REGULAR_BUCKET'),
-    'refined_pii': os.getenv('REFINED_PII_BUCKET'),
-    'refined_hr': os.getenv('REFINED_HR_BUCKET'),
+    'refined_customer_pii': os.getenv('REFINED_CUSTOMER_PII_BUCKET'),
+    'refined_hr_pii': os.getenv('REFINED_HR_PII_BUCKET'),
     'refined_regular': os.getenv('REFINED_REGULAR_BUCKET'),
     'delivery': os.getenv('DELIVERY_BUCKET')
 }
@@ -71,5 +72,7 @@ def choose_builder(event):
         return StepBuilderProduct(factory, S3, BUCKETS, now)
     elif switch == 'storecustomerexperience':
         return StepBuilderStoreCustomerExperience(factory, S3, BUCKETS, now)
+    elif switch == 'goalskpi':
+        return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
