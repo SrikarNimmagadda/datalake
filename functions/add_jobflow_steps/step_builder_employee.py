@@ -1,4 +1,4 @@
-""" Contains the class StepBuilderStore.
+""" Contains the class StepBuilderEmployee.
 Builds EMR Steps for employee files.
 """
 
@@ -22,16 +22,11 @@ class StepBuilderEmployee(object):
 
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
-        discovery_paths = self._build_discovery_paths(
-            self.buckets['discovery_HrPii'])
-
-        refined_paths = self._build_refined_paths(
-            self.buckets['refined_HrPii'])
 
         steps = [
             self._build_step_csv_to_parquet(),
-            self._build_step_employee_refinery(discovery_paths),
-            self._build_step_employee_delivery(refined_paths)
+            self._build_step_employee_refinery(),
+            self._build_step_employee_delivery()
         ]
 
         return steps
@@ -43,8 +38,8 @@ class StepBuilderEmployee(object):
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquet'
         script_name = 'EmployeeCSVToParquet.py'
-        input_bucket = self.buckets['raw_HrPii']
-        output_bucket = self.buckets['discovery_HrPii']
+        input_bucket = self.buckets['raw_hr_pii']
+        output_bucket = self.buckets['discovery_hr_pii']
 
         script_args = [
             's3://' + output_bucket,
@@ -56,8 +51,8 @@ class StepBuilderEmployee(object):
     def _build_step_employee_refinery(self, discovery_paths):
         step_name = 'EmployeeRefinery'
         script_name = 'EmployeeDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_HrPii']
-        output_bucket = self.buckets['refined_HrPii']
+        input_bucket = self.buckets['discovery_hr_pii']
+        output_bucket = self.buckets['refined_hr_pii']
 
         script_args = [
             's3://' + output_bucket,
@@ -70,7 +65,7 @@ class StepBuilderEmployee(object):
     def _build_step_employee_delivery(self, refined_paths):
         step_name = 'EmployeeDelivery'
         script_name = 'EmployeeRefinedToDelivery.py '
-        input_bucket = self.buckets['refined_HrPii']
+        input_bucket = self.buckets['refined_hr_pii']
         output_bucket = self.buckets['delivery']
 
         script_args = [
@@ -140,7 +135,7 @@ class StepBuilderEmployee(object):
 
         for file_filter in filters:
             file_name = self._find_source_file(
-                self.buckets['raw_HrPii'],
+                self.buckets['raw_hr_pii'],
                 file_filter)
 
             if file_name is None:
