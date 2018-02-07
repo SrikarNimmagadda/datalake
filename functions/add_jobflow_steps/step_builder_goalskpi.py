@@ -125,8 +125,8 @@ class StepBuilderGoalskpi(object):
         output_bucket = self.buckets['delivery']
 
         script_args = [
-            input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + 'WT_STORE_GOALS/Current'
+            's3://' + input_bucket + '/StoreGoals/Working',
+            's3://' + output_bucket + '/WT_STORE_GOALS/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

@@ -19,6 +19,7 @@ from step_builder_employee import StepBuilderEmployee
 from step_builder_product import StepBuilderProduct
 from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
 from step_builder_goalskpi import StepBuilderGoalskpi
+from step_builder_salesothers import StepBuilderSalesOthers
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -74,5 +75,7 @@ def choose_builder(event):
         return StepBuilderStoreCustomerExperience(factory, S3, BUCKETS, now)
     elif switch == 'goalskpi':
         return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
+	elif switch == 'salesothers':
+        return StepBuilderSalesOthers(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
