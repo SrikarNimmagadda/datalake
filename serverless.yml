@@ -291,8 +291,35 @@ functions:
             builder: goalskpi
           enabled: true
     package:
-      artifact: ${self:custom.package.addStepsArtifact}    
-    
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsSalesOthers:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-salesothers-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 0 * * ? *)
+          input:
+            builder: salesothers
+          enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}	  
 
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
