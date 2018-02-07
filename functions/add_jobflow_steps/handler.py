@@ -75,7 +75,7 @@ def choose_builder(event):
         return StepBuilderStoreCustomerExperience(factory, S3, BUCKETS, now)
     elif switch == 'goalskpi':
         return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
-	elif switch == 'salesothers':
+    elif switch == 'salesothers':
         return StepBuilderSalesOthers(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
