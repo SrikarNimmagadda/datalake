@@ -32,6 +32,9 @@ class StepBuilderStore(object):
             self._build_step_csv_to_parquet_store(),
             self._build_step_store_refinery(),
             self._build_step_store_delivery(),
+            self._build_step_csv_to_parquet_ATT_Dealer_code(),
+            self._build_step_ATT_Dealer_code_refinery(),
+            self._build_step_ATT_Dealer_code_delivery(),
             self._build_step_store_dlcode_assoc_refinery(),
             self._build_step_store_dlcode_assoc_delivery(),
             self._build_step_store_hier_delivery()
@@ -84,6 +87,45 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Store/Working',
             's3://' + output_bucket + '/WT_STORE/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_ATT_Dealer_code(self):
+        step_name = 'CSVToParquetATTDealerCode'
+        script_name = 'ATTDealerCodeCSV2Parquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/ATTDealerCode',
+            's3://' + input_bucket + '/ATTDealerCodes/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_ATT_Dealer_code_refinery(self):
+        step_name = 'ATTDealerCodeRefinery'
+        script_name = 'ATTDealerCodeRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/ATTDealerCode',
+            's3://' + input_bucket + '/ATTDealerCodes/Working/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_ATT_Dealer_code_delivery(self):
+        step_name = 'ATTDealerCodeDelivery'
+        script_name = 'ATTDealerCodeDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_ATT_DELR_CDS',
+            's3://' + input_bucket + '/ATTDealerCode/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

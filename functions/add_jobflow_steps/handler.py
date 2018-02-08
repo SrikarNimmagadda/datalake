@@ -1,5 +1,4 @@
 """ Lambda entry point for add_jobflow_steps functions
-
 Acts as the composition root for the application and calls other classes
 to do all the work, which allows for easier unit testing of the other
 components.
@@ -20,6 +19,7 @@ from step_builder_product import StepBuilderProduct
 from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
 from step_builder_goalskpi import StepBuilderGoalskpi
 from step_builder_salesothers import StepBuilderSalesOthers
+from step_builder_salestransactions import StepBuilderSalesTransactions
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -77,5 +77,7 @@ def choose_builder(event):
         return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
     elif switch == 'salesothers':
         return StepBuilderSalesOthers(factory, S3, BUCKETS, now)
+    elif switch == 'salestransactions':
+        return StepBuilderSalesTransactions(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
