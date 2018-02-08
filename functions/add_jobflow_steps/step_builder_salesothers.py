@@ -1,5 +1,5 @@
-"""Contains the class StepBuilderSalesOthers.
-Builds EMR Steps for SalesOthers files.
+""" Contains the class StepBuilderSalesOthers.
+Builds EMR Steps for sales files.
 """
 
 
@@ -61,6 +61,7 @@ class StepBuilderSalesOthers(object):
         script_name = 'SalesLeadsRefined_Latest.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        raw_bucket = self.buckets['raw_regular']
 
         script_args = [
 
@@ -69,7 +70,7 @@ class StepBuilderSalesOthers(object):
             's3://' + output_bucket + '/StoreDealerAssociation/Working',
             's3://' + input_bucket + '/ATTDealerCode/Working',
             's3://' + input_bucket + '/SalesLeads/Working',
-            's3://' + input_bucket + '/Company',
+            's3://' + raw_bucket + '/Company',
             's3://' + output_bucket + '/SalesLeads'
 
         ]
@@ -83,7 +84,7 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['delivery']
 
         script_args = [
-            's3://' + input_bucket + '/Working',
+            's3://' + input_bucket + 'SalesLeads/Working',
             's3://' + output_bucket + '/WT_SALES_LEADS'
         ]
 
@@ -114,7 +115,7 @@ class StepBuilderSalesOthers(object):
 
             's3://' + input_bucket + '/StoreTraffic/Working',
             's3://' + output_bucket + '/Store/Working',
-            's3://' + output_bucket + '//StoreTraffic'
+            's3://' + output_bucket + '/StoreTraffic'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
