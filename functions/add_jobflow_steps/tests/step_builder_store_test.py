@@ -43,12 +43,13 @@ class StepBuilderStoreTest(unittest.TestCase):
         }
 
         # act
-        self.step = builder._build_step_store_hier_delivery(paths)
+        # self.step = builder._build_step_store_hier_delivery(paths)
+        self.step = builder._build_step_store_hier_delivery()
 
         # assert
         factory.create.assert_called_with(
             'StoreHierarchyDelivery',
-            'DimStoreHierDelivery.py',
+            'Dimensions/Store/DimStoreHierDelivery.py',
             ['s3://tb-app-datalake-discovery-regular', 's3://tb-app-datalake-delivery']
         )
 
