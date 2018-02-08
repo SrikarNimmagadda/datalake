@@ -50,7 +50,8 @@ class StepBuilderStoreTest(unittest.TestCase):
         factory.create.assert_called_with(
             'StoreHierarchyDelivery',
             'Dimensions/Store/DimStoreHierDelivery.py',
-            ['s3://tb-app-datalake-discovery-regular', 's3://tb-app-datalake-delivery']
+            # ['s3://tb-app-datalake-discovery-regular', 's3://tb-app-datalake-delivery']
+            ['s3://tb-app-datalake-discovery-regular/Store/Working', 's3://tb-app-datalake-delivery/WT_STORE_HIER/Current']
         )
 
 
