@@ -37,10 +37,10 @@ class StepBuilderStoreTest(unittest.TestCase):
 
         factory = Mock(StepFactory)
         builder = StepBuilderStore(factory, {}, buckets, stamp)
-        paths = {
-            'store_refine': 'sr',
-            'att_dealer': 'dlr'
-        }
+        # paths = {
+        # 'store_refine': 'sr',
+        # 'att_dealer': 'dlr'
+        # }
 
         # act
         # self.step = builder._build_step_store_hier_delivery(paths)
