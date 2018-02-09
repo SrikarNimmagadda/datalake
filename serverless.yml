@@ -559,13 +559,13 @@ resources:
         AlarmDescription: Alarm when read capacity reaches provisioned read capacity
         AlarmActions:
           - Ref: SNSNotificationTopic
-        MetricName: ${env:FILE_METADATA_READCAPCITY_METRIC_NAME}
+        MetricName: ${env:FILE_METADATA_READCAPACITY_METRIC_NAME}
         Namespace: AWS/DynamoDB
         Statistic: Average
-        Period: ${env:FILE_METADATA_READCAPCITY_PERIOD}
+        Period: ${env:FILE_METADATA_READCAPACITY_PERIOD}
         EvaluationPeriods: 5
-        Threshold: ${env:FILE_METADATA_READCAPCITY_THRESHOLD}
-        ComparisonOperator: ${env:FILE_METADATA_READCAPCITY_COMPARISON_OPR}
+        Threshold: ${env:FILE_METADATA_READCAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:FILE_METADATA_READCAPACITY_COMPARISON_OPR}
         Dimensions:
           - Name: TableName
             Value: ${self:custom.dynamo.fileMetadata.name}
@@ -576,13 +576,13 @@ resources:
         AlarmDescription: Alarm when write capacity reaches provisioned write capacity
         AlarmActions:
           - Ref: SNSNotificationTopic
-        MetricName: ${env:FILE_METADATA_WRITECAPCITY_METRIC_NAME}
+        MetricName: ${env:FILE_METADATA_WRITECAPACITY_METRIC_NAME}
         Namespace: AWS/DynamoDB
         Statistic: Average
-        Period: ${env:FILE_METADATA_WRITECAPCITY_PERIOD}
+        Period: ${env:FILE_METADATA_WRITECAPACITY_PERIOD}
         EvaluationPeriods: 5
-        Threshold: ${env:FILE_METADATA_WRITECAPCITY_THRESHOLD}
-        ComparisonOperator: ${env:FILE_METADATA_WRITECAPCITY_COMPARISON_OPR}
+        Threshold: ${env:FILE_METADATA_WRITECAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:FILE_METADATA_WRITECAPACITY_COMPARISON_OPR}
         Dimensions:
           - Name: TableName
             Value: ${self:custom.dynamo.fileMetadata.name}
@@ -593,13 +593,13 @@ resources:
         AlarmDescription: Alarm when read capacity reaches provisioned read capacity
         AlarmActions:
           - Ref: SNSNotificationTopic
-        MetricName: ${env:PROCESS_METADATA_READCAPCITY_METRIC_NAME}
+        MetricName: ${env:PROCESS_METADATA_READCAPACITY_METRIC_NAME}
         Namespace: AWS/DynamoDB
         Statistic: Average
-        Period: ${env:PROCESS_METADATA_READCAPCITY_PERIOD}
+        Period: ${env:PROCESS_METADATA_READCAPACITY_PERIOD}
         EvaluationPeriods: 5
-        Threshold: ${env:PROCESS_METADATA_READCAPCITY_THRESHOLD}
-        ComparisonOperator: ${env:PROCESS_METADATA_READCAPCITY_COMPARISON_OPR}
+        Threshold: ${env:PROCESS_METADATA_READCAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:PROCESS_METADATA_READCAPACITY_COMPARISON_OPR}
         Dimensions:
           - Name: TableName
             Value: ${self:custom.dynamo.processMetadata.name}
@@ -610,13 +610,13 @@ resources:
         AlarmDescription: Alarm when write capacity reaches provisioned write capacity
         AlarmActions:
          - Ref: SNSNotificationTopic
-        MetricName: ${env:PROCESS_METADATA_WRITECAPCITY_METRIC_NAME}
+        MetricName: ${env:PROCESS_METADATA_WRITECAPACITY_METRIC_NAME}
         Namespace: AWS/DynamoDB
         Statistic: Average
-        Period: ${env:PROCESS_METADATA_WRITECAPCITY_PERIOD}
+        Period: ${env:PROCESS_METADATA_WRITECAPACITY_PERIOD}
         EvaluationPeriods: 5
-        Threshold: ${env:PROCESS_METADATA_WRITECAPCITY_THRESHOLD}
-        ComparisonOperator: ${env:PROCESS_METADATA_WRITECAPCITY_COMPARISON_OPR}
+        Threshold: ${env:PROCESS_METADATA_WRITECAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:PROCESS_METADATA_WRITECAPACITY_COMPARISON_OPR}
         Dimensions:
           - Name: TableName
             Value: ${self:custom.dynamo.processMetadata.name}
@@ -627,13 +627,13 @@ resources:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
-        MetricName: ${env:STORE_FUCNTION_METRIC_NAME}
+        MetricName: ${env:STORE_FUNCTION_METRIC_NAME}
         Namespace: AWS/Lambda
         Statistic: Sum
-        Period: ${env:STORE_FUCNTION_PERIOD}
+        Period: ${env:STORE_FUNCTION_PERIOD}
         EvaluationPeriods: 1
-        Threshold: ${env:STORE_FUCNTION_THRESHOLD}
-        ComparisonOperator: ${env:STORE_FUCNTION_COMPARISON_OPR}
+        Threshold: ${env:STORE_FUNCTION_THRESHOLD}
+        ComparisonOperator: ${env:STORE_FUNCTION_COMPARISON_OPR}
         Dimensions:
           - Name: FunctionName
             Value: ${self:service}-add-steps-store-${self:provider.stage}
