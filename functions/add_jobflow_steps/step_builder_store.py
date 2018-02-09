@@ -37,6 +37,7 @@ class StepBuilderStore(object):
             self._build_step_ATT_Dealer_code_delivery(),
             self._build_step_store_dlcode_assoc_refinery(),
             self._build_step_store_dlcode_assoc_delivery(),
+            self._build_step_store_management_hier_delivery(),
             self._build_step_store_hier_delivery()
         ]
 
@@ -154,6 +155,19 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/StoreDealerAssociation/Working',
             's3://' + output_bucket + '/WT_STORE_DELR_CD_ASSOC/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_management_hier_delivery(self):
+        step_name = 'StoreManagementHierarchyDelivery'
+        script_name = 'DimStoreManagementHierDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery']
+
+        script_args = [
+            's3://' + input_bucket + '/Store/Working',
+            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

@@ -39,8 +39,9 @@ class StepBuilderGoalskpi(object):
             self._build_step_goalskpi_delivery(),
             self._build_step_csv_to_parquet_storegoals(),
             self._build_step_storegoals_refinery(),
-            self._build_step_storegoals_delivery()
-
+            self._build_step_storegoals_delivery(),
+            self._build_step_empgoals_refinery(),
+            self._build_step_empgoals_delivery()
         ]
 
         return steps
@@ -127,6 +128,38 @@ class StepBuilderGoalskpi(object):
         script_args = [
             's3://' + input_bucket + '/StoreGoals/Working',
             's3://' + output_bucket + '/WT_STORE_GOALS/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_empgoals_refinery(self):
+        step_name = 'EmployeeGoalsRefinery'
+        script_name = 'EmpGoalsDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+        input_bucket = self.buckets['raw_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/StoreGoals/Working/',
+            's3://' + output_bucket + '/EmpStoreAssociation/working/',
+            's3://' + output_bucket + '/Employee/working/',
+            's3://' + input_bucket + '/Employee_GP_Goal_SFTP/',
+            's3://' + output_bucket + '/EmployeeGoal/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_empgoals_delivery(self):
+        step_name = 'EmployeeGoalsDelivery'
+        script_name = 'EmpGoalsDiscoveryToRefined.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery']
+
+        script_args = [
+            's3://' + input_bucket + '/EmployeeGoal/Working/',
+            's3://' + output_bucket + '/WT_EMP_GOALS/Current/',
+            's3://' + output_bucket + '/WT_EMP_GOALS/Previous/'
+
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
