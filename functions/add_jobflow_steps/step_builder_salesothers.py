@@ -33,7 +33,10 @@ class StepBuilderSalesOthers(object):
             self._build_step_salesleads_delivery(),
             self._build_step_csv_to_parquet_storetraffic(),
             self._build_step_storetraffic_refinery(),
-            self._build_step_storetraffic_delivery()
+            self._build_step_storetraffic_delivery(),
+            self._build_step_csv_to_parquet_storetransactionadjustment(),
+            self._build_step_storetransactionadjustment_refinery(),
+            self._build_step_storetransactionadjustment_delivery()
         ]
 
         return steps
@@ -129,6 +132,50 @@ class StepBuilderSalesOthers(object):
         script_args = [
             's3://' + input_bucket + '/StoreTraffic/working',
             's3://' + output_bucket + '/WT_STORE_TRAFFIC'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_storetransactionadjustment(self):
+        step_name = 'CSVToParquetStoreTransactionAdjustment'
+        script_name = 'Store_Transaction_Adjustments_CSVtoParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+
+            's3://' + output_bucket + '/StoreTransactionAdjustment',
+            's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/',
+            's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/'
+
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_storetransactionadjustment_refinery(self):
+        step_name = 'StoreTransactionAdjustmentRefinery'
+        script_name = 'Store_Transaction_Adjustments_Refined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+
+            's3://' + output_bucket + '/StoreTransactionAdj',
+            's3://' + input_bucket + '/StoreTransactionAdjustment/Working1/',
+            's3://' + input_bucket + '/StoreTransactionAdjustment/Working2/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_storetransactionadjustment_delivery(self):
+        step_name = 'StoreTransactionAdjustmentDelivery'
+        script_name = 'Store_Transaction_Adjustments_Delivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_STORE_TRANS_ADJMNTS',
+            's3://' + input_bucket + '/StoreTransactionAdj/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
