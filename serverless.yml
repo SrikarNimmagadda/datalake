@@ -642,7 +642,7 @@ resources:
       Type: AWS::SNS::Topic
       Properties:
         Subscription:
-          - Endpoint: ${env:NON_PROD_SNS_ENDPOINT}
+          - Endpoint: ${env:FAILURE_NOTIFICATION_SNS_ENDPOINT}
             Protocol: email
         TopicName: "SNSNotification"
 		
