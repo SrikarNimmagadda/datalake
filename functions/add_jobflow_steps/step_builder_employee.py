@@ -36,19 +36,19 @@ class StepBuilderEmployee(object):
     # ============================================
 
     def _build_step_csv_to_parquet(self):
-        step_name = 'CSVToParquet'
+        step_name = 'CSVToParquetEmployee'
         script_name = 'EmployeeCSVToParquet.py'
         input_bucket = self.buckets['raw_hr_pii']
         output_bucket = self.buckets['discovery_hr_pii']
 
         script_args = [
             's3://' + output_bucket,
-            's3://' + input_bucket + '/Employee'
+            's3://' + input_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_employee_refinery(self, discovery_paths):
+    def _build_step_employee_refinery(self):
         step_name = 'EmployeeRefinery'
         script_name = 'EmployeeDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_hr_pii']
@@ -62,11 +62,11 @@ class StepBuilderEmployee(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_employee_delivery(self, refined_paths):
+    def _build_step_employee_delivery(self):
         step_name = 'EmployeeDelivery'
-        script_name = 'EmployeeRefinedToDelivery.py '
+        script_name = 'EmployeeRefinedToDelivery.py'
         input_bucket = self.buckets['refined_hr_pii']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             input_bucket,

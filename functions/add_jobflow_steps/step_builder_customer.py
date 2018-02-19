@@ -22,18 +22,13 @@ class StepBuilderCustomer(object):
 
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
-        '''discovery_paths = self._build_discovery_paths(
-            self.buckets['discovery_hr_pii'])
-
-        refined_paths = self._build_refined_paths(
-            self.buckets['refined_hr_pii'])'''
 
         steps = [
             self._build_step_csv_to_parquet_customer(),
             self._build_step_customer_refinery(),
             self._build_step_customer_delivery(),
-            # self._build_step_customer_pii_refinery(),
-            # self._build_step_customer_pii_delivery(),
+            self._build_step_customer_pii_refinery(),
+            self._build_step_customer_pii_delivery(),
         ]
 
         return steps
@@ -50,8 +45,8 @@ class StepBuilderCustomer(object):
 
         script_args = [
 
-            's3://' + input_bucket,
-            's3://' + output_bucket + '/Customer/working/'
+            's3://' + input_bucket + '/Customer/Working/',
+            's3://' + output_bucket + '/Customer/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -63,9 +58,8 @@ class StepBuilderCustomer(object):
         output_bucket = self.buckets['refined_customer_pii']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/working/',
-            's3://' + output_bucket + '/Customer/working/'
-            # 's3://' + output_bucket + '/Employee/working'
+            's3://' + input_bucket + '/Customer/Working/',
+            's3://' + output_bucket + '/Customer/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -74,25 +68,24 @@ class StepBuilderCustomer(object):
         step_name = 'CustomerDelivery'
         script_name = 'CustomerRefinedToDelivery.py'
         input_bucket = self.buckets['refined_customer_pii']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/working/',
+            's3://' + input_bucket + '/Customer/Working/',
             's3://' + output_bucket + '/WT_CUST/Current/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-        '''def _build_step_customer_pii_refinery(self):
+    def _build_step_customer_pii_refinery(self):
         step_name = 'CustomerPiiRefinery'
         script_name = 'CustomerPIIDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
+        input_bucket = self.buckets['discovery_customer_pii']
+        output_bucket = self.buckets['refined_customer_pii']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/working/',
-            's3://' + output_bucket + '/CustomerPII/working/'
-            #'s3://' + output_bucket + '/Employee/working'
+            's3://' + input_bucket + '/Customer/Working/',
+            's3://' + output_bucket + '/CustomerPII/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -100,15 +93,15 @@ class StepBuilderCustomer(object):
     def _build_step_customer_pii_delivery(self):
         step_name = 'CustomerPiiDelivery'
         script_name = 'CustomerPIIRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        input_bucket = self.buckets['refined_customer_pii']
+        output_bucket = self.buckets['delivery_customer_pii']
 
         script_args = [
-            's3://' + input_bucket + '/CustomerPII/working/',
+            's3://' + input_bucket + '/CustomerPII/Working/',
             's3://' + output_bucket + '/WT_CUST_PII/Current/'
         ]
 
-        return self.step_factory.create(step_name, script_name, script_args)'''
+        return self.step_factory.create(step_name, script_name, script_args)
 
     # ============================================
     # Support Methods

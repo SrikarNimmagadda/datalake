@@ -5,13 +5,14 @@
 import boto3
 import logging
 import os
+import datetime
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
 
 BUCKETS = {
-    'pii': os.getenv('RAW_PII_BUCKET'),
-    'hr': os.getenv('RAW_HR_BUCKET'),
+    'pii': os.getenv('RAW_CUSTOMER_PII_BUCKET'),
+    'hr': os.getenv('RAW_HR_PII_BUCKET'),
     'regular': os.getenv('RAW_REGULAR_BUCKET')
 }
 
@@ -26,7 +27,6 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     # no logic in the main handler except passing the S3 boto object.
     # this will allow us to unit test the main logic with a mock of that
     # service
-    # handle_event(event, S3)
 
 
 def handle_event(event, s3_service):
@@ -40,17 +40,45 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target('key')
 
-        myDict = {'AT': 'AT_T_MyResults', 'Approved': 'Approved FTE By Location/', 'B2B': 'B2B/', 'C&C': 'C&C Training Report/', 'CategoryNumber': 'Product Category/',
-                  'SalesTransactions': 'SalesTransactions/', 'DealerCodes': 'DealerCodes/', 'Employee': 'Employee/', 'Inventory': 'Inventory/', 'Location': 'Location/',
-                  'Operational': 'Operational Efficiency/', 'PII_Customer': 'Customer/', 'Spring': 'SpringSFTP/', 'BAE': 'BAE/', 'DTV': 'DTV/', 'Multi': 'MultiTracker/',
-                  'SpringMobile': 'SpringMobile/', 'ProductIdentifier': 'ProductIdentifier/', 'PurchaseOrder': 'PurchaseOrder/', 'ReceivingInvoiceHistory': 'ReceivingInvoiceHistory/',
-                  'Goal_Points': 'Goal_Points/', 'Coupons': 'Coupons/'}
+        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_SFTP':
+                  'AT_T_MyResults_RPT',
+                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis.2_SFTP':
+                  'AT_T_MyResults_SFTP',
+                  'C&C': 'C&C Training Report', 'CategoryNumber':
+                  'ProductCategory',
+                  'SalesTransactions': 'Sales', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals', 'StoreTraffic': 'StoreTraffic',
+                  'HR_Employee': 'Employee', 'Inventory': 'Inventory',
+                  'Location': 'Location',
+                  'Operational': 'Operational Efficiency',
+                  'PII_Customer': 'Customer', 'BAE': 'BAE', 'DTV': 'DTV',
+                  'Multi': 'MultiTracker',
+                  'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'DealerCodes': 'ATTDealerCodes',
+                  'SpringMobileStore': 'SpringMobileStore',
+                  'ProductIdentifier': 'ProductIdentifier',
+                  'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
+                  'TransAdjStore': 'StoreTransAdjustments/StoreTrans',
+                  'MiscAdjustments': 'StoreTransAdjustments/MISC_input',
+                  'ReceivingInvoiceHistory': 'ReceivingInvoiceHistory',
+                  'EmpGoalpoint': 'TBGoalPoint/Employee',
+                  'StoreGoalpoint': 'TBGoalPoint/Store',
+                  'Coupons': 'Coupons',
+                  'ReportingDefinitions_DailyGPGoals_Q4ForecastbyDay':
+                  'StoreDailyGoalForecast',
+                  'EmpGpGoal': 'Employee_GP_Goal_SFTP',
+                  'CustExp_OurPromiseFIle': 'StoreCustomerExperience',
+                  'ApprovedFTEByLocationSpringATT_CurrentHeadcount':
+                  'StoreRecruitingHeadcount',
+                  'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
+        today = datetime.date.today()
+        sysdate = today.strftime("%m-%d-%Y")
+        S3.delete_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + myKey[0])
 
-        s3_service.copy_object(Bucket=target_bucket,
-                               Key=myKey + key1,
-                               CopySource=copy_source)
+        S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + myKey[0], CopySource=copy_source)
+
+        S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/lodaed_date=' + str(sysdate) + '/' + key1, CopySource=copy_source)
 
 
 def determine_target(key):
