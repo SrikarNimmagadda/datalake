@@ -23,6 +23,7 @@ custom:
       writeCapacity: ${env:DYNAMO_PROCESS_META_WRITE_CAP, self:custom.dynamo.defaultCapacity}
   buckets:
     code: ${self:service}-code-${self:custom.hen}-${self:provider.stage}
+    dataprocessingerrors: ${self:service}-data-processing-errors-${self:custom.hen}-${self:provider.stage}
     landing: ${self:service}-landing-${self:custom.hen}-${self:provider.stage}
     rawCustomerPii: ${self:service}-raw-customer-pii-${self:custom.hen}-${self:provider.stage}
     rawHrPii: ${self:service}-raw-hr-pii-${self:custom.hen}-${self:provider.stage}
@@ -33,7 +34,8 @@ custom:
     refinedCustomerPii: ${self:service}-refined-customer-pii-${self:custom.hen}-${self:provider.stage}
     refinedHrPii: ${self:service}-refined-hr-pii-${self:custom.hen}-${self:provider.stage}
     refinedRegular: ${self:service}-refined-regular-${self:custom.hen}-${self:provider.stage}
-    delivery: ${self:service}-delivery-${self:custom.hen}-${self:provider.stage}
+    deliveryCustomerPii: ${self:service}-delivery-customer-pii-${self:custom.hen}-${self:provider.stage}
+    deliveryRegular: ${self:service}-delivery-regular-${self:custom.hen}-${self:provider.stage}
   remover:
     buckets:
       - ${self:custom.buckets.code}
@@ -103,7 +105,8 @@ functions:
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
     name: ${self:service}-extract-metadata-${self:provider.stage}
     handler: handler.lambda_handler
@@ -118,7 +121,10 @@ functions:
         bucket: rawRegular
         event: s3:ObjectCreated:*
       - s3:
-        bucket: delivery
+        bucket: deliveryCustomerPii
+        event: s3:ObjectCreated:*
+      - S3:
+        bucket: deliveryRegular
         event: s3:ObjectCreated:*
     package:
       artifact: ${self:custom.package.extractMetadataArtifact}
@@ -127,6 +133,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -136,7 +143,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
     name: ${self:service}-add-steps-store-${self:provider.stage}
@@ -156,6 +164,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -165,7 +174,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
     name: ${self:service}-add-steps-customer-${self:provider.stage}
     handler: handler.lambda_handler
@@ -184,6 +194,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -193,7 +204,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
     name: ${self:service}-add-steps-employee-${self:provider.stage}
@@ -213,6 +225,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -222,7 +235,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
     name: ${self:service}-add-steps-product-${self:provider.stage}
     handler: handler.lambda_handler
@@ -241,6 +255,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -250,7 +265,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
     name: ${self:service}-add-steps-storecustexpr-${self:provider.stage}
     handler: handler.lambda_handler
@@ -269,6 +285,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -278,7 +295,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
     name: ${self:service}-add-steps-goalskpi-${self:provider.stage}
     handler: handler.lambda_handler
@@ -297,6 +315,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -306,7 +325,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
     name: ${self:service}-add-steps-salesothers-${self:provider.stage}
     handler: handler.lambda_handler
@@ -325,6 +345,7 @@ functions:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
       RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
@@ -334,7 +355,8 @@ functions:
       REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
       REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
       REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_BUCKET: ${self:custom.buckets.delivery}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
     name: ${self:service}-add-steps-salestransactions-${self:provider.stage}
@@ -367,6 +389,16 @@ resources:
       Properties:
         BucketName: ${self:custom.buckets.code}
         # need to add policy to allow the cluster to read the bucket
+
+    ######################################################################
+    # DATA PROCESSING ERRORS BUCKET
+    ######################################################################
+    
+    # S3 bucket where exception handling errors are placed
+    S3BucketDataProcessingErrors:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.dataprocessingerrors}
 
     ######################################################################
     # LANDING BUCKET
@@ -519,11 +551,12 @@ resources:
     # DELIVERY BUCKET
     ######################################################################
 
+    # DELIVERY CUSTOMER PII BUCKET
     # S3 bucket that contains the output of the datalake processing (csv)
-    S3BucketDelivery:
+    S3BucketDeliveryCustomerPii:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.buckets.delivery}
+        BucketName: ${self:custom.buckets.deliveryCustomerPii}
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -536,10 +569,10 @@ resources:
                 Fn::GetAtt:
                   - ExtractMetadataLambdaFunction
                   - Arn
-      DependsOn: ExtractMetadataLambdaPermissionDeliveryS3
+      DependsOn: ExtractMetadataLambdaPermissionDeliveryCusomerPiiS3
 
     # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
-    ExtractMetadataLambdaPermissionDeliveryS3:
+    ExtractMetadataLambdaPermissionDeliveryCusomerPiiS3:
       Type: AWS::Lambda::Permission
       Properties:
         FunctionName:
@@ -550,7 +583,41 @@ resources:
         Action: lambda:InvokeFunction
         SourceAccount:
           Ref: AWS::AccountId
-        SourceArn: arn:aws:s3:::${self:custom.buckets.delivery}
+        SourceArn: arn:aws:s3:::${self:custom.buckets.deliveryCustomerPii}
+     
+    # DELIVERY REGULAR BUCKET
+    # S3 bucket that contains the output of the datalake processing (csv) 
+    S3BucketDeliveryRegular:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.deliveryRegular}
+        LifecycleConfiguration:
+          Rules:
+          - Id: ExpirationRule
+            Status: Enabled
+            ExpirationInDays: 14
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: s3:ObjectCreated:*
+              Function:
+                Fn::GetAtt:
+                  - ExtractMetadataLambdaFunction
+                  - Arn
+      DependsOn: ExtractMetadataLambdaPermissionDeliveryRegularS3
+
+    # Permissions for the Lambda that extracts metadata from the raw and delivery buckets
+    ExtractMetadataLambdaPermissionDeliveryRegularS3:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Fn::GetAtt:
+            - ExtractMetadataLambdaFunction
+            - Arn
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.deliveryRegular}
 
     ######################################################################
     # DISCOVERY BUCKETS
@@ -755,7 +822,8 @@ resources:
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
-                    - arn:aws:s3:::${self:custom.buckets.delivery}/*
+                    - arn:aws:s3:::${self:custom.buckets.deliveryCustomerPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.deliveryRegular}/*
                 - Effect: Allow
                   Action:
                     - dynamodb:*
