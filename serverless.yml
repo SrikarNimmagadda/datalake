@@ -691,6 +691,103 @@ resources:
         TableName: ${self:custom.dynamo.processMetadata.name}
 
     ######################################################################
+    # Cloudwatch Alarm and Notifications
+    ######################################################################
+	
+    FileMetadataReadCapacityAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Alarm when read capacity reaches provisioned read capacity
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${env:FILE_METADATA_READCAPACITY_METRIC_NAME}
+        Namespace: AWS/DynamoDB
+        Statistic: Average
+        Period: ${env:FILE_METADATA_READCAPACITY_PERIOD}
+        EvaluationPeriods: 5
+        Threshold: ${env:FILE_METADATA_READCAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:FILE_METADATA_READCAPACITY_COMPARISON_OPR}
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.dynamo.fileMetadata.name}
+   
+    FileMetadataWriteCapacityAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Alarm when write capacity reaches provisioned write capacity
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${env:FILE_METADATA_WRITECAPACITY_METRIC_NAME}
+        Namespace: AWS/DynamoDB
+        Statistic: Average
+        Period: ${env:FILE_METADATA_WRITECAPACITY_PERIOD}
+        EvaluationPeriods: 5
+        Threshold: ${env:FILE_METADATA_WRITECAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:FILE_METADATA_WRITECAPACITY_COMPARISON_OPR}
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.dynamo.fileMetadata.name}
+
+    ProcessMetadataReadCapacityAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Alarm when read capacity reaches provisioned read capacity
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${env:PROCESS_METADATA_READCAPACITY_METRIC_NAME}
+        Namespace: AWS/DynamoDB
+        Statistic: Average
+        Period: ${env:PROCESS_METADATA_READCAPACITY_PERIOD}
+        EvaluationPeriods: 5
+        Threshold: ${env:PROCESS_METADATA_READCAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:PROCESS_METADATA_READCAPACITY_COMPARISON_OPR}
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.dynamo.processMetadata.name}
+
+    ProcessMetadataWriteCapacityAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Alarm when write capacity reaches provisioned write capacity
+        AlarmActions:
+         - Ref: SNSNotificationTopic
+        MetricName: ${env:PROCESS_METADATA_WRITECAPACITY_METRIC_NAME}
+        Namespace: AWS/DynamoDB
+        Statistic: Average
+        Period: ${env:PROCESS_METADATA_WRITECAPACITY_PERIOD}
+        EvaluationPeriods: 5
+        Threshold: ${env:PROCESS_METADATA_WRITECAPACITY_THRESHOLD}
+        ComparisonOperator: ${env:PROCESS_METADATA_WRITECAPACITY_COMPARISON_OPR}
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.dynamo.processMetadata.name}
+
+    StorelambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${env:STORE_FUNCTION_METRIC_NAME}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${env:STORE_FUNCTION_PERIOD}
+        EvaluationPeriods: 1
+        Threshold: ${env:STORE_FUNCTION_THRESHOLD}
+        ComparisonOperator: ${env:STORE_FUNCTION_COMPARISON_OPR}
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-add-steps-store-${self:provider.stage}
+
+    SNSNotificationTopic: 		
+      Type: AWS::SNS::Topic
+      Properties:
+        Subscription:
+          - Endpoint: ${env:FAILURE_NOTIFICATION_SNS_ENDPOINT}
+            Protocol: email
+        TopicName: "SNSNotification"
+		
+    ######################################################################
     # IAM ROLES
     ######################################################################
 
