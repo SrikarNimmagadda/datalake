@@ -50,11 +50,8 @@ class StepBuilderProduct(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
             's3://' + output_bucket,
-            's3://' + input_bucket + '/Product',
-            's3://' + input_bucket + '/ProductIdentifier',
-            's3://' + input_bucket + '/Coupons'
+            input_bucket
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -64,13 +61,13 @@ class StepBuilderProduct(object):
         script_name = 'ProductDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
             output_bucket,
-            's3://' + input_bucket + '/Product/Working',
-            's3://' + input_bucket + '/ProductIdentifier/Working',
-            's3://' + input_bucket + '/Coupons/Working'
+            error_bucket,
+            's3://' + input_bucket
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -79,7 +76,7 @@ class StepBuilderProduct(object):
         step_name = 'ProductDelivery'
         script_name = 'ProductRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             input_bucket,
@@ -97,7 +94,7 @@ class StepBuilderProduct(object):
         script_args = [
 
             's3://' + output_bucket,
-            's3://' + input_bucket + '/ProductCategory'
+            input_bucket
 
         ]
 
@@ -108,10 +105,12 @@ class StepBuilderProduct(object):
         script_name = 'ProductCategoryDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
             output_bucket,
+            error_bucket,
             's3://' + input_bucket + '/ProductCateogry/Working'
         ]
 
@@ -121,7 +120,7 @@ class StepBuilderProduct(object):
         step_name = 'ProductCategoryDelivery'
         script_name = 'ProductRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             input_bucket,

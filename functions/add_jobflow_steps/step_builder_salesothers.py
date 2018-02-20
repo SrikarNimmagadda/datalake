@@ -84,7 +84,7 @@ class StepBuilderSalesOthers(object):
         step_name = 'SalesLeadsDelivery'
         script_name = 'SalesLeadDelivery_Latest.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + 'SalesLeads/Working',
@@ -101,9 +101,8 @@ class StepBuilderSalesOthers(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreTraffic',
+            's3://' + input_bucket + '/StoreTraffic/Working',
             's3://' + output_bucket + '/StoreTraffic'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -127,7 +126,7 @@ class StepBuilderSalesOthers(object):
         step_name = 'StoreTrafficDelivery'
         script_name = 'StoreTrafficDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/StoreTraffic/working',
@@ -143,11 +142,9 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/StoreTransactionAdjustment',
             's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/',
             's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -159,7 +156,6 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/StoreTransactionAdj',
             's3://' + input_bucket + '/StoreTransactionAdjustment/Working1/',
             's3://' + input_bucket + '/StoreTransactionAdjustment/Working2/'
@@ -171,7 +167,7 @@ class StepBuilderSalesOthers(object):
         step_name = 'StoreTransactionAdjustmentDelivery'
         script_name = 'Store_Transaction_Adjustments_Delivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + output_bucket + '/WT_STORE_TRANS_ADJMNTS',

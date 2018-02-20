@@ -55,8 +55,7 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
-            's3://' + input_bucket + '/Sales',
+            's3://' + input_bucket + '/Sales/Working',
             's3://' + output_bucket + '/SalesDetails'
         ]
 
@@ -70,13 +69,11 @@ class StepBuilderSalesTransactions(object):
         raw_bucket = self.buckets['raw_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/Employee/Working',
             's3://' + output_bucket + '/Store/Working',
             's3://' + input_bucket + '/SalesLeads/Working',
             's3://' + raw_bucket + '/Company',
             's3://' + output_bucket + '/SalesDetails'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,7 +82,7 @@ class StepBuilderSalesTransactions(object):
         step_name = 'SalesDetailsDelivery'
         script_name = 'SalesDetailsDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + 'SalesDetails/Working',
@@ -101,10 +98,9 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/ATTSalesActual',
-            's3://' + input_bucket + '/ATT_SalesActuals/Input1',
-            's3://' + input_bucket + '/ATT_SalesActuals/Input_RPT'
+            's3://' + input_bucket + '/ATT_SalesActuals/AT_T_MyResults_SFTP/Working',
+            's3://' + input_bucket + '/ATT_SalesActuals/AT_T_MyResults_RPT/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -116,14 +112,12 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/ATTSalesActual',
             's3://' + input_bucket + '/ATTSalesActual/Working1/',
             's3://' + output_bucket + '/Store/Working/',
             's3://' + output_bucket + '/StoreDealerAssociation/Working/',
             's3://' + output_bucket + '/ATTDealerCode/Working/',
             's3://' + input_bucket + '/ATTSalesActual/Working2/'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -132,7 +126,7 @@ class StepBuilderSalesTransactions(object):
         step_name = 'ATTSalesActualsDelivery'
         script_name = 'ATTSalesActualsDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + output_bucket + '/WT_ATT_SALES_ACTLS',
@@ -148,9 +142,8 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/EmployeeTransactionAdjustment',
-            's3://' + input_bucket + '/EmpTransAdjustment/'
+            's3://' + input_bucket + '/EmpTransAdjustment/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -162,11 +155,9 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-
             's3://' + output_bucket + '/EmployeeTransactionAdjustment',
             's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/',
             's3://' + output_bucket + '/Employee/Working/'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -175,7 +166,7 @@ class StepBuilderSalesTransactions(object):
         step_name = 'EmployeeTransAdjDelivery'
         script_name = 'EmployeeTransAdjDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + output_bucket + '/WT_EMP_TRANS_ADJMNTS',
@@ -191,8 +182,7 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
-            's3://' + input_bucket + '/EmpOperationalEfficiency/',
+            's3://' + input_bucket + '/EmpOperationalEfficiency/Working/',
             's3://' + output_bucket + '/EmployeeOperationalEfficiency'
         ]
 
@@ -205,13 +195,11 @@ class StepBuilderSalesTransactions(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-
             's3://' + input_bucket + '/EmployeeOperationalEfficiency/Working/',
             's3://' + output_bucket + '/EmpStoreAssociation/Working/',
             's3://' + output_bucket + '/Store/Working/',
             's3://' + output_bucket + '/Employee/Working/',
             's3://' + output_bucket + '/EmployeeOperationalEfficiency'
-
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -220,7 +208,7 @@ class StepBuilderSalesTransactions(object):
         step_name = 'EmployeeOperationalEfficiencyDelivery'
         script_name = 'EmployeeOperationalEfficiencyDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/EmployeeOperationalEfficiency/Working/',
