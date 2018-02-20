@@ -13,7 +13,7 @@ class StepBuilderStoreTest(unittest.TestCase):
         stamp = datetime(1999, 1, 7, 12, 55, 0, 0)
         buckets = {
             'discovery_regular': 'tb-app-datalake-discovery-regular',
-            'refined_regular': 'tb-app-datalake-discovery-regular'
+            'refined_regular': 'tb-app-datalake-refined-regular'
         }
 
         builder = StepBuilderStore({}, {}, buckets, stamp)
@@ -30,8 +30,8 @@ class StepBuilderStoreTest(unittest.TestCase):
         # arrange
         stamp = datetime(1999, 1, 7, 12, 55, 0, 0)
         buckets = {
-            'refined_regular': 'tb-app-datalake-discovery-regular',
-            'delivery': 'tb-app-datalake-delivery',
+            'refined_regular': 'tb-app-datalake-refined-regular',
+            'delivery_regular': 'tb-app-datalake-delivery-regular',
             'code': 'tb-app-datalake-code'
         }
 
@@ -51,7 +51,7 @@ class StepBuilderStoreTest(unittest.TestCase):
             'StoreHierarchyDelivery',
             'Dimensions/Store/DimStoreHierDelivery.py',
             # ['s3://tb-app-datalake-discovery-regular', 's3://tb-app-datalake-delivery']
-            ['s3://tb-app-datalake-discovery-regular/Store/Working', 's3://tb-app-datalake-delivery/WT_STORE_HIER/Current']
+            ['s3://tb-app-datalake-refined-regular/Store/Working', 's3://tb-app-datalake-delivery-regular/WT_STORE_HIER/Current']
         )
 
 
