@@ -403,7 +403,7 @@ resources:
           Rules:
             - Id: Glacier-Expiration-Rule
               Status: Enabled
-              ExpirationInDays: 3650
+              ExpirationInDays: 730
               Transitions:
                 - TransitionInDays: 365
                   StorageClass: Glacier
