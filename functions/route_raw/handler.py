@@ -27,7 +27,7 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     # no logic in the main handler except passing the S3 boto object.
     # this will allow us to unit test the main logic with a mock of that
     # service
-
+    handle_event(event, S3)
 
 def handle_event(event, s3_service):
     """Based on incoming object's key prefix"""
