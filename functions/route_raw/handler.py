@@ -29,6 +29,7 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     # service
     handle_event(event, S3)
 
+
 def handle_event(event, s3_service):
     """Based on incoming object's key prefix"""
     # determines output bucket and copies object.
