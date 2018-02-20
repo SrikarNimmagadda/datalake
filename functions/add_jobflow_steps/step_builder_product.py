@@ -61,7 +61,7 @@ class StepBuilderProduct(object):
         script_name = 'ProductDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.bucket['data_processing_errors']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
@@ -105,7 +105,7 @@ class StepBuilderProduct(object):
         script_name = 'ProductCategoryDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.bucket['data_processing_errors']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
