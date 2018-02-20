@@ -401,12 +401,9 @@ resources:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
         LifecycleConfiguration:
           Rules:
-            - Id: Glacier-Expiration-Rule
-              Status: Enabled
-              ExpirationInDays: 730
-              Transitions:
-                - TransitionInDays: 365
-                  StorageClass: Glacier
+          - Id: ExpirationRule
+            Status: Enabled
+            ExpirationInDays: 90
 
     ######################################################################
     # LANDING BUCKET
