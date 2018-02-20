@@ -123,7 +123,7 @@ functions:
       - s3:
         bucket: deliveryCustomerPii
         event: s3:ObjectCreated:*
-      - S3:
+      - s3:
         bucket: deliveryRegular
         event: s3:ObjectCreated:*
     package:
@@ -399,6 +399,14 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
+        LifecycleConfiguration:
+          Rules:
+            - Id: Glacier-Expiration-Rule
+              Status: Enabled
+              ExpirationInDays: 3650
+              Transitions:
+                - TransitionInDays: 365
+                  StorageClass: Glacier
 
     ######################################################################
     # LANDING BUCKET
