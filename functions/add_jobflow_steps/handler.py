@@ -27,6 +27,7 @@ EMR = boto3.client('emr')
 
 BUCKETS = {
     'code': os.getenv('CODE_BUCKET'),
+    'data_processing_errors': os.getenv('DATA_PROCESSING_ERRORS_BUCKET'),
     'raw_customer_pii': os.getenv('RAW_CUSTOMER_PII_BUCKET'),
     'raw_hr_pii': os.getenv('RAW_HR_PII_BUCKET'),
     'raw_regular': os.getenv('RAW_REGULAR_BUCKET'),
