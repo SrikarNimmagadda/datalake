@@ -39,7 +39,7 @@ class StepBuilderCustomer(object):
 
     def _build_step_csv_to_parquet_customer(self):
         step_name = 'CSVToParquetcustomer'
-        script_name = 'CustomerRawtoDiscovery.py'
+        script_name = 'Dimensions/CustomerRawToDiscovery.py'
         input_bucket = self.buckets['raw_customer_pii']
         output_bucket = self.buckets['discovery_customer_pii']
 
@@ -53,7 +53,7 @@ class StepBuilderCustomer(object):
 
     def _build_step_customer_refinery(self):
         step_name = 'CustomerRefinery'
-        script_name = 'CustomerDiscoveryToRefined.py'
+        script_name = 'Dimensions/CustomerDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_customer_pii']
         output_bucket = self.buckets['refined_customer_pii']
 
@@ -66,7 +66,7 @@ class StepBuilderCustomer(object):
 
     def _build_step_customer_delivery(self):
         step_name = 'CustomerDelivery'
-        script_name = 'CustomerRefinedToDelivery.py'
+        script_name = 'Dimensions/CustomerRefinedToDelivery.py'
         input_bucket = self.buckets['refined_customer_pii']
         output_bucket = self.buckets['delivery_regular']
 
@@ -79,7 +79,7 @@ class StepBuilderCustomer(object):
 
     def _build_step_customer_pii_refinery(self):
         step_name = 'CustomerPiiRefinery'
-        script_name = 'CustomerPIIDiscoveryToRefined.py'
+        script_name = 'Dimensions/CustomerPIIDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_customer_pii']
         output_bucket = self.buckets['refined_customer_pii']
 
@@ -92,7 +92,7 @@ class StepBuilderCustomer(object):
 
     def _build_step_customer_pii_delivery(self):
         step_name = 'CustomerPiiDelivery'
-        script_name = 'CustomerPIIRefinedToDelivery.py'
+        script_name = 'Dimensions/CustomerPIIRefinedToDelivery.py'
         input_bucket = self.buckets['refined_customer_pii']
         output_bucket = self.buckets['delivery_customer_pii']
 
