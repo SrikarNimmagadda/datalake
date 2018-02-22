@@ -14,11 +14,11 @@ custom:
   sns:
     snsendpoint: ${env:FAILURE_NOTIFICATION_SNS_ENDPOINT}
   addjobflow:
-    store:
-      storemetricName: ${env:STORE_FUNCTION_METRIC_NAME}
-      storeperiod: ${env:STORE_FUNCTION_PERIOD}
-      storethreshold: ${env:STORE_FUNCTION_THRESHOLD}
-      storecomparisonoperator: ${env:STORE_FUNCTION_COMPARISON_OPR}
+    lambda:
+      lambdametricName: ${env:LAMBDA_FUNCTION_METRIC_NAME}
+      lambdaperiod: ${env:LAMBDA_FUNCTION_PERIOD}
+      lambdathreshold: ${env:LAMBDA_FUNCTION_THRESHOLD}
+      lambdacomparisonoperator: ${env:LAMBDA_FUNCTION_COMPARISON_OPR}
   dynamo:
     defaultCapacity: 1
     fileMetadata:
@@ -805,8 +805,9 @@ resources:
         ComparisonOperator: ${self:custom.dynamo.fileMetadata.readcomparisonpperator}
         Dimensions:
           - Name: TableName
-            Value: ${self:custom.dynamo.fileMetadata.name}
-   
+            Value:
+              - Ref: FileMetadataDynamoTable
+
     FileMetadataWriteCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -822,7 +823,8 @@ resources:
         ComparisonOperator: ${self:custom.dynamo.fileMetadata.writecomparisonoperator}
         Dimensions:
           - Name: TableName
-            Value: ${self:custom.dynamo.fileMetadata.name}
+            Value:
+              - Ref: FileMetadataDynamoTable
 
     ProcessMetadataReadCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -839,7 +841,8 @@ resources:
         ComparisonOperator: ${self:custom.dynamo.processMetadata.readcomparisonoperator}
         Dimensions:
           - Name: TableName
-            Value: ${self:custom.dynamo.processMetadata.name}
+            Value:
+              - Ref: ProcessMetadataDynamoTable
 
     ProcessMetadataWriteCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -856,7 +859,8 @@ resources:
         ComparisonOperator: ${self:custom.dynamo.processMetadata.writecomparisonoperator}
         Dimensions:
           - Name: TableName
-            Value: ${self:custom.dynamo.processMetadata.name}
+            Value:
+              - Ref: ProcessMetadataDynamoTable
 
     StorelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -864,16 +868,143 @@ resources:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
-        MetricName: ${self:custom.addjobflow.store.storemetricName}
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
-        Period: ${self:custom.addjobflow.store.storeperiod}
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
         EvaluationPeriods: 1
-        Threshold: ${self:custom.addjobflow.store.storethreshold}
-        ComparisonOperator: ${self:custom.addjobflow.store.storecomparisonoperator}
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
         Dimensions:
           - Name: FunctionName
-            Value: ${self:service}-add-steps-store-${self:provider.stage}
+            Value:
+              - Ref: addJobFlowStepsStore
+
+    CustomerlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsCustomer Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsCustomer
+
+    EmployeelambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmployee Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsEmployee
+
+    ProductlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsProduct Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsProduct
+
+    StoreCustomerExperiencelambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoreCustomerExperience Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsStoreCustomerExperience
+
+    GoalsKPIlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsGoalsKPI Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsGoalsKPI
+
+    SalesOtherslambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesOthers Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsSalesOthers
+
+    SalesTransactionslambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesTransactions Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              - Ref: addJobFlowStepsSalesTransactions
 
     SNSNotificationTopic: 		
       Type: AWS::SNS::Topic
@@ -882,7 +1013,7 @@ resources:
           - Endpoint: ${self:custom.sns.snsendpoint}
             Protocol: email
         TopicName: SNSNotification
-		
+
     ######################################################################
     # IAM ROLES
     ######################################################################
