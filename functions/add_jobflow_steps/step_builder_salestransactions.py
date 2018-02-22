@@ -50,7 +50,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_salesdetails(self):
         step_name = 'CSVToParquetSalesDetails'
-        script_name = 'SalesDetailsCSVToParquet.py'
+        script_name = 'Facts/SalesDetailsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -63,7 +63,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_salesdetails_refinery(self):
         step_name = 'SalesDetailsRefinery'
-        script_name = 'SalesDetailsRefined.py'
+        script_name = 'Facts/SalesDetailsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         raw_bucket = self.buckets['raw_regular']
@@ -80,7 +80,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_salesdetails_delivery(self):
         step_name = 'SalesDetailsDelivery'
-        script_name = 'SalesDetailsDelivery.py'
+        script_name = 'Facts/SalesDetailsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -93,7 +93,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_attsalesactuals(self):
         step_name = 'CSVToParquetATTSalesActuals'
-        script_name = 'ATTSalesActualsCSV2Par.py'
+        script_name = 'Facts/ATTSalesActualsCSV2Par.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -107,7 +107,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_attsalesactuals_refinery(self):
         step_name = 'ATTSalesActualsRefinery'
-        script_name = 'ATTSalesActualsRefined.py'
+        script_name = 'Facts/ATTSalesActualsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -124,7 +124,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_attsalesactuals_delivery(self):
         step_name = 'ATTSalesActualsDelivery'
-        script_name = 'ATTSalesActualsDelivery.py'
+        script_name = 'Facts/ATTSalesActualsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -137,7 +137,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_employeetrasactionadjustment(self):
         step_name = 'CSVToParquetEmployeeTransAdj'
-        script_name = 'EmployeeTransAdjCSV2Par.py'
+        script_name = 'Facts/EmployeeTransactionAdjustmentCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -150,7 +150,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_employeetrasactionadjustment_refinery(self):
         step_name = 'EmployeeTransAdjRefinery'
-        script_name = 'EmpTransAdjRefined.py'
+        script_name = 'Facts/EmployeeTransactionAdjustmentRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -164,7 +164,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_employeetrasactionadjustment_delivery(self):
         step_name = 'EmployeeTransAdjDelivery'
-        script_name = 'EmployeeTransAdjDelivery.py'
+        script_name = 'Facts/EmployeeTransactionAdjustmentDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -177,7 +177,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_employeeopperationalefficiency(self):
         step_name = 'CSVToParquetOpperationalEfficiency'
-        script_name = 'EmployeeOperationalEfficiencyCSVToParquet.py '
+        script_name = 'Facts/EmployeeOperationalEfficiencyCSVToParquet.py '
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -190,7 +190,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_employeeopperationalefficiency_refinery(self):
         step_name = 'EmployeeOperationalEfficiencyRefinery'
-        script_name = 'EmployeeOperationalEfficiencyRefined.py'
+        script_name = 'Facts/EmployeeOperationalEfficiencyRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -206,7 +206,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_employeeopperationalefficiency_delivery(self):
         step_name = 'EmployeeOperationalEfficiencyDelivery'
-        script_name = 'EmployeeOperationalEfficiencyDelivery.py'
+        script_name = 'Facts/EmployeeOperationalEfficiencyDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 

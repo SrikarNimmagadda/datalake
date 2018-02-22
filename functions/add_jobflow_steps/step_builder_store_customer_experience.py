@@ -31,7 +31,14 @@ class StepBuilderStoreCustomerExperience(object):
         steps = [
             self._build_step_csv_to_parquet_store_customer_experience(),
             self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
+            self._build_step_store_customer_experience_delivery(),
+            self._build_step_csv_to_parquet_store_recruiting_headcount(),
+            self._build_step_store_recruiting_headcount_refined(),
+            self._build_step_store_recruiting_headcount_delivery(),
+            self._build_step_csv_to_parquet_emp_cnc_training(),
+            self._build_step_emp_cnc_training_refined(),
+            self._build_step_emp_cnc_training_delivery()
+
         ]
 
         return steps
@@ -42,26 +49,29 @@ class StepBuilderStoreCustomerExperience(object):
 
     def _build_step_csv_to_parquet_store_customer_experience(self):
         step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'StoreCustExpCSVToParquet.py'
+        script_name = 'Facts/StoreCustExpCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
 
             's3://' + output_bucket,
-            's3://' + input_bucket + '/StoreCustomerExperience'
+            input_bucket
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_store_customer_experience_refinery(self):
         step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'StoreCustExpDiscoveryToRefined.py'
+        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
+            output_bucket,
+            error_bucket,
             's3://' + input_bucket + 'StoreCustomerExperience/Working'
         ]
 
@@ -69,13 +79,99 @@ class StepBuilderStoreCustomerExperience(object):
 
     def _build_step_store_customer_experience_delivery(self):
         step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'StoreCustExpRefinedToDelivery.py'
+        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + output_bucket + '/WT_STORE_CUST_EXPRC',
-            's3://' + input_bucket + '/StoreCustomerExperience/Working'
+            's3://' + input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_store_recruiting_headcount(self):
+        step_name = 'CSVToParquetStoreRecruitingHeadcount'
+        script_name = 'Facts/StoreRecHeadcountCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + output_bucket,
+            input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_recruiting_headcount_refined(self):
+        step_name = 'StoreRecruitingHeadcountRefined'
+        script_name = 'Facts/StoreRecHeadcountDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
+
+        script_args = [
+            's3://' + output_bucket,
+            output_bucket,
+            error_bucket,
+            's3://' + input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_recruiting_headcount_delivery(self):
+        step_name = 'StoreRecruitingHeadcountDelivery'
+        script_name = 'Facts/StoreRecHeadcountRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_STORE_RCRTING_HDCT',
+            's3://' + input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_emp_cnc_training(self):
+        step_name = 'CSVToParquetEMPCNCTraining'
+        script_name = 'Facts/EmpCNCRawToDiscovery.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/EmpCNCTraining/Working',
+            's3://' + output_bucket + '/EmployeeCnCTraining/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_emp_cnc_training_refined(self):
+        step_name = 'EmployeeCnCTrainingRefined'
+        script_name = 'Facts/EmpCNCDiscoverytoRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/EmployeeCnCTraining/Working/',
+            's3://' + output_bucket + '/StoreDealerAssociation/Working/',
+            's3://' + output_bucket + '/Employee/working/',
+            's3://' + output_bucket + '/ATTDealerCode/Working/',
+            's3://' + output_bucket + '/Store/Working/',
+            's3://' + output_bucket + '/EmployeeCNCTrng/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_emp_cnc_training_delivery(self):
+        step_name = 'EMPCNCTrainingDelivery'
+        script_name = 'Facts/EmployeeCNCTrainingRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/EmployeeCNCTrng/Working/',
+            's3://' + output_bucket + '/WT_EMP_C_C_TRAING/Current',
+            's3://' + output_bucket + '/WT_EMP_C_C_TRAING/Previous'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

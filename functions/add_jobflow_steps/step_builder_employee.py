@@ -26,7 +26,9 @@ class StepBuilderEmployee(object):
         steps = [
             self._build_step_csv_to_parquet(),
             self._build_step_employee_refinery(),
-            self._build_step_employee_delivery()
+            self._build_step_employee_delivery(),
+            self._build_step_emp_store_assoc_refinery(),
+            self._build_step_emp_store_assoc_delivery()
         ]
 
         return steps
@@ -37,7 +39,7 @@ class StepBuilderEmployee(object):
 
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquetEmployee'
-        script_name = 'EmployeeCSVToParquet.py'
+        script_name = 'Dimensions/EmployeeCSVToParquet.py'
         input_bucket = self.buckets['raw_hr_pii']
         output_bucket = self.buckets['discovery_hr_pii']
 
@@ -50,7 +52,7 @@ class StepBuilderEmployee(object):
 
     def _build_step_employee_refinery(self):
         step_name = 'EmployeeRefinery'
-        script_name = 'EmployeeDiscoveryToRefined.py'
+        script_name = 'Dimensions/EmployeeDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_hr_pii']
         output_bucket = self.buckets['refined_hr_pii']
 
@@ -64,7 +66,7 @@ class StepBuilderEmployee(object):
 
     def _build_step_employee_delivery(self):
         step_name = 'EmployeeDelivery'
-        script_name = 'EmployeeRefinedToDelivery.py'
+        script_name = 'Dimensions/EmployeeRefinedToDelivery.py'
         input_bucket = self.buckets['refined_hr_pii']
         output_bucket = self.buckets['delivery_regular']
 
@@ -75,37 +77,36 @@ class StepBuilderEmployee(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
+    def _build_step_emp_store_assoc_refinery(self):
+        step_name = 'EmpStoreAssocRefinery'
+        script_name = 'Associations/EmpStoreAssociationDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_hr_pii']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/EmpStoreAssociation/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_emp_store_assoc_delivery(self):
+        step_name = 'EmpStoreAssocDelivery'
+        script_name = 'Associations/EmpStoreAsscociationRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/EmpStoreAssociation/working/',
+            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Current',
+            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Previous/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
     # ============================================
     # Support Methods
     # ============================================
-
-    def _build_discovery_paths(self, bucket):
-        return
-        {
-            'employee': self._build_path(
-                bucket, 'Employee', 'working')
-
-        }
-
-    def _build_refined_paths(self, bucket):
-        return
-        {
-            'employee': self._build_path(
-                bucket, 'Employee', 'working')
-
-        }
-
-    def _build_path(self, bucket, domain, name):
-        path_parts = [
-            's3://' + bucket,
-            domain,
-            self.date_parts['year'],
-            self.date_parts['month'],
-            name + self.date_parts['time'],
-            '*.parquet'
-        ]
-
-        return '/'.join(path_parts)
 
     def _find_source_file(self, bucketname, filter_prefix):
         bucket = self.s3_client.Bucket(bucketname)

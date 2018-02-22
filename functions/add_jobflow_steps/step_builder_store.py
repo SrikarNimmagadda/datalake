@@ -38,9 +38,7 @@ class StepBuilderStore(object):
             self._build_step_store_dlcode_assoc_refinery(),
             self._build_step_store_dlcode_assoc_delivery(),
             self._build_step_store_management_hier_delivery(),
-            self._build_step_store_hier_delivery(),
-            self._build_step_emp_store_assoc_refinery(),
-            self._build_step_emp_store_assoc_delivery()
+            self._build_step_store_hier_delivery()
         ]
 
         return steps
@@ -51,7 +49,7 @@ class StepBuilderStore(object):
 
     def _build_step_csv_to_parquet_store(self):
         step_name = 'CSVToParquetStore'
-        script_name = 'DimStoreParquet.py'
+        script_name = 'Dimensions/DimStoreCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -69,7 +67,7 @@ class StepBuilderStore(object):
 
     def _build_step_store_refinery(self):
         step_name = 'StoreRefinery'
-        script_name = 'DimStoreRefined.py'
+        script_name = 'Dimensions/DimStoreRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -82,7 +80,7 @@ class StepBuilderStore(object):
 
     def _build_step_store_delivery(self):
         step_name = 'StoreDelivery'
-        script_name = 'DimStoreDelivery.py'
+        script_name = 'Dimensions/DimStoreDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -95,7 +93,7 @@ class StepBuilderStore(object):
 
     def _build_step_csv_to_parquet_ATT_Dealer_code(self):
         step_name = 'CSVToParquetATTDealerCode'
-        script_name = 'ATTDealerCodeCSV2Parquet.py'
+        script_name = 'Dimensions/ATTDealerCodeCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -108,7 +106,7 @@ class StepBuilderStore(object):
 
     def _build_step_ATT_Dealer_code_refinery(self):
         step_name = 'ATTDealerCodeRefinery'
-        script_name = 'ATTDealerCodeRefined.py'
+        script_name = 'Dimensions/ATTDealerCodeRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -121,7 +119,7 @@ class StepBuilderStore(object):
 
     def _build_step_ATT_Dealer_code_delivery(self):
         step_name = 'ATTDealerCodeDelivery'
-        script_name = 'ATTDealerCodeDelivery.py'
+        script_name = 'Dimensions/ATTDealerCodeDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -134,7 +132,7 @@ class StepBuilderStore(object):
 
     def _build_step_store_dlcode_assoc_refinery(self):
         step_name = 'StoreDelaerCodeAssociationRefinery'
-        script_name = 'StoreDealerCodeAssociationRefine.py'
+        script_name = 'Associations/StoreDealerCodeAssociationRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -147,7 +145,7 @@ class StepBuilderStore(object):
 
     def _build_step_store_dlcode_assoc_delivery(self):
         step_name = 'StoreDealerCodeAssociationDelivery'
-        script_name = 'StoreDealerCodeAssociationDelivery.py'
+        script_name = 'Associations/StoreDealerCodeAssociationDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -160,7 +158,7 @@ class StepBuilderStore(object):
 
     def _build_step_store_management_hier_delivery(self):
         step_name = 'StoreManagementHierarchyDelivery'
-        script_name = 'DimStoreManagementHierDelivery.py'
+        script_name = 'Dimensions/DimStoreManagementHierDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -173,40 +171,13 @@ class StepBuilderStore(object):
 
     def _build_step_store_hier_delivery(self):
         step_name = 'StoreHierarchyDelivery'
-        script_name = 'Dimensions/Store/DimStoreHierDelivery.py'
+        script_name = 'Dimensions/DimStoreHierDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/Store/Working',
             's3://' + output_bucket + '/WT_STORE_HIER/Current'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_emp_store_assoc_refinery(self):
-        step_name = 'EmpStoreAssocRefinery'
-        script_name = 'EmpStoreAssociationDiscoverytoRefined.py'
-        input_bucket = self.buckets['discovery_hr_pii']
-        output_bucket = self.buckets['refined_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/EmpStoreAssociation/'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_emp_store_assoc_delivery(self):
-        step_name = 'EmpStoreAssocDelivery'
-        script_name = 'EmpStoreAsscociationRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/EmpStoreAssociation/working/',
-            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Current',
-            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Previous/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

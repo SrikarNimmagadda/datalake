@@ -45,7 +45,7 @@ class StepBuilderProduct(object):
 
     def _build_step_csv_to_parquet_product(self):
         step_name = 'CSVToParquetProduct'
-        script_name = 'ProductCSVToParquet.py'
+        script_name = 'Dimensions/ProductCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -58,7 +58,7 @@ class StepBuilderProduct(object):
 
     def _build_step_product_refinery(self):
         step_name = 'ProductRefinery'
-        script_name = 'ProductDiscoveryToRefined.py'
+        script_name = 'Dimensions/ProductDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         error_bucket = self.buckets['data_processing_errors']
@@ -74,7 +74,7 @@ class StepBuilderProduct(object):
 
     def _build_step_product_delivery(self):
         step_name = 'ProductDelivery'
-        script_name = 'ProductRefinedToDelivery.py'
+        script_name = 'Dimensions/ProductRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -87,7 +87,7 @@ class StepBuilderProduct(object):
 
     def _build_step_csv_to_parquet_productcategory(self):
         step_name = 'CSVToParquetProductCategory'
-        script_name = 'ProductCategoryCSVToParquet.py'
+        script_name = 'Dimensions/ProductCategoryCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -102,7 +102,7 @@ class StepBuilderProduct(object):
 
     def _build_step_productcategory_refinery(self):
         step_name = 'ProductCategoryRefinery'
-        script_name = 'ProductCategoryDiscoveryToRefined.py'
+        script_name = 'Dimensions/ProductCategoryDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         error_bucket = self.buckets['data_processing_errors']
@@ -118,7 +118,7 @@ class StepBuilderProduct(object):
 
     def _build_step_productcategory_delivery(self):
         step_name = 'ProductCategoryDelivery'
-        script_name = 'ProductRefinedToDelivery.py'
+        script_name = 'Dimensions/ProductCategoryRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 

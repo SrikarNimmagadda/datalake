@@ -66,7 +66,7 @@ def handle_event(event, s3_service):
                   'Coupons': 'Coupons',
                   'ReportingDefinitions_DailyGPGoals_Q4ForecastbyDay':
                   'StoreDailyGoalForecast',
-                  'EmpGpGoal': 'Employee_GP_Goal_SFTP',
+                  'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
                   'CustExp_OurPromiseFIle': 'StoreCustomerExperience',
                   'ApprovedFTEByLocationSpringATT_CurrentHeadcount':
                   'StoreRecruitingHeadcount',

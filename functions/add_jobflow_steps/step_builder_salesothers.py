@@ -47,13 +47,13 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_csv_to_parquet_salesleads(self):
         step_name = 'CSVToParquetSalesLeads'
-        script_name = 'SalesLeadCSVToParquet_Latest.py'
+        script_name = 'Facts/SalesLeadCSVToParquet_Latest.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
 
-            's3://' + input_bucket + '/SalesLeads',
+            's3://' + input_bucket + '/SalesLeads/Working',
             's3://' + output_bucket + '/SalesLeads'
         ]
 
@@ -61,7 +61,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_salesleads_refinery(self):
         step_name = 'SalesLeadsRefinery'
-        script_name = 'SalesLeadsRefined_Latest.py'
+        script_name = 'Facts/SalesLeadsRefined_Latest.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         raw_bucket = self.buckets['raw_regular']
@@ -82,7 +82,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_salesleads_delivery(self):
         step_name = 'SalesLeadsDelivery'
-        script_name = 'SalesLeadDelivery_Latest.py'
+        script_name = 'Facts/SalesLeadDelivery_Latest.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -95,7 +95,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_csv_to_parquet_storetraffic(self):
         step_name = 'CSVToParquetStoreTraffic'
-        script_name = 'StoreTrafficCSVToParquet.py'
+        script_name = 'Facts/StoreTrafficCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
@@ -109,7 +109,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_storetraffic_refinery(self):
         step_name = 'StoreTrafficRefinery'
-        script_name = 'StoreTrafficRefined.py'
+        script_name = 'Facts/StoreTrafficRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -124,7 +124,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_storetraffic_delivery(self):
         step_name = 'StoreTrafficDelivery'
-        script_name = 'StoreTrafficDelivery.py'
+        script_name = 'Facts/StoreTrafficDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
@@ -137,21 +137,21 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_csv_to_parquet_storetransactionadjustment(self):
         step_name = 'CSVToParquetStoreTransactionAdjustment'
-        script_name = 'Store_Transaction_Adjustments_CSVtoParquet.py'
+        script_name = 'Facts/StoreTransactionAdjustmentsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
             's3://' + output_bucket + '/StoreTransactionAdjustment',
-            's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/',
-            's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/'
+            's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/Working',
+            's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_storetransactionadjustment_refinery(self):
         step_name = 'StoreTransactionAdjustmentRefinery'
-        script_name = 'Store_Transaction_Adjustments_Refined.py'
+        script_name = 'Facts/StoreTransactionAdjustmentsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -165,7 +165,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_storetransactionadjustment_delivery(self):
         step_name = 'StoreTransactionAdjustmentDelivery'
-        script_name = 'Store_Transaction_Adjustments_Delivery.py'
+        script_name = 'Facts/StoreTransactionAdjustmentsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 

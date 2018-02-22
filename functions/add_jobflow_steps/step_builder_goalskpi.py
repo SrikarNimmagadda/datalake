@@ -52,13 +52,13 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_csv_to_parquet_goalskpi(self):
         step_name = 'CSVToParquetTbGoalPoint'
-        script_name = 'TBGoalPointsCSVtoParquet.py'
+        script_name = 'Facts/TBGoalPointsCSVtoParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
 
-            's3://' + input_bucket + '/TBGoalPoint',
+            's3://' + input_bucket + '/TBGoalPoint/Working',
             's3://' + output_bucket + '/TBGoalPoint'
         ]
 
@@ -66,7 +66,7 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_goalskpi_refinery(self):
         step_name = 'GoalKpiRefinery'
-        script_name = 'TBGoalPointsRefine.py'
+        script_name = 'Facts/TBGoalPointsRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
@@ -80,9 +80,9 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_goalskpi_delivery(self):
         step_name = 'GoalsKPIDelivery'
-        script_name = 'TBGoalPointsDelivery.py'
+        script_name = 'Facts/TBGoalPointsDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/TBGoalPoint/Working',
@@ -93,37 +93,37 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_csv_to_parquet_storegoals(self):
         step_name = 'CSVToParquetStoreGoals'
-        script_name = 'DimStoreGoalsParquet.py'
+        script_name = 'Facts/DimStoreGoalsParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreGoals',
-            's3://' + output_bucket + '/StoreGoals/working'
+            's3://' + input_bucket + '/StoreGoals/Working',
+            's3://' + output_bucket + '/StoreGoals/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_storegoals_refinery(self):
         step_name = 'StoreGoalsRefinery'
-        script_name = 'DimStoreGoalsRefined.py'
+        script_name = 'Facts/DimStoreGoalsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreGoals/working',
-            's3://' + output_bucket + '/StoreGoals/working'
+            's3://' + input_bucket + '/StoreGoals/Working',
+            's3://' + output_bucket + '/StoreGoals/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_storegoals_delivery(self):
         step_name = 'StoreGoalsDelivery'
-        script_name = 'DimStoreGoalsDelivery.py'
+        script_name = 'Facts/DimStoreGoalsDelivery.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/StoreGoals/Working',
@@ -134,16 +134,16 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_empgoals_refinery(self):
         step_name = 'EmployeeGoalsRefinery'
-        script_name = 'EmpGoalsDiscoveryToRefined.py'
+        script_name = 'Facts/EmpGoalsDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         input_bucket = self.buckets['raw_regular']
 
         script_args = [
             's3://' + output_bucket + '/StoreGoals/Working/',
-            's3://' + output_bucket + '/EmpStoreAssociation/working/',
-            's3://' + output_bucket + '/Employee/working/',
-            's3://' + input_bucket + '/Employee_GP_Goal_SFTP/',
+            's3://' + output_bucket + '/EmpStoreAssociation/Working/',
+            's3://' + output_bucket + '/Employee/Working/',
+            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
             's3://' + output_bucket + '/EmployeeGoal/'
         ]
 
@@ -151,14 +151,13 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_empgoals_delivery(self):
         step_name = 'EmployeeGoalsDelivery'
-        script_name = 'EmpGoalsDiscoveryToRefined.py'
+        script_name = 'Facts/EmpGoalsDiscoveryToRefined.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/EmployeeGoal/Working/',
-            's3://' + output_bucket + '/WT_EMP_GOALS/Current/',
-            's3://' + output_bucket + '/WT_EMP_GOALS/Previous/'
+            's3://' + output_bucket + '/WT_EMP_GOALS/'
 
         ]
 
