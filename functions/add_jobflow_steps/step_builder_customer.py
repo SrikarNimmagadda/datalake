@@ -46,7 +46,7 @@ class StepBuilderCustomer(object):
         script_args = [
 
             's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/Customer/Working/'
+            's3://' + output_bucket + '/Customer/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -55,11 +55,11 @@ class StepBuilderCustomer(object):
         step_name = 'CustomerRefinery'
         script_name = 'Dimensions/CustomerDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_customer_pii']
-        output_bucket = self.buckets['refined_customer_pii']
+        output_bucket = self.buckets['refined_regular']
 
         script_args = [
             's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/Customer/Working/'
+            's3://' + output_bucket + '/Customer/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -67,12 +67,12 @@ class StepBuilderCustomer(object):
     def _build_step_customer_delivery(self):
         step_name = 'CustomerDelivery'
         script_name = 'Dimensions/CustomerRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_customer_pii']
+        input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/WT_CUST/Current/'
+            's3://' + output_bucket + '/WT_CUST/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,7 +85,7 @@ class StepBuilderCustomer(object):
 
         script_args = [
             's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/CustomerPII/Working/'
+            's3://' + output_bucket + '/CustomerPII/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -98,7 +98,7 @@ class StepBuilderCustomer(object):
 
         script_args = [
             's3://' + input_bucket + '/CustomerPII/Working/',
-            's3://' + output_bucket + '/WT_CUST_PII/Current/'
+            's3://' + output_bucket + '/WT_CUST_PII/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

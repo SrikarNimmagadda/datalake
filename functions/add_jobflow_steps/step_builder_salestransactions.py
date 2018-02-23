@@ -28,9 +28,6 @@ class StepBuilderSalesTransactions(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_salesdetails(),
-            self._build_step_salesdetails_refinery(),
-            self._build_step_salesdetails_delivery(),
             self._build_step_csv_to_parquet_attsalesactuals(),
             self._build_step_attsalesactuals_refinery(),
             self._build_step_attsalesactuals_delivery(),
@@ -48,49 +45,6 @@ class StepBuilderSalesTransactions(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_salesdetails(self):
-        step_name = 'CSVToParquetSalesDetails'
-        script_name = 'Facts/SalesDetailsCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/Sales/Working',
-            's3://' + output_bucket + '/SalesDetails'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_salesdetails_refinery(self):
-        step_name = 'SalesDetailsRefinery'
-        script_name = 'Facts/SalesDetailsRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-        raw_bucket = self.buckets['raw_regular']
-
-        script_args = [
-            's3://' + output_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/Store/Working',
-            's3://' + input_bucket + '/SalesLeads/Working',
-            's3://' + raw_bucket + '/Company',
-            's3://' + output_bucket + '/SalesDetails'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_salesdetails_delivery(self):
-        step_name = 'SalesDetailsDelivery'
-        script_name = 'Facts/SalesDetailsDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            's3://' + input_bucket + 'SalesDetails/Working',
-            's3://' + output_bucket + '/WT_SALES_DTLS'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
     def _build_step_csv_to_parquet_attsalesactuals(self):
         step_name = 'CSVToParquetATTSalesActuals'
         script_name = 'Facts/ATTSalesActualsCSV2Par.py'
@@ -99,8 +53,8 @@ class StepBuilderSalesTransactions(object):
 
         script_args = [
             's3://' + output_bucket + '/ATTSalesActual',
-            's3://' + input_bucket + '/ATT_SalesActuals/AT_T_MyResults_SFTP/Working',
-            's3://' + input_bucket + '/ATT_SalesActuals/AT_T_MyResults_RPT/Working'
+            's3://' + input_bucket + '/AT_T_MyResults_SFTP/Working',
+            's3://' + input_bucket + '/AT_T_MyResults_RPT/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
