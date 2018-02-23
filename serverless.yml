@@ -878,7 +878,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsStore
+              Fn::GetAtt:
+                - AddJobFlowStepsStoreLambdaFunction
+                - Arn
 
     CustomerlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -896,7 +898,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsCustomer
+              Fn::GetAtt:
+                - AddJobFlowStepsCustomerLambdaFunction
+                - Arn
 
     EmployeelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -914,7 +918,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsEmployee
+              Fn::GetAtt:
+                - AddJobFlowStepsEmployeeLambdaFunction
+                - Arn
 
     ProductlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -932,7 +938,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsProduct
+              Fn::GetAtt:
+                - AddJobFlowStepsProductLambdaFunction
+                - Arn
 
     StoreCustomerExperiencelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -950,7 +958,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsStoreCustomerExperience
+              Fn::GetAtt:
+                - AddJobFlowStepsStoreCustomerExperienceLambdaFunction
+                - Arn
 
     GoalsKPIlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -968,7 +978,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsGoalsKPI
+              Fn::GetAtt:
+                - AddJobFlowStepsGoalsKPILambdaFunction
+                - Arn
 
     SalesOtherslambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -986,7 +998,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsSalesOthers
+              Fn::GetAtt:
+                - AddJobFlowStepsSalesOthersLambdaFunction
+                - Arn
 
     SalesTransactionslambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -1004,7 +1018,9 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              - Ref: addJobFlowStepsSalesTransactions
+              Fn::GetAtt:
+                - AddJobFlowStepsSalesTransactionsLambdaFunction
+                - Arn
 
     SNSNotificationTopic: 		
       Type: AWS::SNS::Topic
