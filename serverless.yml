@@ -806,7 +806,7 @@ resources:
         Dimensions:
           - Name: TableName
             Value:
-              - Ref: FileMetadataDynamoTable
+              Ref: FileMetadataDynamoTable
 
     FileMetadataWriteCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -824,7 +824,7 @@ resources:
         Dimensions:
           - Name: TableName
             Value:
-              - Ref: FileMetadataDynamoTable
+              Ref: FileMetadataDynamoTable
 
     ProcessMetadataReadCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -842,7 +842,7 @@ resources:
         Dimensions:
           - Name: TableName
             Value:
-              - Ref: ProcessMetadataDynamoTable
+              Ref: ProcessMetadataDynamoTable
 
     ProcessMetadataWriteCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -860,7 +860,7 @@ resources:
         Dimensions:
           - Name: TableName
             Value:
-              - Ref: ProcessMetadataDynamoTable
+              Ref: ProcessMetadataDynamoTable
 
     StorelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
