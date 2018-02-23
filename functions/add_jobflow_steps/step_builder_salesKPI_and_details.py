@@ -1,9 +1,9 @@
-"""Contains the class StepBuilderGoalsKPi.
-Builds EMR Steps for GoalsKPi files.
+"""Contains the class StepBuildersalesKPI and details.
+Builds EMR Steps for salesKPI and details files.
 """
 
 
-class StepBuilderGoalskpi(object):
+class StepBuilderSalesKPIandDetails(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -34,14 +34,12 @@ class StepBuilderGoalskpi(object):
         #    self.buckets['refined_regular'])
 
         steps = [
-            self._build_step_csv_to_parquet_goalskpi(),
-            self._build_step_goalskpi_refinery(),
-            self._build_step_goalskpi_delivery(),
-            self._build_step_csv_to_parquet_storegoals(),
-            self._build_step_storegoals_refinery(),
-            self._build_step_storegoals_delivery(),
-            self._build_step_empgoals_refinery(),
-            self._build_step_empgoals_delivery()
+            self._build_step_csv_to_parquet_salesdetails(),
+            self._build_step_salesdetails_refinery(),
+            self._build_step_salesdetails_delivery(),
+            self._build_step_salesKPIlist(),
+            self._build_step_salesDetails_Refinery(),
+            self._build_step_salesDetails_Delivery()
         ]
 
         return steps
@@ -50,115 +48,98 @@ class StepBuilderGoalskpi(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_goalskpi(self):
-        step_name = 'CSVToParquetTbGoalPoint'
-        script_name = 'Facts/TBGoalPointsCSVtoParquet.py'
+    def _build_step_csv_to_parquet_salesdetails(self):
+        step_name = 'CSVToParquetSalesDetails'
+        script_name = 'Facts/SalesDetailsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-
-            's3://' + input_bucket + '/TBGoalPoint/Working',
-            's3://' + output_bucket + '/TBGoalPoint'
+            's3://' + input_bucket + '/Sales/Working',
+            's3://' + output_bucket + '/SalesDetails'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_goalskpi_refinery(self):
-        step_name = 'GoalKpiRefinery'
-        script_name = 'Facts/TBGoalPointsRefine.py'
+    def _build_step_salesdetails_refinery(self):
+        step_name = 'SalesDetailsRefinery'
+        script_name = 'Facts/SalesDetailsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        raw_bucket = self.buckets['raw_regular']
 
         script_args = [
-
-            's3://' + input_bucket + '/TBGoalPoint/Working',
-            's3://' + output_bucket + '/TBGoalPoint'
+            's3://' + output_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + input_bucket + '/SalesDetails/Working',
+            's3://' + raw_bucket + '/Company',
+            's3://' + output_bucket + '/SalesDetails'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_goalskpi_delivery(self):
-        step_name = 'GoalsKPIDelivery'
-        script_name = 'Facts/TBGoalPointsDelivery.py'
+    def _build_step_salesdetails_delivery(self):
+        step_name = 'SalesDetailsDelivery'
+        script_name = 'Facts/SalesDetailsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/TBGoalPoint/Working',
-            's3://' + output_bucket + '/WT_TB_GOAL_PT'
+            's3://' + input_bucket + 'SalesDetails/Working',
+            's3://' + output_bucket + '/WT_SALES_DTLS'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_csv_to_parquet_storegoals(self):
-        step_name = 'CSVToParquetStoreGoals'
-        script_name = 'Facts/DimStoreGoalsParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-
-        script_args = [
-
-            's3://' + input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + '/StoreGoals/Working'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_storegoals_refinery(self):
-        step_name = 'StoreGoalsRefinery'
-        script_name = 'Facts/DimStoreGoalsRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-
-        script_args = [
-
-            's3://' + input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + '/StoreGoals/Working'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_storegoals_delivery(self):
-        step_name = 'StoreGoalsDelivery'
-        script_name = 'Facts/DimStoreGoalsDelivery.py'
+    def _build_step_salesKPIlist(self):
+        step_name = 'SalesKPIList'
+        script_name = 'Facts/tb_kpi_list_script.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + '/WT_STORE_GOALS/Current'
+            's3://' + input_bucket + '/KPI_Testing/KPIsinScopeV6-DL.xlsx ',
+            's3://' + output_bucket + '/WT_TB_KPI_LIST'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_empgoals_refinery(self):
-        step_name = 'EmployeeGoalsRefinery'
-        script_name = 'Facts/EmpGoalsDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-        input_bucket = self.buckets['raw_regular']
-
-        script_args = [
-            's3://' + output_bucket + '/StoreGoals/Working/',
-            's3://' + output_bucket + '/EmpStoreAssociation/Working/',
-            's3://' + output_bucket + '/Employee/Working/',
-            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + output_bucket + '/EmployeeGoal/'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_empgoals_delivery(self):
-        step_name = 'EmployeeGoalsDelivery'
-        script_name = 'Facts/EmpGoalsRefinedToDelivery.py'
+    def _build_step_salesDetails_Refinery(self):
+        step_name = 'SalesKPIRefined'
+        script_name = 'Facts/SalesKPI.py'
         input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
+        KPI_FILE = '/KPI_Testing/KPIsinScopeV6-DL.xlsx'
 
         script_args = [
+            's3://' + input_bucket + '/SalesDetails/Working/',
+            's3://' + input_bucket + '/Product/Working/',
+            's3://' + input_bucket + '/ProductCategory/Working/',
+            's3://' + input_bucket + '/StoreTransactionAdj/Working/',
+            's3://' + input_bucket + '/Store/Working/',
+            's3://' + input_bucket + '/ATTSalesActual/Working/',
+            's3://' + input_bucket + '/StoreTraffic/Working/',
+            's3://' + input_bucket + '/StoreCNCTraining/',
+            's3://' + input_bucket + '/StoreHeadCount/Working',
             's3://' + input_bucket + '/EmployeeGoal/Working/',
-            's3://' + output_bucket + '/WT_EMP_GOALS/'
+            's3://' + input_bucket + '/Employee/Working/',
+            's3://' + input_bucket + '/EmpStoreAssociation/Working/',
+            's3://' + input_bucket + '/SalesLeads/Working/',
+            's3://' + input_bucket + '/StoreCustomerExperience/Working/',
+            's3://' + input_bucket + KPI_FILE,
+            's3://' + input_bucket + '/SalesKPI'
+        ]
 
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_salesDetails_Delivery(self):
+        step_name = 'SalesKPIDelivery'
+        script_name = 'Facts/SalesKPIDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_TB_SALES_KPIS',
+            's3://' + input_bucket + '/SalesKPI/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

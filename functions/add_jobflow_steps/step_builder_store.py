@@ -112,7 +112,7 @@ class StepBuilderStore(object):
 
         script_args = [
             's3://' + output_bucket + '/ATTDealerCode',
-            's3://' + input_bucket + '/ATTDealerCodes/Working/'
+            's3://' + input_bucket + '/ATTDealerCode/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

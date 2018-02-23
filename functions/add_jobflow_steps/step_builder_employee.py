@@ -44,8 +44,8 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['discovery_hr_pii']
 
         script_args = [
-            's3://' + output_bucket,
-            's3://' + input_bucket + '/Employee/Working'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + 'Employee/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -54,12 +54,11 @@ class StepBuilderEmployee(object):
         step_name = 'EmployeeRefinery'
         script_name = 'Dimensions/EmployeeDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_hr_pii']
-        output_bucket = self.buckets['refined_hr_pii']
+        output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + output_bucket,
-            's3://' + input_bucket + '/Employee',
-            's3://' + input_bucket + '/Employee/working'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -67,12 +66,12 @@ class StepBuilderEmployee(object):
     def _build_step_employee_delivery(self):
         step_name = 'EmployeeDelivery'
         script_name = 'Dimensions/EmployeeRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_hr_pii']
+        input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_EMP'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/WT_EMP/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,6 +84,7 @@ class StepBuilderEmployee(object):
 
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/EmpStoreAssociation/',
             's3://' + output_bucket + '/EmpStoreAssociation/'
         ]
 
@@ -97,9 +97,8 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/EmpStoreAssociation/working/',
-            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Current',
-            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/Previous/'
+            's3://' + input_bucket + '/EmpStoreAssociation/Working/',
+            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
