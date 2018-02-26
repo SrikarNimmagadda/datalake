@@ -457,8 +457,8 @@ resources:
         NotificationConfiguration:
           TopicConfigurations:
             - Event: s3:ObjectCreated:*
-            Topic:
-              - Ref: SNSNotificationTopic
+              Topic:
+                - Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -507,7 +507,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawCustomerPii}
-	BucketEncryption:
+        BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
                 KMSMasterKeyID:
@@ -550,7 +550,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHrPii}
-	BucketEncryption:
+        BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
                 KMSMasterKeyID:
@@ -634,7 +634,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.deliveryCustomerPii}
-	BucketEncryption:
+        BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
                 KMSMasterKeyID:
@@ -711,7 +711,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryCustomerPii}
-	BucketEncryption:
+        BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
                 KMSMasterKeyID:
@@ -769,7 +769,7 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedCustomerPii}
-	BucketEncryption:
+        BucketEncryption:
           ServerSideEncryptionConfiguration:
             - ServerSideEncryptionByDefault:
                 KMSMasterKeyID:
