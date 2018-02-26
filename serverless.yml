@@ -454,6 +454,11 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
+        NotificationConfiguration:
+          TopicConfigurations:
+            - Event: s3:ObjectCreated:*
+            Topic:
+              - Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -502,6 +507,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawCustomerPii}
+	BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  - Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -539,6 +550,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHrPii}
+	BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  - Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -617,6 +634,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.deliveryCustomerPii}
+	BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  - Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -688,6 +711,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryCustomerPii}
+	BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  - Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: IA-Glacier-Expire-Rule
@@ -740,6 +769,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedCustomerPii}
+	BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  - Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: IA-Glacier-Expire-Rule
@@ -892,6 +927,46 @@ resources:
           - Name: TableName
             Value:
               Ref: ProcessMetadataDynamoTable
+
+    RouterawlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for routeRaw Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Fn::GetAtt:
+                - RouteRawLambdaFunction
+                - Arn
+
+    ExtractMetadatalambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for extractMetadata Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Fn::GetAtt:
+                - ExtractMetadataFunction
+                - Arn
 
     StorelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -1081,6 +1156,70 @@ resources:
             Protocol: email
         TopicName: SNSNotification
 
+    ######################################################################
+    # CMK - KMS
+    ######################################################################
+
+    S3PIIEncryptionKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: A Encryption key for PII Buckets
+        KeyPolicy:
+          Version: '2012-10-17'
+          Id: key-default-1
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS: arn:aws:iam::034165572779:root
+              Action: kms:*
+              Resource: '*'
+            - Sid: Allow access for Key Administrators
+              Effect: Allow
+              Principal:
+              AWS:
+                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+              Action:
+                - kms:Create*
+                - kms:Describe*
+                - kms:Enable*
+                - kms:List*
+                - kms:Put*
+                - kms:Update*
+                - kms:Revoke*
+                - kms:Disable*
+                - kms:Get*
+                - kms:Delete*
+                - kms:TagResource
+                - kms:UntagResource
+                - kms:ScheduleKeyDeletion
+                - kms:CancelKeyDeletion
+              Resource: '*'
+            - Sid: Allow use of the key
+              Effect: Allow
+              Principal:
+              AWS:
+                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+              Action:
+                - kms:Encrypt
+                - kms:Decrypt
+                - kms:ReEncrypt*
+                - kms:GenerateDataKey*
+                - kms:DescribeKey
+              Resource: '*'
+            - Sid: Allow attachment of persistent resources
+              Effect: Allow
+              Principal:
+              AWS:
+                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+              Action:
+                - kms:CreateGrant
+                - kms:ListGrants
+                - kms:RevokeGrant
+              Resource: '*'
+              Condition:
+                Bool:
+                  'kms:GrantIsForAWSResource': 'true'
     ######################################################################
     # IAM ROLES
     ######################################################################
