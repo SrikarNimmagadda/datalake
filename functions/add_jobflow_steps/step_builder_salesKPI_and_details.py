@@ -119,7 +119,7 @@ class StepBuilderSalesKPIandDetails(object):
             's3://' + input_bucket + '/ATTSalesActual/Working/',
             's3://' + input_bucket + '/StoreTraffic/Working/',
             's3://' + input_bucket + '/StoreCNCTraining/',
-            's3://' + input_bucket + '/StoreHeadCount/Working',
+            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
             's3://' + input_bucket + '/EmployeeGoal/Working/',
             's3://' + input_bucket + '/Employee/Working/',
             's3://' + input_bucket + '/EmpStoreAssociation/Working/',
