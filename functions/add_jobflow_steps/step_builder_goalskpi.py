@@ -58,8 +58,10 @@ class StepBuilderGoalskpi(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/TBGoalPoint/Working',
-            's3://' + output_bucket + '/TBGoalPoint'
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
+            's3://' + output_bucket + '/TBGoalPointStore',
+            's3://' + output_bucket + '/TBGoalPointEmployee'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -72,7 +74,8 @@ class StepBuilderGoalskpi(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/TBGoalPoint/Working',
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
             's3://' + output_bucket + '/TBGoalPoint'
         ]
 
