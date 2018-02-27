@@ -41,9 +41,9 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target('key')
 
-        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_SFTP':
+        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
                   'AT_T_MyResults_RPT',
-                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis.2_SFTP':
+                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis.2_Grid_SFTP':
                   'AT_T_MyResults_SFTP',
                   'C&C': 'C&C Training Report', 'CategoryNumber':
                   'ProductCategory',
@@ -51,24 +51,26 @@ def handle_event(event, s3_service):
                   'HR_Employee': 'Employee', 'Inventory': 'Inventory',
                   'Location': 'Location',
                   'Operational': 'Operational Efficiency',
-                  'PII_Customer': 'Customer', 'BAE': 'BAE', 'DTV': 'DTV',
-                  'Multi': 'MultiTracker',
-                  'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'PII_Customer': 'Customer', 'BAE': 'BAE', 'DTVNow': 'DTV',
+                  'MultiTracker_SpringMobileMultiTracker': 'MultiTracker',
+                  'OperationalEFC_TotalLoss' : 'EmpOperationalEfficiency',
+                  'ScoreCardGoals_GoalsforSQL': 'StoreGoals',
                   'DealerCodes': 'ATTDealerCodes',
-                  'SpringMobileStore': 'SpringMobileStore',
+                  'SpringMobileStoreList': 'SpringMobileStore',
+                  'Report202020' : 'SalesLeads', 
                   'ProductIdentifier': 'ProductIdentifier',
                   'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
                   'TransAdjStore': 'StoreTransAdjustments/StoreTrans',
                   'MiscAdjustments': 'StoreTransAdjustments/MISC_input',
                   'ReceivingInvoiceHistory': 'ReceivingInvoiceHistory',
-                  'EmpGoalpoint': 'TBGoalPoint/Employee',
-                  'StoreGoalpoint': 'TBGoalPoint/Store',
+                  'GoalPoints_EmployeeScorecard': 'TBGoalPointEmployee',
+                  'GoalPoints_StoreScorecard': 'TBGoalPointStore',
                   'Coupons': 'Coupons',
-                  'ReportingDefinitions_DailyGPGoals_Q4ForecastbyDay':
+                  'ReportingDailyGP_Q4ForecastbyDay':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
                   'CustExp_OurPromiseFIle': 'StoreCustomerExperience',
-                  'ApprovedFTEByLocationSpringATT_CurrentHeadcount':
+                  'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
                   'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
 
