@@ -66,13 +66,11 @@ class StepBuilderStoreCustomerExperience(object):
         script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
             output_bucket,
-            error_bucket,
-            's3://' + input_bucket + 'StoreCustomerExperience/Working'
+            's3://' + input_bucket + '/StoreCustomerExperience/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,7 +83,7 @@ class StepBuilderStoreCustomerExperience(object):
 
         script_args = [
             's3://' + output_bucket + '/WT_STORE_CUST_EXPRC',
-            's3://' + input_bucket
+            's3://' + input_bucket + '/StoreCustomerExperience/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -170,8 +168,7 @@ class StepBuilderStoreCustomerExperience(object):
 
         script_args = [
             's3://' + input_bucket + '/EmployeeCNCTrng/Working/',
-            's3://' + output_bucket + '/WT_EMP_C_C_TRAING/Current',
-            's3://' + output_bucket + '/WT_EMP_C_C_TRAING/Previous'
+            's3://' + output_bucket + '/WT_EMP_C_C_TRAING/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
