@@ -72,7 +72,7 @@ class StepBuilderStoreCustomerExperience(object):
             's3://' + output_bucket,
             output_bucket,
             error_bucket,
-            's3://' + input_bucket + 'StoreCustomerExperience/Working'
+            's3://' + input_bucket
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
