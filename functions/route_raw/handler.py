@@ -47,7 +47,8 @@ def handle_event(event, s3_service):
                   'AT_T_MyResults_SFTP',
                   'C&C': 'C&C Training Report', 'CategoryNumber':
                   'ProductCategory',
-                  'SalesTransactions': 'Sales', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals', 'StoreTraffic': 'StoreTraffic',
+                  'SalesTransactions': 'Sales', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'StoreTraffic': 'StoreTraffic',
                   'HR_Employee': 'Employee', 'Inventory': 'Inventory',
                   'Location': 'Location',
                   'Operational': 'Operational Efficiency',
