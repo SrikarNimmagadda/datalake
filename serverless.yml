@@ -1171,14 +1171,27 @@ resources:
             - Sid: Enable IAM User Permissions
               Effect: Allow
               Principal:
-                AWS: arn:aws:iam::034165572779:root
+                AWS:
+                  - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - iam
+                        - Ref: AWS::AccountId
+                        - root
               Action: kms:*
               Resource: '*'
             - Sid: Allow access for Key Administrators
               Effect: Allow
               Principal:
               AWS:
-                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+                - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - iam
+                        - Ref: AWS::AccountId
+                        - user/GMEDataLakeEng
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1199,7 +1212,13 @@ resources:
               Effect: Allow
               Principal:
               AWS:
-                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+                - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - iam
+                        - Ref: AWS::AccountId
+                        - user/GMEDataLakeEng
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1211,7 +1230,13 @@ resources:
               Effect: Allow
               Principal:
               AWS:
-                - arn:aws:iam::034165572779:user/GMEDataLakeEng
+                - Fn::Join:
+                      - ':'
+                      - - arn
+                        - aws
+                        - iam
+                        - Ref: AWS::AccountId
+                        - user/GMEDataLakeEng
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
