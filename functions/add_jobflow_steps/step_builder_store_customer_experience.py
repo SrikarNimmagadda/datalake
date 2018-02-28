@@ -96,7 +96,7 @@ class StepBuilderStoreCustomerExperience(object):
 
         script_args = [
             's3://' + output_bucket,
-            input_bucket
+            's3://' + input_bucket + '/StoreRecruitingHeadcount'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -106,13 +106,11 @@ class StepBuilderStoreCustomerExperience(object):
         script_name = 'Facts/StoreRecHeadcountDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket,
             output_bucket,
-            error_bucket,
-            's3://' + input_bucket
+            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -125,7 +123,7 @@ class StepBuilderStoreCustomerExperience(object):
 
         script_args = [
             's3://' + output_bucket + '/WT_STORE_RCRTING_HDCT',
-            's3://' + input_bucket
+            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
