@@ -152,7 +152,7 @@ class StepBuilderStoreCustomerExperience(object):
         script_args = [
             's3://' + input_bucket + '/EmployeeCnCTraining/Working/',
             's3://' + output_bucket + '/StoreDealerAssociation/Working/',
-            's3://' + output_bucket + '/Employee/working/',
+            's3://' + output_bucket + '/Employee/Working/',
             's3://' + output_bucket + '/ATTDealerCode/Working/',
             's3://' + output_bucket + '/Store/Working/',
             's3://' + output_bucket + '/EmployeeCNCTrng/'
