@@ -99,11 +99,13 @@ class StepBuilderGoalskpi(object):
         script_name = 'Facts/DimStoreGoalsParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
             's3://' + input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + '/StoreGoals/Working'
+            's3://' + output_bucket + '/StoreGoals/Working',
+            's3://' + error_bucket + '/StoreGoals'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -113,11 +115,13 @@ class StepBuilderGoalskpi(object):
         script_name = 'Facts/DimStoreGoalsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
             's3://' + input_bucket + '/StoreGoals/Working',
-            's3://' + output_bucket + '/StoreGoals/Working'
+            's3://' + output_bucket + '/StoreGoals/Working',
+            's3://' + error_bucket + '/StoreGoals'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
