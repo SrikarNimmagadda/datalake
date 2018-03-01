@@ -1283,7 +1283,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     CustomerRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1301,7 +1301,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     	  
     CustomerPiiDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1319,7 +1319,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     CustomerPiiRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1337,7 +1337,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     EmployeeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1355,7 +1355,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     EmployeeRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1373,7 +1373,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     ProductDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1391,7 +1391,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     ProductRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1409,7 +1409,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     ProductCategoryDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1427,7 +1427,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     ProductCategoryRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1445,7 +1445,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     StoreDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1463,7 +1463,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     StoreRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1481,7 +1481,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     AttDealercodeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1499,7 +1499,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     
     AttDealercodeRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1517,7 +1517,7 @@ resources:
           UpdateBehavior: "UPDATE_IN_DATABASE"
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
-          ScheduleExpression: "cron(0/15 * * * ? *)"
+          ScheduleExpression: "cron(0 0 * * ? *)"
     	
     ######################################################################
     # IAM ROLES
