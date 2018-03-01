@@ -52,6 +52,7 @@ class StepBuilderStore(object):
         script_name = 'Dimensions/DimStoreCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket + '/Location/Working',
@@ -60,7 +61,8 @@ class StepBuilderStore(object):
             's3://' + input_bucket + '/MultiTracker/Working',
             's3://' + input_bucket + '/SpringMobileStore/Working',
             's3://' + input_bucket + '/DTV/Working',
-            's3://' + output_bucket + '/Store/Working'
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -70,10 +72,12 @@ class StepBuilderStore(object):
         script_name = 'Dimensions/DimStoreRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket + '/Store/Working',
-            's3://' + output_bucket + '/Store/Working'
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -135,10 +139,12 @@ class StepBuilderStore(object):
         script_name = 'Associations/StoreDealerCodeAssociationRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket + '/StoreDealerAssociation/Working',
-            's3://' + output_bucket + '/StoreDealerAssociation/Working'
+            's3://' + output_bucket + '/StoreDealerAssociation/Working',
+            's3://' + error_bucket + '/StoreDealerAssociation'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
