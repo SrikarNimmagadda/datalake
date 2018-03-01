@@ -46,7 +46,7 @@ class DimStoreDelivery(object):
                             + "WindowWrapGraphics,LiveDTV,LearningTables,CommunityTableIndicator,DiamondDisplays," \
                             + "CFixtures,TIOKioskIndicator,ApprovedforFlexBladeIndicator,CapIndexScore," \
                             + "SellingWallNotes,RemodelDate,SpringMarket,SpringRegion,SpringDistrict,DTVNowIndicator," \
-                            + "BAEWorkDayId,BSISWorkDayId,SpringMarketVP,SpringRegionDirector,SpringDistrictManager"
+                            + "BAEWorkDayId,BSISWorkDayId,SpringRegionVP,SpringMarketDirector,SpringDistrictManager"
 
         self.storeDeliveryColumnSelect = "select a.StoreNumber as store_num ,a.CompanyCd as co_cd ," \
                                          + "a.SourceStoreIdentifier as src_store_id ,a.LocationName as loc_nm ," \
@@ -186,12 +186,19 @@ class DimStoreDelivery(object):
                                                     "inner join att_dealer_code c on b.DealerCode = c.DealerCode")\
                 .registerTempTable("store")
 
-            newRow = self.sparkSession.createDataFrame([[0, 4, '', 'General Location', '', '', '', '', '', '', '', '',
+            newRow = self.sparkSession.createDataFrame([[0, 4, 0, 'General Location', '', '', '', '', '', '', '', '',
                                                          '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
                                                          '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
                                                          '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
                                                          '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', 'I']])
+                                                         '', '', '', '', 'I'],
+                                                        [-2, 4, -2, 'Unknown', '', '', '', '', '', '', '', '',
+                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+                                                         '', '', '', '', 'I']
+                                                        ])
             dfStoreCurr = self.sparkSession.sql(self.storeDeliveryColumnSelect).union(newRow)
             dfStoreCurr.coalesce(1).write.mode("overwrite").csv(self.storeCurrentPath, header=True)
             dfStoreCurr.coalesce(1).write.mode("append").csv(self.storePreviousPath, header=True)

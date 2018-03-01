@@ -1,10 +1,10 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, regexp_extract, regexp_replace, col, when, hash, from_unixtime, \
-    unix_timestamp, substring, year
-from pyspark.sql.types import IntegerType
+    unix_timestamp, substring, year, lit
+from pyspark.sql.types import IntegerType, DateType
 import boto3
 import sys
-
+from pyspark.sql.utils import AnalysisException
 from datetime import datetime
 
 
@@ -26,6 +26,7 @@ class DimStoreRefined(object):
         self.storeWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + self.workingName
         self.storePartitonPath = 's3://' + self.refinedBucket + '/' + self.storeName
         self.storeCSVPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + 'csv'
+        self.dataProcessingErrorPath = sys.argv[3]
 
         self.locationName = "Location"
         self.baeName = "BAE"
@@ -33,6 +34,7 @@ class DimStoreRefined(object):
         self.springMobileName = "SpringMobile"
         self.dtvLocationName = "DTVLocation"
         self.dealerName = "Dealer"
+        self.storeRefinedName = "StoreRefined"
 
         self.prefixLocationDiscoveryPath = self.storeName + '/' + self.locationName
         self.prefixBaeDiscoveryPath = self.storeName + '/' + self.baeName
@@ -76,7 +78,7 @@ class DimStoreRefined(object):
                             + "WindowWrapGraphics,LiveDTV,LearningTables,CommunityTableIndicator,DiamondDisplays," \
                             + "CFixtures,TIOKioskIndicator,ApprovedforFlexBladeIndicator,CapIndexScore," \
                             + "SellingWallNotes,RemodelDate,SpringMarket,SpringRegion,SpringDistrict,DTVNowIndicator," \
-                            + "BAEWorkDayId,BSISWorkDayId,SpringMarketVP,SpringRegionDirector,SpringDistrictManager"
+                            + "BAEWorkDayId,BSISWorkDayId,SpringRegionVP,SpringMarketDirector,SpringDistrictManager"
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
@@ -114,36 +116,86 @@ class DimStoreRefined(object):
 
         lastUpdatedBAEFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixBaeDiscoveryPath,
                                                        self.discoveryBucket)
-        self.sparkSession.read.parquet(lastUpdatedBAEFile).registerTempTable("BAE")
+
+        dfBAE = self.sparkSession.read.parquet(lastUpdatedBAEFile)
 
         lastUpdatedDealerFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixDealerDiscoveryPath,
                                                           self.discoveryBucket)
-        self.sparkSession.read.parquet(lastUpdatedDealerFile).withColumnRenamed("TBLoc", "StoreNo").\
-            registerTempTable("Dealer")
+        dfDealer = self.sparkSession.read.parquet(lastUpdatedDealerFile).withColumnRenamed("TBLoc", "StoreNo")
 
         lastUpdatedSpringMobileFile = self.findLastModifiedFile(discoveryBucketNode,
                                                                 self.prefixSpringMobileDiscoveryPath,
                                                                 self.discoveryBucket)
         dfSpringMobile = self.sparkSession.read.parquet(lastUpdatedSpringMobileFile)
-        dfSpringMobile.withColumn("StoreNo", dfSpringMobile["Store"].cast(IntegerType())).\
-            registerTempTable("SpringMobile")
 
         lastUpdatedMultiTrackerFile = self.findLastModifiedFile(discoveryBucketNode,
                                                                 self.prefixMultitrackerDiscoveryPath,
                                                                 self.discoveryBucket)
         dfRealEstate = self.sparkSession.read.parquet(lastUpdatedMultiTrackerFile)
-        dfRealEstate.withColumn("StoreNo", dfRealEstate["Loc"].cast(IntegerType())).\
-            registerTempTable("RealEstate")
 
         lastUpdatedDTVLocationFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixDtvLocationDiscoveryPath,
                                                                self.discoveryBucket)
-        self.sparkSession.read.parquet(lastUpdatedDTVLocationFile).registerTempTable("dtvLocation")
+        dfDTVLocation = self.sparkSession.read.parquet(lastUpdatedDTVLocationFile)
 
         dfLocationMaster = dfLocationMaster.withColumn('StoreNo', split(col('StoreName'), ' ').getItem(0))
 
         dfLocationMaster = dfLocationMaster.withColumn('StoreNumber', regexp_replace(col('StoreNo'), '\D', ''))
 
+        self.log.info("Exception Handling of Store Refine starts")
+
+        dfLocationMaster.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.locationName + '/' + self.storeRefinedName + '/' +
+                self.locationName, header=True)
+
+        dfSpringMobile.filter("Store == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.springMobileName + '/' + self.storeRefinedName + '/' +
+                self.springMobileName, header=True)
+        try:
+            dfSpringMobile = dfSpringMobile.withColumn('OpenDate1', dfSpringMobile['OpenDate'].cast(DateType()))
+        except AnalysisException:
+            self.log.error("SpringMobile OpenDate value is not in correct date format")
+            # dfSpringMobile = dfSpringMobile.withColumn('OpenDate1', lit(''))
+            dfSpringMobile.coalesce(1).write.mode("append").csv(
+                self.dataProcessingErrorPath + '/' + self.springMobileName + '/' + self.storeRefinedName + '/' +
+                self.springMobileName, header=True)
+            return
+        try:
+            dfRealEstate = dfRealEstate.withColumn('RemodelorOpenDate1', dfRealEstate['RemodelorOpenDate'].cast(
+                DateType()))
+        except AnalysisException:
+            self.log.error("RealEstate RemodelorOpenDate value is not in correct date format")
+            # dfRealEstate = dfRealEstate.withColumn('RemodelorOpenDate1', lit(''))
+            dfRealEstate.coalesce(1).write.mode("append").csv(
+                self.dataProcessingErrorPath + '/' + self.multiTrackerName + '/' + self.storeRefinedName + '/' +
+                self.springMobileName, header=True)
+            return
+
+        dfRealEstate.filter("Loc == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.multiTrackerName + '/' + self.storeRefinedName + '/' +
+                self.multiTrackerName, header=True)
+
+        dfDealer.filter("StoreNo == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.dealerName + '/' + self.storeRefinedName + '/' +
+                self.dealerName, header=True)
+
+        dfDTVLocation.filter("Location == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.dtvLocationName + '/' + self.storeRefinedName + '/' +
+                self.dtvLocationName, header=True)
+
+        dfBAE.filter("StoreNo == ''").coalesce(1).write.mode("append").\
+            csv(self.dataProcessingErrorPath + '/' + self.baeName + '/' + self.storeRefinedName + '/' +
+                self.baeName, header=True)
+
+        self.log.info("Exception Handling of Store Refine Ends")
+
         dfLocationMaster = dfLocationMaster.filter("StoreNumber != ''").drop_duplicates(subset=['StoreNumber'])
+        dfBAE.filter("StoreNo != ''").registerTempTable("BAE")
+        dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
+        dfDealer.filter("StoreNo != ''").registerTempTable("Dealer")
+        dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
+        dfSpringMobile.filter("Store != ''").registerTempTable("SpringMobile")
+        dfRealEstate.filter("Loc != ''").withColumn("StoreNo", dfRealEstate["Loc"].cast(IntegerType())).\
+            registerTempTable("RealEstate")
 
         dfLocationMaster = dfLocationMaster.withColumn('Location', regexp_replace(col('StoreName'), '[0-9]', ''))
         dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe',
@@ -194,80 +246,121 @@ class DimStoreRefined(object):
                        otherwise(split(regexp_replace(col("SatTm"), 'S:', ''), '-').getItem(1)))
         dfLocationMaster.registerTempTable("API")
 
-        self.sparkSession.sql("select a.StoreNumber as StoreNumber , '4' as CompanyCd, a.StoreID as "
-                              + "SourceStoreIdentifier, a.Location as LocationName, a.Abbreviation as "
-                              + "Abbreviation,  a.GLCode as GLCode, a.Disabled as StoreStatus, "
-                              + "a.ManagerEmployeeID as StoreManagerEmployeeId, case "
-                              + "when a.ManagerCommissionable = 'TRUE' or a.ManagerCommissionable = 'true' "
-                              + "then '1' when a.ManagerCommissionable = 'FALSE' or "
-                              + "a.ManagerCommissionable = 'false' then '0' else ' ' end as "
-                              + "ManagerCommisionableIndicator, case when a.Address is null or "
-                              + "a.Address = '' then d.StreetAddress else a.Address end as Address, "
-                              + "case when a.City is null or a.City = '' then e.City else a.City end as City,"
-                              + " case when a.StateProv is null or a.StateProv = '' then e.State else "
-                              + "a.StateProv end as StateProvince, case when a.ZipPostal is null or "
-                              + "a.ZipPostal = '' then e.Zip else a.ZipPostal end as PostalCode, a.Country as"
-                              + " Country, cast(a.PhoneNumber AS string) as Phone, cast(a.FaxNumber as "
-                              + "string) as Fax, a.StoreType as StoreType, a.StaffLevel as StaffLevel , "
-                              + "e.SqFtRange as SquareFootRange ,case when d.SquareFeet is null then "
-                              + "a.SquareFootage else d.SquareFeet end as SquareFoot, cast(a.Latitude as "
-                              + "decimal(20,10)) as Lattitude, cast(a.Longitude as decimal(20,10)) as "
-                              + "Longitude, a.TimeZone as Timezone, case when a.AdjustDST = 'TRUE' or "
-                              + "a.AdjustDST = 'true' then '1' when a.AdjustDST = 'FALSE' or a.AdjustDST = "
-                              + "'false' then '0' else ' ' end as AdjustDST, a.CashPolicy as CashPolicy, "
-                              + "a.MaxCashDrawer as MaxCashDrawer, a.Serial_on_OE as SerialOnOEIndicator, "
-                              + "a.Phone_on_OE as PhoneOnOEIndicator, a.PAW_on_OE as PAWOnOEIndicator, "
-                              + "a.Comment_on_OE as CommentOnOEIndicator, case when a.HideCustomerAddress = "
-                              + "'TRUE' or a.HideCustomerAddress = 'true' then '1' when "
-                              + "a.HideCustomerAddress = 'FALSE' or a.HideCustomerAddress = 'false' then "
-                              + "'0' else ' ' end as HideCustomerAddressIndicator, a.EmailAddress as "
-                              + "EmailAddress, a.CnsmrLicNbr as ConsumerLicenseNumber, a.SaleInvoiceCommentRe"
-                              + " as SaleInvoiceComment, a.Taxes as Taxes, case when d.TotalMonthlyRent is "
-                              + "null then a.rent else d.TotalMonthlyRent end as Rent, a.PropertyTaxes as "
-                              + "PropertyTaxes, a.InsuranceAmount as InsuranceAmount, a.OtherCharges as "
-                              + "OtherCharges, a.DepositTaken as Deposit, a.LandlordName as LandlordName, "
-                              + "case when a.UseLocationEmail = 'TRUE' or a.UseLocationEmail = 'true' then "
-                              + "'1' when a.UseLocationEmail = 'FALSE' or a.UseLocationEmail = 'false' then "
-                              + "'0' else ' ' end as UseLocationEmailIndicator, a.StoreType as LocationType, "
-                              + "a.LandlordNotes as LandlordNote, a.LeaseStartDate as LeaseStartDate, "
-                              + "a.LeaseEndDate as LeaseEndDate, a.LeaseNotes as LeaseNotes, c.OpenDate as "
-                              + "StoreOpenDate, c.CloseDate as StoreCloseDate, a.RelocationDate as "
-                              + "RelocationDate, e.StoreTier as StoreTier, a.MonOpenTm as MondayOpenTime, "
-                              + "a.MonCloseTm as MondayCloseTime, a.TueOpenTm as TuesdayOpenTime, "
-                              + "a.TueCloseTm as TuesdayCloseTime, a.WedOpenTm as WednesdayOpenTime, "
-                              + "a.WedCloseTm as WednesdayCloseTime, a.ThuOpenTm as ThursdayOpenTime, "
-                              + "a.ThuCloseTm as ThursdayCloseTime, a.FriOpenTm as FridayOpenTime, "
-                              + "a.FriCloseTm as FridayCloseTime, a.SatOpenTm as SaturdayOpenTime, "
-                              + "a.SatCloseTm as SaturdayCloseTime, a.SunOpenTm as SundayOpenTime, "
-                              + "a.SunCloseTm as SundayCloseTime, e.AcquisitionName as AcquisitionName, "
-                              + "case when e.Base = 'x' then '1' else '0' end as BaseStoreIndicator, "
-                              + "case when e.Comp = 'x' then '1' else '0' end as CompStoreIndicator, "
-                              + "case when e.Same = 'x' then '1' else '0' end as SameStoreIndicator, "
-                              + "' ' as FranchiseStoreIndicator, d.LeaseExpiration as LeaseExpiration, "
-                              + "d.BuildType as BuildTypeCode, d.`C&Cdesignation` as C_CDesignation, "
-                              + "d.AuthorizedRetailerTagLine as AuthorizedRetailedTagLineStatusIndicator, "
-                              + "d.PylonMonumentPanels as PylonMonumentPanels, d.SellingWalls as SellingWalls"
-                              + ", d.MemorableAccessoryWall as MemorableAccessoryWall, d.cashwrapexpansion as"
-                              + " CashWrapExpansion, d.WindowWrapGrpahics as WindowWrapGraphics, d.LiveDTV as"
-                              + " LiveDTV, d.LearningTables as LearningTables, d.CommunityTable as "
-                              + "CommunityTableIndicator, d.DiamondDisplays as DiamondDisplays, d.CFixtures"
-                              + " as CFixtures, d.TIOKiosk as TIOKioskIndicator, d.ApprovedforFlexBlade as "
-                              + "ApprovedforFlexBladeIndicator, d.CapIndexScore as CapIndexScore, "
-                              + "d.SellingWallsNotes as SellingWallNotes, case when unix_timestamp"
-                              + "(d.RemodelorOpenDate,'MM/dd/yyyy') > unix_timestamp(e.OpenDate,'MM/dd/yyyy')"
-                              + " then d.RemodelorOpenDate end as RemodelDate, case when a.ChannelName is "
-                              + "null then d.SpringMarket else a.ChannelName end as SpringMarket, case when"
-                              + " a.RegionName is null then d.Region else a.RegionName end as SpringRegion, "
-                              + "case when a.DistrictName is null then d.District else a.DistrictName end as"
-                              + " SpringDistrict, case when f.DTVNowLocation = 'x' then '0' else '1' end as"
-                              + " DTVNowIndicator, b.BAEWorkdayID as BAEWorkDayId, b.BSISWorkdayID as "
-                              + "BSISWorkDayId, e.MarketVP as SpringMarketVP, e.RegionDirector as "
-                              + "SpringRegionDirector, e.DistrictManager as SpringDistrictManager from API a"
-                              + " left outer join BAE b on a.StoreNumber = b.StoreNo left outer join Dealer c"
-                              + " on a.StoreNumber = c.StoreNo left outer join RealEstate d on a.StoreNumber"
-                              + " = d.StoreNo left outer join SpringMobile e on a.StoreNumber = e.StoreNo and"
-                              + " a.City = e.City left outer join dtvLocation f on a.Location = "
-                              + "f.Location").drop_duplicates(subset=['StoreNumber']).registerTempTable("store")
+        self.sparkSession.sql(
+            "select a.StoreNumber as StoreNumber "
+            ", '4' as CompanyCd"
+            ", a.StoreID as SourceStoreIdentifier"
+            ", a.Location as LocationName"
+            ", a.Abbreviation as Abbreviation"
+            ",  a.GLCode as GLCode"
+            ", a.Disabled as StoreStatus"
+            ", a.ManagerEmployeeID as StoreManagerEmployeeId"
+            ", case when lower(a.ManagerCommissionable) = 'true' then '1' when lower(a.ManagerCommissionable) = 'false'"
+            " then '0' else ' ' end as ManagerCommisionableIndicator"
+            ", case when a.Address = '' then d.StreetAddress when a.Address = '' and d.StreetAddress = '' then "
+            "e.Address else a.Address end as Address"
+            ", case when a.City is null or a.City = '' then e.City else a.City end as City"
+            ", case when a.StateProv is null or a.StateProv = '' then e.State else a.StateProv end as StateProvince"
+            ", case when a.ZipPostal is null or a.ZipPostal = '' then e.Zip else a.ZipPostal end as PostalCode"
+            ", a.Country as Country"
+            ", cast(a.PhoneNumber AS string) as Phone"
+            ", cast(a.FaxNumber as string) as Fax"
+            ", a.StoreType as StoreType"
+            ", a.StaffLevel as StaffLevel "
+            ", e.SqFtRange as SquareFootRange "
+            ",case when d.SquareFeet is null then a.SquareFootage else d.SquareFeet end as SquareFoot"
+            ", cast(a.Latitude as decimal(20,10)) as Lattitude"
+            ", cast(a.Longitude as decimal(20,10)) as Longitude"
+            ", a.TimeZone as Timezone"
+            ", case when lower(a.AdjustDST) = 'true' then '1' when lower(a.AdjustDST) = 'false' then '0' else ' ' end"
+            " as AdjustDST"
+            ", a.CashPolicy as CashPolicy"
+            ", a.MaxCashDrawer as MaxCashDrawer"
+            ", a.Serial_on_OE as SerialOnOEIndicator"
+            ", a.Phone_on_OE as PhoneOnOEIndicator"
+            ", a.PAW_on_OE as PAWOnOEIndicator"
+            ", a.Comment_on_OE as CommentOnOEIndicator"
+            ", case when lower(a.HideCustomerAddress) = 'true' then '1' when lower(a.HideCustomerAddress) = 'false' "
+            "then '0' else ' ' end as HideCustomerAddressIndicator"
+            ", a.EmailAddress as EmailAddress"
+            ", a.CnsmrLicNbr as ConsumerLicenseNumber"
+            ", a.SaleInvoiceCommentRe as SaleInvoiceComment"
+            ", a.Taxes as Taxes"
+            ", case when d.TotalMonthlyRent is null then a.rent else d.TotalMonthlyRent end as Rent"
+            ", a.PropertyTaxes as PropertyTaxes"
+            ", a.InsuranceAmount as InsuranceAmount"
+            ", a.OtherCharges as OtherCharges"
+            ", a.DepositTaken as Deposit"
+            ", a.LandlordName as LandlordName"
+            ", case when lower(a.UseLocationEmail) = 'true' then '1' when lower(a.UseLocationEmail) = 'false' then '0'"
+            " else ' ' end as UseLocationEmailIndicator"
+            ", d.StoreType as LocationType"
+            ", a.LandlordNotes as LandlordNote"
+            ", a.LeaseStartDate as LeaseStartDate"
+            ", a.LeaseEndDate as LeaseEndDate"
+            ", a.LeaseNotes as LeaseNotes"
+            ", e.OpenDate as StoreOpenDate"
+            ", e.ClosedDate as StoreCloseDate"
+            ", a.RelocationDate as RelocationDate"
+            ", e.StoreTier as StoreTier"
+            ", a.MonOpenTm as MondayOpenTime"
+            ", a.MonCloseTm as MondayCloseTime"
+            ", a.TueOpenTm as TuesdayOpenTime"
+            ", a.TueCloseTm as TuesdayCloseTime"
+            ", a.WedOpenTm as WednesdayOpenTime"
+            ", a.WedCloseTm as WednesdayCloseTime"
+            ", a.ThuOpenTm as ThursdayOpenTime"
+            ", a.ThuCloseTm as ThursdayCloseTime"
+            ", a.FriOpenTm as FridayOpenTime"
+            ", a.FriCloseTm as FridayCloseTime"
+            ", a.SatOpenTm as SaturdayOpenTime"
+            ", a.SatCloseTm as SaturdayCloseTime"
+            ", a.SunOpenTm as SundayOpenTime"
+            ", a.SunCloseTm as SundayCloseTime"
+            ", e.AcquisitionName as AcquisitionName"
+            ", case when lower(e.Base) = 'x' or lower(e.Base) = 'yes' or lower(e.Base) = 'true' then '1' end as "
+            "BaseStoreIndicator"
+            ", case when lower(e.Comp) = 'x' or lower(e.Comp) = 'yes' or lower(e.Comp) = 'true' then '1' end as "
+            "CompStoreIndicator"
+            ", case when lower(e.Same) = 'x' or lower(e.Same) = 'yes' or lower(e.Same) = 'true' then '1' end as "
+            "SameStoreIndicator"
+            ",' ' as FranchiseStoreIndicator"
+            ", d.LeaseExpiration as LeaseExpiration"
+            ", d.BuildType as BuildTypeCode"
+            ", d.C_Cdesignation as C_CDesignation"
+            ", d.AuthorizedRetailerTagLine as AuthorizedRetailedTagLineStatusIndicator"
+            ", d.PylonMonumentPanels as PylonMonumentPanels"
+            ", d.SellingWalls as SellingWalls "
+            ", d.MemorableAccessoryWall as MemorableAccessoryWall"
+            ", d.cashwrapexpansion as CashWrapExpansion"
+            ", d.WindowWrapGrpahics as WindowWrapGraphics"
+            ", d.LiveDTV as LiveDTV"
+            ", d.LearningTables as LearningTables"
+            ", d.CommunityTable as CommunityTableIndicator"
+            ", d.DiamondDisplays as DiamondDisplays"
+            ", d.CFixtures as CFixtures"
+            ", d.TIOKiosk as TIOKioskIndicator"
+            ", d.ApprovedforFlexBlade as ApprovedforFlexBladeIndicator"
+            ", d.CapIndexScore as CapIndexScore"
+            ", d.SellingWallsNotes as SellingWallNotes"
+            ", case when unix_timestamp (d.RemodelorOpenDate1,'MM/dd/yyyy') > unix_timestamp(e.OpenDate1,'MM/dd/yyyy')"
+            " then d.RemodelorOpenDate end as RemodelDate"
+            ", case when a.ChannelName is null then d.SpringRegion else a.ChannelName end as SpringRegion"
+            ", case when a.RegionName is null then d.SpringMarket else a.RegionName end as SpringMarket"
+            ", case when a.DistrictName is null then d.SpringDistrict else a.DistrictName end as SpringDistrict"
+            ", case when lower(f.DTVNowLocation) = 'x' or lower(f.DTVNowLocation) = 'yes' or lower(f.DTVNowLocation) ="
+            " 'true' then '1' end as DTVNowIndicator"
+            ", b.BAEWorkdayID as BAEWorkDayId"
+            ", b.BSISWorkdayID as BSISWorkDayId"
+            ", e.RegionVP as SpringRegionVP"
+            ", e.MarketDirector as SpringMarketDirector"
+            ", e.DistrictManager as SpringDistrictManager from API a "
+            "left outer join BAE b on a.StoreNumber = b.StoreNo "
+            "left outer join Dealer c on a.StoreNumber = c.StoreNo "
+            "left outer join RealEstate d on a.StoreNumber = d.StoreNo "
+            "left outer join SpringMobile e on a.StoreNumber = e.Store "
+            "left outer join dtvLocation f on a.Location = f.Location"
+            ).registerTempTable("store")
 
         dfStoreSource = self.sparkSession.sql("select " + self.storeColumns + " from store")
         self.sparkSession.sql("select " + self.storeColumns + " from store ").\
@@ -296,7 +389,7 @@ class DimStoreRefined(object):
                                            "CommunityTableIndicator", "DiamondDisplays", "CFixtures",
                                            "TIOKioskIndicator", "ApprovedforFlexBladeIndicator", "CapIndexScore",
                                            "SellingWallNotes", "RemodelDate", "DTVNowIndicator", "BAEWorkDayId",
-                                           "BSISWorkDayId", "SpringMarketVP", "SpringRegionDirector",
+                                           "BSISWorkDayId", "SpringRegionVP", "SpringMarketDirector",
                                            "SpringDistrictManager")).registerTempTable("store_curr")
 
         refinedBucketNode = s3.Bucket(name=self.refinedBucket)
@@ -331,7 +424,7 @@ class DimStoreRefined(object):
                                                "CommunityTableIndicator", "DiamondDisplays", "CFixtures",
                                                "TIOKioskIndicator", "ApprovedforFlexBladeIndicator", "CapIndexScore",
                                                "SellingWallNotes", "RemodelDate", "DTVNowIndicator", "BAEWorkDayId",
-                                               "BSISWorkDayId", "SpringMarketVP", "SpringRegionDirector",
+                                               "BSISWorkDayId", "SpringRegionVP", "SpringMarketDirector",
                                                "SpringDistrictManager")).registerTempTable("store_prev")
 
             self.sparkSession.sql("select " + storeColumnsWithAlias +

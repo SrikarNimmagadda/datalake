@@ -8,7 +8,7 @@ from urlparse import urlparse
 from pyspark.sql.functions import unix_timestamp, year, substring, from_unixtime
 
 
-class DimStoreParquet(object):
+class DimStoreCSVToParquet(object):
 
     def __init__(self):
 
@@ -28,6 +28,7 @@ class DimStoreParquet(object):
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
         self.storeName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[1]
         self.workingName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[2]
+        self.dataProcessingErrorPath = sys.argv[8]
 
         self.locationName = "Location"
         self.baeName = "BAE"
@@ -36,6 +37,47 @@ class DimStoreParquet(object):
         self.dtvLocationName = "DTVLocation"
         self.dealerName = "Dealer"
         self.fileFormat = ".csv"
+        self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
+
+        self.locationFileColumnCount = 54
+        self.baeFileColumnCount = 7
+        self.dealerCodesColumnCount = 37
+        self.multiTrackerColumnCount = 40
+        self.springMobileColumnCount = 24
+        self.dtvColumnCount = 2
+        self.locationMasterListFile, self.locationHeader = self.searchFile(self.locationMasterList, self.locationName)
+        self.log.info(self.locationMasterListFile)
+        self.log.info(self.locationHeader)
+
+        self.baeLocationFile, self.baeHeader = self.searchFile(self.baeLocation, self.baeName)
+        self.log.info(self.baeLocationFile)
+        self.log.info(self.baeHeader)
+        self.baeCols = [column.replace(' ', '').replace('\r', '') for column in self.baeHeader]
+
+        self.dealerCodesFile, self.dealerHeader = self.searchFile(self.dealerCodes, self.dealerName)
+        self.log.info(self.dealerCodesFile)
+        self.log.info(self.dealerHeader)
+        self.dealerCodesCols = [column.replace(' ', '') for column in self.dealerHeader]
+
+        self.multiTrackerFile, self.multiTrackerHeader = self.searchFile(self.multiTrackerStore, self.multiTrackerName)
+        self.log.info(self.multiTrackerFile)
+        self.log.info(column.decode('utf-8') for column in self.multiTrackerHeader)
+        self.multiTrackerCols = [column.replace(' ', '').replace(',', '').replace('/', '').replace('&', '_') for column
+                                 in self.multiTrackerHeader]
+
+        self.springMobileStoreFile, self.springMobileHeader = self.searchFile(self.springMobileStoreList,
+                                                                              self.springMobileName)
+        self.log.info(self.springMobileStoreFile)
+        self.log.info(column.decode('utf-8') for column in self.springMobileHeader)
+
+        self.springMobileCols = [column.decode('ascii', 'ignore').replace(' ', '').replace('#', '')
+                                 for index, column in enumerate(self.springMobileHeader)]
+
+        self.dTVLocationFile, self.dtvHeader = self.searchFile(self.dtvLocationMasterPath, self.dtvLocationName)
+        self.log.info(self.dTVLocationFile)
+        self.log.info(column.decode('utf-8') for column in self.dtvHeader)
+        self.dtvCols = [column.decode('ascii', 'ignore').replace(' ', '') for column in self.dtvHeader]
 
         self.locationStorePartitionFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
                                               self.locationName
@@ -62,30 +104,153 @@ class DimStoreParquet(object):
         self.dtvLocationStoreWorkingFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
                                                self.dtvLocationName + '/' + self.workingName
 
-    def searchFile(self, strS3url):
+    def copyFile(self, strS3url, newS3PathURL):
 
-        s3 = boto3.resource('s3')
+        newBucketWithPath = urlparse(newS3PathURL)
+        newBucket = newBucketWithPath.netloc
+        newPath = newBucketWithPath.path.lstrip('/')
+
+        bucketWithPath = urlparse(strS3url)
+        bucket = bucketWithPath.netloc
+        originalName = bucketWithPath.path.lstrip('/')
+        self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
+        self.log.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
+
+    def searchFile(self, strS3url, name):
+
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
         path = bucketWithPath.path.lstrip('/')
-        mybucket = s3.Bucket(bucket)
+        mybucket = self.s3.Bucket(bucket)
         objs = mybucket.objects.filter(Prefix=path)
         filePath = ''
         fileName = ''
         file = ''
+        body = ''
+        header = ''
         for s3Object in objs:
             path, filename = os.path.split(s3Object.key)
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
+            body = s3Object.get()['Body'].read()
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
-        return file
+        if name == self.multiTrackerName:
+            for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
+                if i == 2:
+                    header = line
+        # elif name == self.springMobileName:
+        #     for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
+        #         if i == 1:
+        #             header = line[:-1]
+        else:
+            for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
+                if i == 0:
+                    header = line
+
+        return file, header
+
+    def isValidFormatInSource(self):
+
+        locationFileName, locationFileExtension = os.path.splitext(os.path.basename(self.locationMasterListFile))
+        baeFileName, baeFileExtension = os.path.splitext(os.path.basename(self.baeLocationFile))
+        dealerCOdesFileName, dealerCOdesFileExtension = os.path.splitext(os.path.basename(self.dealerCodesFile))
+        multiTrackerFileName, multiTrackerFileExtension = os.path.splitext(os.path.basename(self.multiTrackerFile))
+        springMobileFileName, springMobileFileExtension = os.path.splitext(os.path.basename(self.springMobileStoreFile))
+        dtvFileName, dtvFileExtension = os.path.splitext(os.path.basename(self.dTVLocationFile))
+
+        isValidLocationFormat = self.fileFormat in locationFileExtension
+        isValidBAEFormat = self.fileFormat in baeFileExtension
+        isValidDealerCodesFormat = self.fileFormat in dealerCOdesFileExtension
+        isValidMultiTrackerFormat = self.fileFormat in multiTrackerFileExtension
+        isValidSpringMobileFormat = self.fileFormat in springMobileFileExtension
+        isValidDTVFormat = self.fileFormat in dtvFileExtension
+
+        if all([isValidBAEFormat, isValidDealerCodesFormat, isValidDTVFormat, isValidLocationFormat,
+                isValidMultiTrackerFormat, isValidSpringMobileFormat]):
+            return True
+        return False
+
+    def isValidSchemaInSource(self):
+
+        self.log.info("Location column count " + str(self.locationHeader.__len__()))
+        self.log.info("BAE column count " + str(self.baeHeader.__len__()))
+        self.log.info("Dealer Codes column count " + str(self.dealerHeader.__len__()))
+        self.log.info("Multi Tracker column count " + str(self.multiTrackerHeader.__len__()))
+        self.log.info("Spring Mobile column count " + str(self.springMobileHeader.__len__()))
+        self.log.info("DTV column count " + str(self.dtvHeader.__len__()))
+
+        isValidLocationSchema = False
+
+        if self.locationHeader.__len__() >= self.locationFileColumnCount:
+            isValidLocationSchema = True
+
+        isValidBAESchema = False
+
+        if self.baeHeader.__len__() >= self.baeFileColumnCount:
+            isValidBAESchema = True
+
+        isValidDealerCodesSchema = False
+
+        if self.dealerHeader.__len__() >= self.dealerCodesColumnCount:
+            isValidDealerCodesSchema = True
+
+        isValidMultiTrackerSchema = False
+
+        if self.multiTrackerHeader.__len__() >= self.multiTrackerColumnCount:
+            isValidMultiTrackerSchema = True
+
+        isValidSpringMobileSchema = False
+
+        if self.springMobileHeader.__len__() >= self.springMobileColumnCount:
+            isValidSpringMobileSchema = True
+
+        isValidDTVSchema = False
+
+        if self.dtvHeader.__len__() >= self.dtvColumnCount:
+            isValidDTVSchema = True
+
+        self.log.info("isValidBAESchema " + isValidBAESchema.__str__() + "isValidDealerCodesSchema " +
+                      isValidDealerCodesSchema.__str__() + "isValidDTVSchema " + isValidDTVSchema.__str__() +
+                      "isValidLocationSchema " + isValidLocationSchema.__str__() + "isValidMultiTrackerSchema " +
+                      isValidMultiTrackerSchema.__str__() + "isValidSpringMobileSchema " +
+                      isValidSpringMobileSchema.__str__())
+
+        if all([isValidBAESchema, isValidDealerCodesSchema, isValidDTVSchema, isValidLocationSchema,
+                isValidMultiTrackerSchema, isValidSpringMobileSchema]):
+            return True
+
+        return False
 
     def loadParquet(self):
 
-        self.log.info('Reading the input parquet file')
+        self.log.info('Exception Handling starts')
 
-        locationMasterListFile = self.searchFile(self.locationMasterList)
+        validSourceFormat = self.isValidFormatInSource()
+
+        if not validSourceFormat:
+            self.log.error("Store Source files not in csv format.")
+
+        validSourceSchema = self.isValidSchemaInSource()
+        if not validSourceSchema:
+            self.log.error("Store Source schema does not have all the required columns.")
+
+        if not validSourceFormat or not validSourceSchema:
+            self.log.info("Copy the source files to data processing error path and return.")
+            self.copyFile(self.locationMasterListFile, self.dataProcessingErrorPath + '/' + self.locationName +
+                          self.fileFormat)
+            self.copyFile(self.baeLocationFile, self.dataProcessingErrorPath + '/' + self.baeName + self.fileFormat)
+            self.copyFile(self.dealerCodesFile, self.dataProcessingErrorPath + '/' + self.dealerName + self.fileFormat)
+            self.copyFile(self.multiTrackerFile, self.dataProcessingErrorPath + '/' + self.multiTrackerName +
+                          self.fileFormat)
+            self.copyFile(self.springMobileStoreFile, self.dataProcessingErrorPath + '/' + self.springMobileName +
+                          self.fileFormat)
+            self.copyFile(self.dTVLocationFile, self.dataProcessingErrorPath + '/' + self.dtvLocationName +
+                          self.fileFormat)
+            return
+
+        self.log.info('Source format and schema validation successful.')
+        self.log.info('Reading the input parquet file')
 
         dfLocationMasterList = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
@@ -94,9 +259,7 @@ class DimStoreParquet(object):
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(locationMasterListFile)
-
-        baeLocationFile = self.searchFile(self.baeLocation)
+            load(self.locationMasterListFile).toDF(*self.locationHeader)
 
         dfBAELocation = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
@@ -105,12 +268,10 @@ class DimStoreParquet(object):
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(baeLocationFile)
+            load(self.baeLocationFile).toDF(*self.baeHeader)
 
         dfBAELocation = dfBAELocation.withColumnRenamed("Store Number", "StoreNo").\
             withColumnRenamed("BSISWorkdayID\r", "BSISWorkdayID")
-
-        dealerCodesFile = self.searchFile(self.dealerCodes)
 
         dfDealerCodes = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
@@ -119,69 +280,29 @@ class DimStoreParquet(object):
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(dealerCodesFile)
+            load(self.dealerCodesFile).toDF(*self.dealerCodesCols)
 
-        dfDealerCodes = dfDealerCodes.withColumnRenamed("Dealer Code", "DealerCode"). \
-            withColumnRenamed("Loc #", "Loc#"). \
-            withColumnRenamed("Retail IQ", "RetailIQ"). \
-            withColumnRenamed("ATT Mkt Abbrev", "ATTMktAbbrev"). \
-            withColumnRenamed("ATT Market Name", "ATTMarketName"). \
-            withColumnRenamed("Dispute Mkt", "DisputeMkt"). \
-            withColumnRenamed("WS Expires", "WSExpires"). \
-            withColumnRenamed("Footprint Level", "FootprintLevel"). \
-            withColumnRenamed("Business Expert", "BusinessExpert"). \
-            withColumnRenamed("DF Code", "DFCode"). \
-            withColumnRenamed("Old 2", "Old2"). \
-            withColumnRenamed("ATT Location Name", "ATTLocationName"). \
-            withColumnRenamed("ATT Location ID", "ATTLocationID"). \
-            withColumnRenamed("ATT Region", "ATTRegion"). \
-            withColumnRenamed("Open Date", "OpenDate"). \
-            withColumnRenamed("Close Date", "CloseDate"). \
-            withColumnRenamed("DC Origin", "DCOrigin"). \
-            withColumnRenamed("Store Origin", "StoreOrigin"). \
-            withColumnRenamed("Acquisition Origin", "AcquisitionOrigin"). \
-            withColumnRenamed("TB Loc", "TBLoc"). \
-            withColumnRenamed("SMF Mapping", "SMFMapping"). \
-            withColumnRenamed("SMF Market", "SMFMarket"). \
-            withColumnRenamed("DC status", "DCstatus"). \
-            withColumnRenamed("Sorting Rank", "SortingRank"). \
-            withColumnRenamed("Rank Description", "RankDescription").\
-            withColumnRenamed("Company\r", "Company")
-
-        multiTrackerFile = self.searchFile(self.multiTrackerStore)
-
-        dfMultiTrackerStore = self.sparkSession.sparkContext.textFile(multiTrackerFile). \
+        dfMultiTrackerStore = self.sparkSession.sparkContext.textFile(self.multiTrackerFile). \
             mapPartitions(lambda partition: csv.
                           reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: ''.join(line).strip() != '' and
                                 line[1] != 'Formula Link' and line[2] != 'Spring Mobile Multi-Tracker').\
-            toDF(['delete', 'FormulaLink', 'AT&TRegion', 'AT&TMarket', 'SpringMarket', 'Region', 'District',
-                  'Loc', 'StoreName', 'StreetAddress', 'City_State_Zip',
-                  'SquareFeet', 'TotalMonthlyRent', 'LeaseExpiration', 'November2017TotalOps',
-                  'AverageLast12MonthsOps', 'AverageTrafficCountLast12Months', 'OctoberSMF',
-                  'DealerCode', 'ExteriorPhoto', 'InteriorPhoto', 'BuildType', 'StoreType',
-                  'C&CDesignation', 'RemodelorOpenDate', 'AuthorizedRetailerTagLine',
-                  'PylonMonumentPanels', 'SellingWalls', 'MemorableAccessoryWall',
-                  'CashWrapExpansion', 'WindowWrapGrpahics', 'LiveDTV', 'LearningTables',
-                  'CommunityTable', 'DiamondDisplays', 'CFixtures', 'TIOKiosk',
-                  'ApprovedforFlexBlade', 'CapIndexScore', 'SellingWallsNotes']).drop('delete')
+            toDF(self.multiTrackerCols)
 
-        springMobileStoreFile = self.searchFile(self.springMobileStoreList)
+        dfSpringMobileStoreList = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            option("escape", '"'). \
+            option("quote", "\""). \
+            option("multiLine", "true"). \
+            load(self.springMobileStoreFile).toDF(*self.springMobileCols)
 
-        dfSpringMobileStoreList = self.sparkSession.sparkContext.textFile(springMobileStoreFile).\
-            mapPartitions(lambda partition: csv.
-                          reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
-            filter(lambda line: line[0] not in {'Spring Mobile - AT&T', 'Store #'}).\
-            toDF(['Store', 'StoreName', 'Address', 'City', 'State', 'Zip', 'Market', 'Region',
-                  'District', 'State_delete', 'OpenDate', 'MarketVP', 'RegionDirector',
-                  'DistrictManager', 'blank_column', 'Classification', 'AcquisitionName', 'StoreTier', 'SqFt',
-                  'SqFtRange', 'ClosedDate', 'Status', 'Attribute', 'Base', 'Comp', 'Same']).drop('State_delete',
-                                                                                                  'blank_column')
-
-        dtvLocationSchema = StructType([StructField("Location", StringType(), True),
-                                        StructField("DTVNowLocation", StringType(), True)])
-
-        dfDTVLocationFile = self.searchFile(self.dtvLocationMasterPath)
+        # dfSpringMobileStoreList = self.sparkSession.sparkContext.textFile(self.springMobileStoreFile).\
+        #     mapPartitions(lambda partition: csv.
+        #                   reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
+        #     filter(lambda line: line[0] not in {'Spring Mobile - AT&T', 'Store #'}).\
+        #     toDF(self.springMobileCols)
 
         dfDTVLocation = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("header", "true"). \
@@ -190,7 +311,7 @@ class DimStoreParquet(object):
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(dfDTVLocationFile, schema=dtvLocationSchema)
+            load(self.dTVLocationFile).toDF(*self.dtvCols)
 
         #########################################################################################################
         # Saving the parquet source data files in working #
@@ -249,4 +370,4 @@ class DimStoreParquet(object):
 
 
 if __name__ == "__main__":
-    DimStoreParquet().loadParquet()
+    DimStoreCSVToParquet().loadParquet()
