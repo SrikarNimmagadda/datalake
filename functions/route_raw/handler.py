@@ -83,8 +83,9 @@ def handle_event(event, s3_service):
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + myKey[0], CopySource=copy_source)
 
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/loaded_date=' + str(sysdate) + '/' + key1, CopySource=copy_source)
-        
+
         S3.delete_object(Bucket=bucket, Key=key1)
+
 
 def determine_target(key):
     """Select a target bucket name string based on an object's key's prefix."""
