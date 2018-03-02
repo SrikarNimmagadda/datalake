@@ -112,21 +112,21 @@ if prodFileCheck == 1 and prodIdenFileCheck == 1 and couponFileCheck == 1:
         dfCouponsWithDupsRem = dfCoupons.dropDuplicates(['CouponSKU']).registerTempTable("CouponsTempTable")
 
         dfProductFinal = spark.sql(
-            "select ProductSKU,ProductName,ProductLabel,DefaultCost,AverageCOS,UnitCost,MostRecentCost,"
-            + "ProductLibraryName,Manufacturer,ManufacturerPartNumber,CategoryName,PricingType,"
-            + "DefaultRetailPrice,DefaultMargin,FloorPrice,PAWFloorPrice,DefaultMinQty,DefaultMaxQty,"
-            + "LockMinMax,NoSale,RMADays,InvoiceComments,Serialized,AutoGenerateSerialNumbers,"
-            + "SerialNumberLength,Discountable,AllowPriceIncrease,DefaultDiscontinuedDate,DateCreated,"
-            + "Enabled,EcommerceItem,WarehouseLocation,DefaultVendorName,PrimaryVendorSKU,"
-            + "CostofGoodsSoldAccount,SalesRevenueAccount,InventoryAccount,InventoryCorrectionsAccount,"
-            + "WarrantyWebLink,WarrantyDescription,RMANumberRequired,WarrantyLengthUnits,"
-            + "WarrantyLengthValue,CommissionDetailsLocked,ShowOnInvoice,Refundable,RefundPeriodLength,"
-            + "RefundToUsed,TriggerServiceRequestOnSale,ServiceRequestType,MultiLevelPriceDetailsLocked,"
-            + "BackOrderDate,StoreInStoreSKU,StoreInStorePrice,DefaultDoNotOrder,DefaultSpecialOrder,"
-            + "DefaultDateEOL,DefaultWriteOff,NoAutoTaxes,TaxApplicationType,SetCostToRefundPrice,"
-            + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month"
-            + " from ProdTempTable "
-            + " where ProductSKU != ''"
+            "select ProductSKU,ProductName,ProductLabel,DefaultCost,AverageCOS,UnitCost,MostRecentCost," +
+            "ProductLibraryName,Manufacturer,ManufacturerPartNumber,CategoryName,PricingType," +
+            "DefaultRetailPrice,DefaultMargin,FloorPrice,PAWFloorPrice,DefaultMinQty,DefaultMaxQty," +
+            "LockMinMax,NoSale,RMADays,InvoiceComments,Serialized,AutoGenerateSerialNumbers," +
+            "SerialNumberLength,Discountable,AllowPriceIncrease,DefaultDiscontinuedDate,DateCreated," +
+            "Enabled,EcommerceItem,WarehouseLocation,DefaultVendorName,PrimaryVendorSKU," +
+            "CostofGoodsSoldAccount,SalesRevenueAccount,InventoryAccount,InventoryCorrectionsAccount," +
+            "WarrantyWebLink,WarrantyDescription,RMANumberRequired,WarrantyLengthUnits," +
+            "WarrantyLengthValue,CommissionDetailsLocked,ShowOnInvoice,Refundable,RefundPeriodLength," +
+            "RefundToUsed,TriggerServiceRequestOnSale,ServiceRequestType,MultiLevelPriceDetailsLocked," +
+            "BackOrderDate,StoreInStoreSKU,StoreInStorePrice,DefaultDoNotOrder,DefaultSpecialOrder," +
+            "DefaultDateEOL,DefaultWriteOff,NoAutoTaxes,TaxApplicationType,SetCostToRefundPrice," +
+            "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month" +
+            " from ProdTempTable " +
+            " where ProductSKU != ''"
         )
 
         dfProductIdenFinal = spark.sql("select ID,Description,CategoryNumber,ProductEnabled, "

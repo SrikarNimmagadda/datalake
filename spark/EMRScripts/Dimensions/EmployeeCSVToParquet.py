@@ -73,11 +73,11 @@ dfEmployee = dfEmployee.\
     withColumnRenamed("RowEvent", "rowevent")
 
 dfEmployee.registerTempTable("employee")
-dfEmployee_Write = spark.sql("select *,"
-                             + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) "
-                             + "as year,"
-                             + "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) "
-                             + "as month from employee")
+dfEmployee_Write = spark.sql("select *," +
+                             "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
+                             "as year," +
+                             "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) " +
+                             "as month from employee")
 
 dfEmployee_Write.coalesce(1).select("*"). \
     write.option("header", "false").mode("overwrite").\
