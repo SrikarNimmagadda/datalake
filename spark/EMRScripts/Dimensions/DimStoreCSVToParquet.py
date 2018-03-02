@@ -46,25 +46,29 @@ class DimStoreCSVToParquet(object):
         self.multiTrackerColumnCount = 40
         self.springMobileColumnCount = 24
         self.dtvColumnCount = 2
+
         self.locationMasterListFile, self.locationHeader = self.searchFile(self.locationMasterList, self.locationName)
         self.log.info(self.locationMasterListFile)
-        self.log.info(self.locationHeader)
+        self.log.info("Location RQ4 Columns:" + ','.join(self.locationHeader))
 
         self.baeLocationFile, self.baeHeader = self.searchFile(self.baeLocation, self.baeName)
         self.log.info(self.baeLocationFile)
         self.log.info(self.baeHeader)
         self.baeCols = [column.replace(' ', '').replace('\r', '') for column in self.baeHeader]
+        self.log.info("BAE Columns:" + ','.join(self.baeCols))
 
         self.dealerCodesFile, self.dealerHeader = self.searchFile(self.dealerCodes, self.dealerName)
         self.log.info(self.dealerCodesFile)
         self.log.info(self.dealerHeader)
         self.dealerCodesCols = [column.replace(' ', '') for column in self.dealerHeader]
+        self.log.info("DealerCodes Columns:" + ','.join(self.dealerCodesCols))
 
         self.multiTrackerFile, self.multiTrackerHeader = self.searchFile(self.multiTrackerStore, self.multiTrackerName)
         self.log.info(self.multiTrackerFile)
         self.log.info(column.decode('utf-8') for column in self.multiTrackerHeader)
         self.multiTrackerCols = [column.replace(' ', '').replace(',', '').replace('/', '').replace('&', '_') for column
                                  in self.multiTrackerHeader]
+        self.log.info("Multi Tracker Columns:" + ','.join(self.multiTrackerCols))
 
         self.springMobileStoreFile, self.springMobileHeader = self.searchFile(self.springMobileStoreList,
                                                                               self.springMobileName)
@@ -74,10 +78,14 @@ class DimStoreCSVToParquet(object):
         self.springMobileCols = [column.decode('ascii', 'ignore').replace(' ', '').replace('#', '')
                                  for index, column in enumerate(self.springMobileHeader)]
 
+        self.log.info("Spring Mobile Columns:" + ','.join(self.springMobileCols))
+
         self.dTVLocationFile, self.dtvHeader = self.searchFile(self.dtvLocationMasterPath, self.dtvLocationName)
         self.log.info(self.dTVLocationFile)
         self.log.info(column.decode('utf-8') for column in self.dtvHeader)
         self.dtvCols = [column.decode('ascii', 'ignore').replace(' ', '') for column in self.dtvHeader]
+
+        self.log.info("DTV Columns:" + ','.join(self.dtvCols))
 
         self.locationStorePartitionFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
                                               self.locationName
@@ -253,6 +261,9 @@ class DimStoreCSVToParquet(object):
         self.log.info('Reading the input parquet file')
 
         dfLocationMasterList = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
@@ -262,18 +273,21 @@ class DimStoreCSVToParquet(object):
             load(self.locationMasterListFile).toDF(*self.locationHeader)
 
         dfBAELocation = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
             option("escape", '"'). \
             option("quote", "\""). \
             option("multiLine", "true"). \
-            load(self.baeLocationFile).toDF(*self.baeHeader)
-
-        dfBAELocation = dfBAELocation.withColumnRenamed("Store Number", "StoreNo").\
-            withColumnRenamed("BSISWorkdayID\r", "BSISWorkdayID")
+            load(self.baeLocationFile).toDF(*self.baeCols)
 
         dfDealerCodes = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
@@ -290,6 +304,9 @@ class DimStoreCSVToParquet(object):
             toDF(self.multiTrackerCols)
 
         dfSpringMobileStoreList = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
@@ -305,6 +322,9 @@ class DimStoreCSVToParquet(object):
         #     toDF(self.springMobileCols)
 
         dfDTVLocation = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
             option("header", "true"). \
             option("treatEmptyValuesAsNulls", "true"). \
             option("inferSchema", "true"). \
