@@ -89,51 +89,51 @@ class DimStoreHierDelivery(object):
             self.sparkSession.read.parquet(lastUpdatedAttDealerCodeFile).registerTempTable("att_dealer_code_curr")
 
             dfStoreHierCurr = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
-                                                    + " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
-                                                    + "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
-                                                    + "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
-                                                    + "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
-                                                    + "'I' as cdc_ind_cd from att_dealer_code_curr a where"
-                                                    + " a.ATTRegion != '' and a.ATTMarket != '' union select "
-                                                    + "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
-                                                    + "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
-                                                    + ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd, "
-                                                    + "b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd, "
-                                                    + "b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm, "
-                                                    + "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm,"
-                                                    + " 'I' as cdc_ind_cd from store_refine_curr b where "
-                                                    + "b.SpringMarket != '' and b.SpringRegion != '' and "
-                                                    + "b.SpringDistrict != ''")
+                                                    " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
+                                                    "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
+                                                    "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
+                                                    "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
+                                                    "'I' as cdc_ind_cd from att_dealer_code_curr a where"
+                                                    " a.ATTRegion != '' and a.ATTMarket != '' union select "
+                                                    "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
+                                                    "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
+                                                    ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd, "
+                                                    "b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd, "
+                                                    "b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm, "
+                                                    "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm,"
+                                                    " 'I' as cdc_ind_cd from store_refine_curr b where "
+                                                    "b.SpringMarket != '' and b.SpringRegion != '' and "
+                                                    "b.SpringDistrict != ''")
 
             self.sparkSession.read.parquet(lastPrevUpdatedStoreFile).registerTempTable("store_refine_prev")
             self.sparkSession.read.parquet(lastPrevUpdatedAttDealerCodeFile).registerTempTable("att_dealer_code_prev")
 
             dfStoreHierPrev = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
-                                                    + " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
-                                                    + "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
-                                                    + "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
-                                                    + "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
-                                                    + "'I' as cdc_ind_cd from att_dealer_code_prev a where "
-                                                    + "a.ATTRegion != '' and a.ATTMarket != '' union select "
-                                                    + "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
-                                                    + "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
-                                                    + ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd,"
-                                                    + " b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd, "
-                                                    + "b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm, "
-                                                    + "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
-                                                    + "'I' as cdc_ind_cd from store_refine_prev b where b.SpringMarket"
-                                                    + " != '' and b.SpringRegion != '' and b.SpringDistrict != ''")
+                                                    " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
+                                                    "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
+                                                    "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
+                                                    "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
+                                                    "'I' as cdc_ind_cd from att_dealer_code_prev a where "
+                                                    "a.ATTRegion != '' and a.ATTMarket != '' union select "
+                                                    "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
+                                                    "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
+                                                    ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd,"
+                                                    " b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd, "
+                                                    "b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm, "
+                                                    "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
+                                                    "'I' as cdc_ind_cd from store_refine_prev b where b.SpringMarket"
+                                                    " != '' and b.SpringRegion != '' and b.SpringDistrict != ''")
 
             dfStoreHierCurr.subtract(dfStoreHierPrev).registerTempTable("store_hier_delta")
             dfStoreHierPrev.registerTempTable("store_hier_prev")
             dfStoreHierNew = self.sparkSession.sql(
                 "select " + self.storeHierColumnsAlias + ",'I' as cdc_ind_cd from store_hier_delta a left join "
-                                                         + "store_hier_prev b on a.hier_id = b.hier_id where"
-                                                         + " b.hier_id is null")
+                                                         "store_hier_prev b on a.hier_id = b.hier_id where"
+                                                         " b.hier_id is null")
             dfStoreHierUpdated = self.sparkSession.sql(
                 "select " + self.storeHierColumnsAlias + ",'C' as cdc_ind_cd from store_hier_delta a left join "
-                                                         + "store_hier_prev b on a.hier_id = b.hier_id where "
-                                                         + "b.hier_id is not null")
+                                                         "store_hier_prev b on a.hier_id = b.hier_id where "
+                                                         "b.hier_id is not null")
 
             rowCountUpdateRecords = dfStoreHierUpdated.count()
 
@@ -159,20 +159,20 @@ class DimStoreHierDelivery(object):
             self.sparkSession.read.parquet(lastUpdatedAttDealerCodeFile).registerTempTable("att_dealer_code_curr")
 
             dfStoreHierCurr = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
-                                                    + " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm,"
-                                                    + " a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, "
-                                                    + "'' as lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
-                                                    + "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
-                                                    + "'I' as cdc_ind_cd from att_dealer_code_curr a where "
-                                                    + "a.ATTRegion != '' and a.ATTMarket != '' union select "
-                                                    + "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
-                                                    + "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
-                                                    + ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd,"
-                                                    + " b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd,"
-                                                    + " b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm,"
-                                                    + " '' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm,"
-                                                    + " 'I' as cdc_ind_cd from store_refine_curr b where b.SpringMarket"
-                                                    + " != '' and b.SpringRegion != '' and b.SpringDistrict != ''")
+                                                    " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm,"
+                                                    " a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, "
+                                                    "'' as lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
+                                                    "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
+                                                    "'I' as cdc_ind_cd from att_dealer_code_curr a where "
+                                                    "a.ATTRegion != '' and a.ATTMarket != '' union select "
+                                                    "concat(b.SpringMarket,b.SpringRegion,b.SpringDistrict) as "
+                                                    "hier_id,'Spring Hierarchy' as hier_nm,b.SpringMarket as lvl_1_cd"
+                                                    ",b.SpringMarket as lvl_1_nm, b.SpringRegion as lvl_2_cd,"
+                                                    " b.SpringRegion as lvl_2_nm, b.SpringDistrict as lvl_3_cd,"
+                                                    " b.SpringDistrict as lvl_3_nm, '' as lvl_4_cd, '' as lvl_4_nm,"
+                                                    " '' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm,"
+                                                    " 'I' as cdc_ind_cd from store_refine_curr b where b.SpringMarket"
+                                                    " != '' and b.SpringRegion != '' and b.SpringDistrict != ''")
             dfStoreHierCurr.coalesce(1).write.mode("overwrite").csv(self.storeHierCurrentPath, header=True)
             dfStoreHierCurr.coalesce(1).write.mode("append").csv(self.storeHierPrevPath, header=True)
             self.sparkSession.stop()
