@@ -16,7 +16,6 @@ class DimStoreRefined(object):
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
-
         self.discoveryBucketWorking = sys.argv[1]
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
         self.refinedBucketWorking = sys.argv[2]
@@ -182,31 +181,28 @@ class DimStoreRefined(object):
             csv(self.dataProcessingErrorPath + '/' + self.dtvLocationName + '/' + self.storeRefinedName + '/' +
                 self.dtvLocationName, header=True)
 
-        dfBAE.filter("StoreNo == ''").coalesce(1).write.mode("append").\
+        dfBAE.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
             csv(self.dataProcessingErrorPath + '/' + self.baeName + '/' + self.storeRefinedName + '/' +
                 self.baeName, header=True)
 
         self.log.info("Exception Handling of Store Refine Ends")
 
         dfLocationMaster = dfLocationMaster.filter("StoreNumber != ''").drop_duplicates(subset=['StoreNumber'])
-        dfBAE.filter("StoreNo != ''").registerTempTable("BAE")
+        dfBAE.filter(dfBAE.StoreNumber > 0).registerTempTable("BAE")
         dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
-        dfDealer.filter("StoreNo != ''").registerTempTable("Dealer")
+        dfDealer.filter(dfDealer.StoreNo > 0).registerTempTable("Dealer")
         dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
         dfSpringMobile.filter("Store != ''").registerTempTable("SpringMobile")
         dfRealEstate.filter("Loc != ''").withColumn("StoreNo", dfRealEstate["Loc"].cast(IntegerType())).\
             registerTempTable("RealEstate")
 
         dfLocationMaster = dfLocationMaster.withColumn('Location', regexp_replace(col('StoreName'), '[0-9]', ''))
-        dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe',
-                                                       split(regexp_replace(
-                                                           col('SaleInvoiceComment'), '\n', ' '), 'License #')
-                                                       .getItem(0))
-        dfLocationMaster = dfLocationMaster.withColumn('CnsmrLicNbr',
-                                                       split(regexp_replace(
-                                                           col('SaleInvoiceComment'), '\n', ' '), 'License #')
+        dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe', regexp_replace(
+            col('SaleInvoiceComment'), "[\\r\\n]", ' '))
+        dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentText', split(col('SaleInvoiceCommentRe'),
+                                                                                       'License #').getItem(0))
+        dfLocationMaster = dfLocationMaster.withColumn('CnsmrLicNbr', split(col('SaleInvoiceCommentRe'), 'License #')
                                                        .getItem(1))
-
         dfLocationMaster = dfLocationMaster.withColumn('SunTm', regexp_extract(col("GeneralLocationNotes"),
                                                                                self.sundayTimeExp, 0)).\
             withColumn('MonTm', regexp_extract(col("GeneralLocationNotes"), self.mondayTimeExp, 0)).\
@@ -284,7 +280,7 @@ class DimStoreRefined(object):
             "then '0' else ' ' end as HideCustomerAddressIndicator"
             ", a.EmailAddress as EmailAddress"
             ", a.CnsmrLicNbr as ConsumerLicenseNumber"
-            ", a.SaleInvoiceCommentRe as SaleInvoiceComment"
+            ", a.SaleInvoiceCommentText as SaleInvoiceComment"
             ", a.Taxes as Taxes"
             ", case when d.TotalMonthlyRent is null then a.rent else d.TotalMonthlyRent end as Rent"
             ", a.PropertyTaxes as PropertyTaxes"
@@ -355,12 +351,12 @@ class DimStoreRefined(object):
             ", e.RegionVP as SpringRegionVP"
             ", e.MarketDirector as SpringMarketDirector"
             ", e.DistrictManager as SpringDistrictManager from API a "
-            "left outer join BAE b on a.StoreNumber = b.StoreNo "
+            "left outer join BAE b on a.StoreNumber = b.StoreNumber "
             "left outer join Dealer c on a.StoreNumber = c.StoreNo "
             "left outer join RealEstate d on a.StoreNumber = d.StoreNo "
             "left outer join SpringMobile e on a.StoreNumber = e.Store "
-            "left outer join dtvLocation f on a.Location = f.Location"
-            ).registerTempTable("store")
+            "left outer join dtvLocation f on a.StoreName = f.Location"
+            ).drop_duplicates().registerTempTable("store")
 
         dfStoreSource = self.sparkSession.sql("select " + self.storeColumns + " from store")
         self.sparkSession.sql("select " + self.storeColumns + " from store ").\
