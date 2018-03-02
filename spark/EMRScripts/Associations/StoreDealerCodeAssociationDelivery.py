@@ -77,8 +77,8 @@ class StoreDealerCodeAssociationDelivery(object):
             registerTempTable("storeAss")
         dfStoreDealerAssocCurr = self.sparkSession.sql(
             "select cast(a.StoreNumber as integer) as STORE_NUM,a.DealerCode as DLR_CD,a.CompanyCode as "
-            + "CO_CD,a.AssociationType as ASSOC_TYP, a.AssociationStatus as ASSOC_STAT from storeAss a "
-            + "where AssociationType != '' or AssociationStatus != '' ")
+            "CO_CD,a.AssociationType as ASSOC_TYP, a.AssociationStatus as ASSOC_STAT from storeAss a "
+            "where AssociationType != '' or AssociationStatus != '' ")
 
         lastPrevUpdatedStoreAssocFile = self.findLastModifiedFile(refinedBucketNode, storeAssocPrefixPath,
                                                                   self.refinedBucket, 0)
@@ -96,12 +96,12 @@ class StoreDealerCodeAssociationDelivery(object):
 
             dfStoreAssocNew = self.sparkSession.sql(
                 "select a.STORE_NUM,a.DLR_CD,a.CO_CD,a.ASSOC_TYP,a.ASSOC_STAT,'I' as cdc_ind_cd from "
-                + "store_assoc_delta a left join store_assoc_prev b on a.DLR_CD = b.DLR_CD where b.DLR_CD is null")
+                "store_assoc_delta a left join store_assoc_prev b on a.DLR_CD = b.DLR_CD where b.DLR_CD is null")
             rowCountNewRecords = dfStoreAssocNew.count()
 
             dfStoreAssocUpdated = self.sparkSession.sql(
                 "select a.STORE_NUM,a.DLR_CD,a.CO_CD,a.ASSOC_TYP,a.ASSOC_STAT,'C' as cdc_ind_cd from "
-                + "store_assoc_delta a left join store_assoc_prev b on a.DLR_CD = b.DLR_CD where b.DLR_CD is not null")
+                "store_assoc_delta a left join store_assoc_prev b on a.DLR_CD = b.DLR_CD where b.DLR_CD is not null")
             rowCountUpdateRecords = dfStoreAssocUpdated.count()
 
             dfStoreAssocUpdated.registerTempTable("store_assoc_updated_data")
@@ -112,7 +112,7 @@ class StoreDealerCodeAssociationDelivery(object):
                 self.log.info("Updated file has arrived..")
                 dfStoreAssocDelta = self.sparkSession.sql(
                     "select STORE_NUM,DLR_CD,CO_CD,ASSOC_TYP,ASSOC_STAT,cdc_ind_cd from store_assoc_updated_data union"
-                    + " all select STORE_NUM,DLR_CD,CO_CD,ASSOC_TYP,ASSOC_STAT,cdc_ind_cd from store_assoc_new_data")
+                    " all select STORE_NUM,DLR_CD,CO_CD,ASSOC_TYP,ASSOC_STAT,cdc_ind_cd from store_assoc_new_data")
 
                 dfStoreAssocDelta.coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCurrentPath, header=True)
                 dfStoreAssocDelta.coalesce(1).write.mode("append").csv(self.storeDealerAssocPreviousPath, header=True)

@@ -119,13 +119,13 @@ class StoreDealerCodeAssociationRefine(object):
 #########################################################################################################
 
         joined_DF = self.sparkSession.sql("select cast(StoreNumber as integer),DealerCode, 4 as CompanyCode,"
-                                          + "AssociationType,AssociationStatus from storeAss1 union select StoreNumber"
-                                          + ",DealerCode,4 as CompanyCode,AssociationType,AssociationStatus "
-                                          + "from storeAss2")
+                                          "AssociationType,AssociationStatus from storeAss1 union select StoreNumber"
+                                          ",DealerCode,4 as CompanyCode,AssociationType,AssociationStatus "
+                                          "from storeAss2")
 
         joined_DF.registerTempTable("store_assoc_source")
         self.sparkSession.sql("select StoreNumber, DealerCode, CompanyCode, AssociationType, AssociationStatus from"
-                              + " store_assoc_source ").withColumn("Hash_Column",
+                              " store_assoc_source ").withColumn("Hash_Column",
                                                                    hash("StoreNumber", "DealerCode", "CompanyCode",
                                                                         "AssociationType", "AssociationStatus")).\
             registerTempTable("store_assoc_curr")
@@ -141,31 +141,31 @@ class StoreDealerCodeAssociationRefine(object):
                 registerTempTable("store_assoc_prev")
 
             self.sparkSession.sql("select a.StoreNumber, a.DealerCode, a.CompanyCode, a.AssociationType, "
-                                  + "a.AssociationStatus from store_assoc_prev a left join store_assoc_curr b on "
-                                  + "a.StoreNumber = b.StoreNumber where a.Hash_Column = b.Hash_Column").\
+                                  "a.AssociationStatus from store_assoc_prev a left join store_assoc_curr b on "
+                                  "a.StoreNumber = b.StoreNumber where a.Hash_Column = b.Hash_Column").\
                 registerTempTable("store_assoc_no_change_data")
 
             dfStoreUpdated = self.sparkSession.sql("select a.StoreNumber, a.DealerCode, a.CompanyCode, "
-                                                   + "a.AssociationType, a.AssociationStatus from store_assoc_curr a"
-                                                   + " left join store_assoc_prev b on a.StoreNumber = b.StoreNumber"
-                                                   + " where a.Hash_Column <> b.Hash_Column")
+                                                   "a.AssociationType, a.AssociationStatus from store_assoc_curr a"
+                                                   " left join store_assoc_prev b on a.StoreNumber = b.StoreNumber"
+                                                   " where a.Hash_Column <> b.Hash_Column")
             updateRowsCount = dfStoreUpdated.count()
             dfStoreUpdated.registerTempTable("store_assoc_updated_data")
 
             dfStoreNew = self.sparkSession.sql("select a.StoreNumber, a.DealerCode, a.CompanyCode, a.AssociationType,"
-                                               + " a.AssociationStatus from store_assoc_curr a left join "
-                                               + "store_assoc_prev b on a.StoreNumber = b.StoreNumber where "
-                                               + "b.StoreNumber = null")
+                                               " a.AssociationStatus from store_assoc_curr a left join "
+                                               "store_assoc_prev b on a.StoreNumber = b.StoreNumber where "
+                                               "b.StoreNumber = null")
             newRowsCount = dfStoreNew.count()
             dfStoreNew.registerTempTable("store_assoc_new_data")
 
             if updateRowsCount > 0 or newRowsCount > 0:
                 dfStoreWithCDC = self.sparkSession.sql("select StoreNumber, DealerCode, CompanyCode, AssociationType, "
-                                                       + "AssociationStatus from store_assoc_no_change_data union "
-                                                       + "select StoreNumber, DealerCode, CompanyCode, AssociationType,"
-                                                       + " AssociationStatus from store_assoc_updated_data union "
-                                                       + "select StoreNumber, DealerCode, CompanyCode, AssociationType,"
-                                                       + " AssociationStatus from store_assoc_new_data")
+                                                       "AssociationStatus from store_assoc_no_change_data union "
+                                                       "select StoreNumber, DealerCode, CompanyCode, AssociationType,"
+                                                       " AssociationStatus from store_assoc_updated_data union "
+                                                       "select StoreNumber, DealerCode, CompanyCode, AssociationType,"
+                                                       " AssociationStatus from store_assoc_new_data")
                 self.log.info("Updated file has arrived..")
                 dfStoreWithCDC.coalesce(1).write.mode("overwrite").parquet(self.storeAssociationWorkingPath)
                 dfStoreWithCDC.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
