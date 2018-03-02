@@ -1,8 +1,8 @@
 from pyspark.sql import SparkSession
 import sys
 
-ATTSalesActualOutputArg = sys.argv[1]
-ATTSalesActualRefineInp = sys.argv[2]
+attSalesActualOutputArg = sys.argv[1]
+attSalesActualRefineInp = sys.argv[2]
 
 spark = SparkSession.builder.appName("ATTSalesActualDelivery").getOrCreate()
 
@@ -10,7 +10,7 @@ spark = SparkSession.builder.appName("ATTSalesActualDelivery").getOrCreate()
 #                                 Read the 2 source files                                              #
 #########################################################################################################
 
-dfATTSalesActual = spark.read.parquet(ATTSalesActualRefineInp)
+dfATTSalesActual = spark.read.parquet(attSalesActualRefineInp)
 
 dfATTSalesActual.registerTempTable("attsalesactual")
 
@@ -23,6 +23,6 @@ dfOutput = spark.sql("select distinct a.reportdate as RPT_DT,a.storenumber as ST
                      "a.actualvalue as ACTL_VAL,a.projectedvalue as PROJ_VAL,"
                      "a.currentkpiindicator as CRNT_KPI_IND from attsalesactual a")
 
-dfOutput.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(ATTSalesActualOutputArg + '/' + 'Current')
+dfOutput.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(attSalesActualOutputArg + '/' + 'Current')
 
 spark.stop()
