@@ -82,11 +82,11 @@ dfCust_ColRename = dfCustomer.\
 dfCust_ColRename.registerTempTable("customer")
 
 
-dfCust_Write = spark.sql("select * ,"
-                         + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) "
-                         + "as year,"
-                         + "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) "
-                         + "as month from customer")
+dfCust_Write = spark.sql("select * ," +
+                         "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
+                         "as year," +
+                         "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) " +
+                         "as month from customer")
 
 # Writing data to working Directory
 

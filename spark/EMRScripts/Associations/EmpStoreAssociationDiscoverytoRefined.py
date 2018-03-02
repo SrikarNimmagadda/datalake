@@ -19,18 +19,18 @@ dfEmployeeMasterList.registerTempTable("employee")
 
 # Spark Transformation begins here
 
-dfEmpStoreAssociation = spark.sql("select a.assignedlocations as storenumber,"
-                                  + " a.primarylocation, 4 as companycd,"
-                                  + " a.employeeid as sourceemployeeid, "
-                                  + "'RQ4' as sourcesystenname,"
-                                  + "CASE WHEN a.rowevent = 'Inserted' THEN 'I' "
-                                  + "WHEN a.rowevent = 'Added' THEN 'I' "
-                                  + "WHEN a.rowevent = 'Updated' THEN 'C' END "
-                                  + "as CDC_IND_CD, "
-                                  + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) "
-                                  + "as YEAR,"
-                                  + "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) "
-                                  + "as MONTH from employee a")
+dfEmpStoreAssociation = spark.sql("select a.assignedlocations as storenumber," +
+                                  " a.primarylocation, 4 as companycd," +
+                                  " a.employeeid as sourceemployeeid, " +
+                                  "'RQ4' as sourcesystenname," +
+                                  "CASE WHEN a.rowevent = 'Inserted' THEN 'I' " +
+                                  "WHEN a.rowevent = 'Added' THEN 'I' " +
+                                  "WHEN a.rowevent = 'Updated' THEN 'C' END " +
+                                  "as CDC_IND_CD, " +
+                                  "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
+                                  "as YEAR," +
+                                  "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) " +
+                                  "as MONTH from employee a")
 
 dfEmpStoreAssociationInd = dfEmpStoreAssociation.\
     withColumn('storenumber', explode(split('storenumber', ',')))

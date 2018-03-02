@@ -102,12 +102,12 @@ class ProductCategoryRefinedToDelivery:
 
             spark.sql(
                 "select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                + "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                + "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
-                + "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                + "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                + "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
-                + "from CurrentProdCatTableTmpRenamed a"
+                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
+                "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
+                "from CurrentProdCatTableTmpRenamed a"
             ).registerTempTable("CurrentProdCatTable")
 
             currTableCount = spark.sql("select count(*) from CurrentProdCatTable").show()
@@ -134,12 +134,12 @@ class ProductCategoryRefinedToDelivery:
 
             spark.sql(
                 "select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                + "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                + "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
-                + "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                + "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                + "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
-                + "from PrevProdCatTableTmpRenamed a"
+                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
+                "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
+                "from PrevProdCatTableTmpRenamed a"
             ).registerTempTable("PrevProdCatTable")
 
             prevTableCount = spark.sql("select count(*) from PrevProdCatTable").show()

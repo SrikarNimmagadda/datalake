@@ -17,13 +17,13 @@ dfEmpStoreAssociation.registerTempTable("employee")
 
 #  Spark Transformation begins here
 
-dfEmpStoreAssociation = spark.sql("select a.storenumber as STORE_NUM,"
-                                  + "a.sourceemployeeid as SRC_EMP_ID,"
-                                  + "a.companycd as CO_CD,"
-                                  + "a.sourcesystenname as SRC_SYS_NM,"
-                                  + " a.primarylocationindicator as PRI_LOC_IN,"
-                                  + " a.CDC_IND_CD as CDC_IND_CD "
-                                  + "from employee a")
+dfEmpStoreAssociation = spark.sql("select a.storenumber as STORE_NUM," +
+                                  "a.sourceemployeeid as SRC_EMP_ID," +
+                                  "a.companycd as CO_CD," +
+                                  "a.sourcesystenname as SRC_SYS_NM," +
+                                  " a.primarylocationindicator as PRI_LOC_IN," +
+                                  " a.CDC_IND_CD as CDC_IND_CD " +
+                                  "from employee a")
 
 
 todayyear = datetime.now().strftime('%Y')

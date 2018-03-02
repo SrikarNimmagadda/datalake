@@ -126,8 +126,8 @@ class StoreDealerCodeAssociationRefine(object):
         joined_DF.registerTempTable("store_assoc_source")
         self.sparkSession.sql("select StoreNumber, DealerCode, CompanyCode, AssociationType, AssociationStatus from"
                               " store_assoc_source ").withColumn("Hash_Column",
-                                                                   hash("StoreNumber", "DealerCode", "CompanyCode",
-                                                                        "AssociationType", "AssociationStatus")).\
+                                                                 hash("StoreNumber", "DealerCode", "CompanyCode",
+                                                                      "AssociationType", "AssociationStatus")).\
             registerTempTable("store_assoc_curr")
 
         refinedBucketNode = s3.Bucket(name=self.refinedBucket)
