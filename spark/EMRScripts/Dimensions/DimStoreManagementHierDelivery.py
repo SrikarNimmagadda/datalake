@@ -101,15 +101,15 @@ class DimStoreManagementHierDelivery(object):
         self.sparkSession.read.parquet(lastUpdatedEmployeeFile).registerTempTable("employee_refine_curr")
         dfEmployeeRefined = self.sparkSession.sql(
             "select name,sourceemployeeid from employee_refine_curr where name != ''")
-        # dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
+        dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
         dfEmployeeRefined.registerTempTable("employee_curr")
 
         if lastPrevUpdatedStoreFile != '':
 
             self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("store_refine_curr")
             self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,SpringMarket,"
-                                  + "SpringRegion,SpringDistrict from store_refine_curr where SpringRegionVP != '' and"
-                                  + " SpringMarketDirector != '' and SpringDistrictManager != ''").\
+                                  "SpringRegion,SpringDistrict from store_refine_curr where SpringRegionVP != '' and"
+                                  " SpringMarketDirector != '' and SpringDistrictManager != ''").\
                 registerTempTable("store_curr")
 
             dfStoreMgmtHierCurr = self.sparkSession.sql(self.storeMgmtSelectQuery + " from store_curr a " +
@@ -117,8 +117,8 @@ class DimStoreManagementHierDelivery(object):
 
             self.sparkSession.read.parquet(lastPrevUpdatedStoreFile).registerTempTable("store_refine_prev")
             self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,SpringMarket,"
-                                  + "SpringRegion,SpringDistrict from store_refine_prev where SpringRegionVP != '' and"
-                                  + " SpringMarketDirector != '' and SpringDistrictManager != ''").\
+                                  "SpringRegion,SpringDistrict from store_refine_prev where SpringRegionVP != '' and"
+                                  " SpringMarketDirector != '' and SpringDistrictManager != ''").\
                 registerTempTable("store_prev")
 
             dfStoreMgmtHierPrev = self.sparkSession.sql(self.storeMgmtSelectQuery + " from store_prev a " +
@@ -128,12 +128,12 @@ class DimStoreManagementHierDelivery(object):
             dfStoreMgmtHierPrev.registerTempTable("store_mgmt_hier_prev")
             dfStoreMgmtHierNew = self.sparkSession.sql(
                 "select " + self.storeMgmtHierColumnsWithAlias + ",'I' as cdc_ind_cd from store_mgmt_hier_delta a "
-                                                                 + "left join store_mgmt_hier_prev b on a.hier_id = "
-                                                                 + "b.hier_id  where b.hier_id is null")
+                                                                 "left join store_mgmt_hier_prev b on a.hier_id = "
+                                                                 "b.hier_id  where b.hier_id is null")
             dfStoreMgmtHierUpdated = self.sparkSession.sql(
                 "select " + self.storeMgmtHierColumnsWithAlias + ",'C' as cdc_ind_cd from store_mgmt_hier_delta a "
-                                                                 + "left join store_mgmt_hier_prev b on a.hier_id = "
-                                                                 + "b.hier_id  where b.hier_id is not null")
+                                                                 "left join store_mgmt_hier_prev b on a.hier_id = "
+                                                                 "b.hier_id  where b.hier_id is not null")
 
             rowCountUpdateRecords = dfStoreMgmtHierUpdated.count()
 
@@ -158,8 +158,8 @@ class DimStoreManagementHierDelivery(object):
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")
             self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("store_refine_curr")
 
-            # self.sparkSession.sql("select * from store_refine_curr").coalesce(1).write.mode("overwrite").csv(
-            #     self.storeCSVPath, header=True)
+            self.sparkSession.sql("select * from store_refine_curr").coalesce(1).write.mode("overwrite").csv(
+                self.storeCSVPath, header=True)
 
             self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,"
                                   "SpringMarket,SpringRegion,SpringDistrict from store_refine_curr "
