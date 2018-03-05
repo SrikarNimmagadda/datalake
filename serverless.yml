@@ -458,7 +458,7 @@ resources:
           TopicConfigurations:
             - Event: s3:ObjectCreated:*
               Topic:
-                - Ref: SNSNotificationTopic
+                Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
