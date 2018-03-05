@@ -1,28 +1,39 @@
 from pyspark.sql import SparkSession
 import sys
 
-attSalesActualOutputArg = sys.argv[1]
-attSalesActualRefineInp = sys.argv[2]
 
-spark = SparkSession.builder.appName("ATTSalesActualDelivery").getOrCreate()
+class AttSalesActualsDelivery(object):
 
-#########################################################################################################
-#                                 Read the 2 source files                                              #
-#########################################################################################################
+        def __init__(self):
 
-dfATTSalesActual = spark.read.parquet(attSalesActualRefineInp)
+                self.appName = self.__class__.__name__
+                self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
+                self.attSalesActualOutputArg = sys.argv[1]
+                self.attSalesActualRefineInp = sys.argv[2]
 
-dfATTSalesActual.registerTempTable("attsalesactual")
+                #########################################################################################################
+                #                                 Read the 2 source files                                              #
+                #########################################################################################################
 
-#########################################################################################################
-#                                 Spark Transformation begins here                                      #
-#########################################################################################################
+        def loadCsv(self):
 
-dfOutput = spark.sql("select distinct a.reportdate as RPT_DT,a.storenumber as STORE_NUM,"
-                     "a.dealercode as DLR_CD,a.companycode as CO_CD,a.kpiname as KPI_NM,"
-                     "a.actualvalue as ACTL_VAL,a.projectedvalue as PROJ_VAL,"
-                     "a.currentkpiindicator as CRNT_KPI_IND from attsalesactual a")
+                dfAttSalesActual = self.sparkSession.read.parquet(self.attSalesActualRefineInp)
 
-dfOutput.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(attSalesActualOutputArg + '/' + 'Current')
+                dfAttSalesActual.registerTempTable("attsalesactual")
 
-spark.stop()
+                #########################################################################################################
+                #                                 Spark Transformation begins here                                      #
+                #########################################################################################################
+
+                dfOutput = self.sparkSession.sql("select distinct a.reportdate as RPT_DT,a.storenumber as STORE_NUM,"
+                                                 "a.dealercode as DLR_CD,a.companycode as CO_CD,a.kpiname as KPI_NM,"
+                                                 "a.actualvalue as ACTL_VAL,a.projectedvalue as PROJ_VAL,"
+                                                 "a.currentkpiindicator as CRNT_KPI_IND from attsalesactual a")
+
+                dfOutput.coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(self.attSalesActualOutputArg + '/' + 'Current')
+
+                self.sparkSession.stop()
+
+
+if __name__ == "__main__":
+        AttSalesActualsDelivery().loadCsv()
