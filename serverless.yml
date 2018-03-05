@@ -1197,7 +1197,7 @@ resources:
                       - aws
                       - iam
                       - Ref: AWS::AccountId
-                      - root
+                      - Ref: GMEDataLakeuser 
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1224,7 +1224,7 @@ resources:
                       - aws
                       - iam
                       - Ref: AWS::AccountId
-                      - root
+                      - Ref: GMEDataLakeuser 
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1242,7 +1242,7 @@ resources:
                       - aws
                       - iam
                       - Ref: AWS::AccountId
-                      - root
+                      - Ref: GMEDataLakeuser 
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
@@ -1524,7 +1524,21 @@ resources:
           DeleteBehavior: "DEPRECATE_IN_DATABASE"
         Schedule:
           ScheduleExpression: "cron(0 0 * * ? *)"
-    	
+
+    ######################################################################
+    # IAM User
+    ######################################################################
+    GMEDataLakeuser:
+      Type: AWS::IAM::User
+      Properties:
+        Policies:
+          - PolicyName: Fullaccess
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: "*"
+                  Resource: "*"	  
     ######################################################################
     # IAM ROLES
     ######################################################################
