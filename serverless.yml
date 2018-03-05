@@ -1259,7 +1259,7 @@ resources:
       Type: AWS::Glue::Database
       Properties:
         CatalogId: 
-          - Ref: AWS::AccountId
+          Ref: AWS::AccountId
         DatabaseInput:
           Name: ${self:service}-discoveyglue-${self:provider.stage}
           Description: Database for discovery layer
@@ -1268,7 +1268,7 @@ resources:
       Type: AWS::Glue::Database
       Properties:
         CatalogId: 
-          - Ref: AWS::AccountId
+          Ref: AWS::AccountId
         DatabaseInput:
           Name: ${self:service}-refinedglue-${self:provider.stage}
           Description: Database for refined layer
@@ -1278,9 +1278,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-customer-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1296,9 +1296,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-customer-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1314,9 +1314,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-customer-pii-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1332,9 +1332,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-customer-pii-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1350,9 +1350,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-employee-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1368,9 +1368,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-employee-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1386,9 +1386,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-product-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1404,9 +1404,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-product-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1422,9 +1422,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-product-category-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1440,9 +1440,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-product-category-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1458,9 +1458,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-store-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1476,9 +1476,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-store-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1494,9 +1494,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-mtd-att-dealercode-discovery-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: DiscoveryDatabase
+          Ref: DiscoveryDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
@@ -1512,9 +1512,9 @@ resources:
       Properties:
         Name: ${self:service}-glue-att-dealercode-refined-${self:provider.stage}
         Role: 
-          - Ref: GlueRole
+          Ref: GlueRole
         DatabaseName:
-          - Ref: RefinedDatabase
+          Ref: RefinedDatabase
         TablePrefix: crw
         Targets:
           S3Targets:
