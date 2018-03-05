@@ -971,7 +971,7 @@ resources:
           - Name: FunctionName
             Value:
               Fn::GetAtt:
-                - ExtractMetadataFunction
+                - ExtractMetadataLambdaFunction
                 - Arn
 
     StorelambdafailureAlarm:
