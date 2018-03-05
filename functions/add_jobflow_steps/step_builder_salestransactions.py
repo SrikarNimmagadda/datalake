@@ -47,7 +47,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_attsalesactuals(self):
         step_name = 'CSVToParquetATTSalesActuals'
-        script_name = 'Facts/ATTSalesActualsCSV2Par.py'
+        script_name = 'Facts/ATTSalesActualsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
 
