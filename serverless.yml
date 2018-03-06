@@ -1575,8 +1575,7 @@ resources:
     GMEDataLakeuser:
       Type: AWS::IAM::User
       Properties:
-        LoginProfile:
-        Password: 'Password123'
+        Path: /
 
     GMEDataLakePolicies:
       Type: AWS::IAM::Policy
