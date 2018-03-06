@@ -464,7 +464,7 @@ resources:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
-    #  DependsOn: SNSTopicPolicy
+      DependsOn: SNSNotificationTopic
 
     ######################################################################
     # LANDING BUCKET
@@ -1575,14 +1575,24 @@ resources:
     GMEDataLakeuser:
       Type: AWS::IAM::User
       Properties:
-        Policies:
-          - PolicyName: Fullaccess
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action: '*'
-                  Resource: '*'	  
+        LoginProfile:
+        Password: 'Password123'
+
+    GMEDataLakePolicies:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: GMEDataLakeusers
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Action: '*'
+              Resource: '*'
+
+    GMEDataLakeKeys:
+      Type: AWS::IAM::AccessKey
+      Properties:
+        UserName: Ref: 'GMEDataLakeuser'
+
     ######################################################################
     # IAM ROLES
     ######################################################################
