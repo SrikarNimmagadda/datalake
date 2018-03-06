@@ -1589,12 +1589,6 @@ resources:
         Users:
           - Ref: GMEDataLakeuser
 
-    GMEDataLakeKeys:
-      Type: AWS::IAM::AccessKey
-      Properties:
-        UserName:
-          Ref: GMEDataLakeuser
-
     ######################################################################
     # IAM ROLES
     ######################################################################
