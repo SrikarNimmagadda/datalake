@@ -1162,22 +1162,22 @@ resources:
           - Endpoint: ${self:custom.sns.snsendpoint}
             Protocol: email
         TopicName: SNSNotification
-	
+
     SNSTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      PolicyDocument:
-        Id: SNSTopicPolicy
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: '*'
-            Action:
-              - sns:*
-            Resource: '*'
-      Topics:
-        - Ref: SNSNotificationTopic
+      Type: AWS::SNS::TopicPolicy
+      Properties:
+        PolicyDocument:
+          Id: SNSTopicPolicy
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: '*'
+              Action:
+                - sns:*
+              Resource: '*'
+        Topics:
+          - Ref: SNSNotificationTopic
 
     ######################################################################
     # CMK - KMS
