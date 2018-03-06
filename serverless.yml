@@ -1587,11 +1587,14 @@ resources:
             - Effect: Allow
               Action: '*'
               Resource: '*'
+        Users:
+          - Ref: GMEDataLakeuser
 
     GMEDataLakeKeys:
       Type: AWS::IAM::AccessKey
       Properties:
-        UserName: Ref: 'GMEDataLakeuser'
+        UserName:
+          Ref: GMEDataLakeuser
 
     ######################################################################
     # IAM ROLES
