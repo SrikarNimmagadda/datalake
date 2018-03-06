@@ -862,7 +862,7 @@ resources:
     ######################################################################
     # Cloudwatch Alarm and Notifications
     ######################################################################
-	
+
     FileMetadataReadCapacityAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -1272,7 +1272,7 @@ resources:
     ######################################################################
     # Glue - Crawler
     ######################################################################
-	
+
     DiscoveryDatabase:
       Type: AWS::Glue::Database
       Properties:
@@ -1281,7 +1281,7 @@ resources:
         DatabaseInput:
           Name: ${self:service}-discoveyglue-${self:provider.stage}
           Description: Database for discovery layer
-    	
+
     RefinedDatabase:
       Type: AWS::Glue::Database
       Properties:
@@ -1326,7 +1326,7 @@ resources:
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
           ScheduleExpression: 'cron(0 0 * * ? *)'
-    	  
+
     CustomerPiiDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
