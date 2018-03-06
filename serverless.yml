@@ -452,7 +452,6 @@ resources:
     # S3 bucket where exception handling errors are placed
     S3BucketDataProcessingErrors:
       Type: AWS::S3::Bucket
-      DependsOn: SNSTopicPolicy
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
         NotificationConfiguration:
@@ -465,6 +464,7 @@ resources:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
+      DependsOn: SNSTopicPolicy
 
     ######################################################################
     # LANDING BUCKET
@@ -1174,7 +1174,7 @@ resources:
             Principal:
               AWS: '*'
             Action:
-              - SNS:*
+              - sns:*
             Resource: '*'
       Topics:
         - Ref: SNSNotificationTopic
@@ -1202,7 +1202,8 @@ resources:
                       - iam
                       - Ref: AWS::AccountId
                       - root
-              Action: kms:*
+              Action:
+                - kms:*
               Resource: '*'
             - Sid: Allow access for Key Administrators
               Effect: Allow
@@ -1303,10 +1304,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryCustomerPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     CustomerRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1321,10 +1322,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedCustomerPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     	  
     CustomerPiiDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1339,10 +1340,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryCustomerPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     CustomerPiiRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1357,10 +1358,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedCustomerPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     EmployeeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1375,10 +1376,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryHrPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     EmployeeRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1393,10 +1394,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedHrPii}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     ProductDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1411,10 +1412,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     ProductRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1429,10 +1430,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     ProductCategoryDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1447,10 +1448,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     ProductCategoryRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1465,10 +1466,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     StoreDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1483,10 +1484,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     StoreRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1501,10 +1502,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     AttDealercodeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
@@ -1519,10 +1520,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
     
     AttDealercodeRefinedCrawler:
       Type: AWS::Glue::Crawler
@@ -1537,10 +1538,10 @@ resources:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedRegular}/Working
         SchemaChangePolicy:
-          UpdateBehavior: "UPDATE_IN_DATABASE"
-          DeleteBehavior: "DEPRECATE_IN_DATABASE"
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
-          ScheduleExpression: "cron(0 0 * * ? *)"
+          ScheduleExpression: 'cron(0 0 * * ? *)'
 
     ######################################################################
     # IAM User
@@ -1554,8 +1555,8 @@ resources:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action: "*"
-                  Resource: "*"	  
+                  Action: '*'
+                  Resource: '*'	  
     ######################################################################
     # IAM ROLES
     ######################################################################
@@ -1692,7 +1693,7 @@ resources:
                 - Effect: Allow
                   Action:
                     - athena:*
-                  Resource: "*"
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - s3:ListBucket
@@ -1717,7 +1718,7 @@ resources:
                 - Effect: Allow
                   Action:
                     - athena:*
-                  Resource: "*"
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - s3:ListBucket
@@ -1742,7 +1743,7 @@ resources:
                 - Effect: Allow
                   Action:
                     - athena:*
-                  Resource: "*"
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - s3:ListBucket
@@ -1766,8 +1767,8 @@ resources:
               Version: '2012-10-17'
               Statement:
                 - Effect: Allow
-                  Action: "*"
-                  Resource: "*"
+                  Action: '*'
+                  Resource: '*'
   ######################################################################
   # OUTPUTS
   ######################################################################
