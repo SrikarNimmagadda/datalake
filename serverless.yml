@@ -452,6 +452,7 @@ resources:
     # S3 bucket where exception handling errors are placed
     S3BucketDataProcessingErrors:
       Type: AWS::S3::Bucket
+      DependsOn: SNSTopicPolicy
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
         NotificationConfiguration:
@@ -1161,6 +1162,22 @@ resources:
           - Endpoint: ${self:custom.sns.snsendpoint}
             Protocol: email
         TopicName: SNSNotification
+	
+    SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Id: SNSTopicPolicy
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - SNS:*
+            Resource: '*'
+      Topics:
+        - Ref: SNSNotificationTopic
 
     ######################################################################
     # CMK - KMS
