@@ -1575,7 +1575,7 @@ resources:
           # ScheduleExpression: 'cron(0 0 * * ? *)'
 
     ######################################################################
-    # IAM User for KMS
+    # IAM User for KMS Key
     ######################################################################
     GMEDataLakeuser:
       Type: AWS::IAM::User
