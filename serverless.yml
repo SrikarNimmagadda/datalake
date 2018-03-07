@@ -13,6 +13,7 @@ custom:
     emrStackName: tb-emr-datalake-master
   sns:
     snsendpoint: ${env:FAILURE_NOTIFICATION_SNS_ENDPOINT}
+    snsnotification: ${self:service}-failuresnsnotification-${self:custom.hen}-${self:provider.stage}
   addjobflow:
     lambda:
       lambdametricName: ${env:LAMBDA_FUNCTION_METRIC_NAME}
@@ -454,17 +455,17 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
-        NotificationConfiguration:
-          TopicConfigurations:
-            - Event: s3:ObjectCreated:*
-              Topic:
-                Ref: SNSNotificationTopic1
+    #    NotificationConfiguration:
+    #      TopicConfigurations:
+    #        - Event: s3:ObjectCreated:*
+    #          Topic:
+    #            Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
-      DependsOn: SNSNotificationTopic1
+    #  DependsOn: SNSNotificationTopic
 
     ######################################################################
     # LANDING BUCKET
@@ -475,12 +476,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.landing}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+    #    BucketEncryption:
+    #      ServerSideEncryptionConfiguration:
+    #        - ServerSideEncryptionByDefault:
+    #            KMSMasterKeyID:
+    #              Ref: S3PIIEncryptionKey
+    #            SSEAlgorithm: aws:kms
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
@@ -514,12 +515,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawCustomerPii}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+        # BucketEncryption:
+          # ServerSideEncryptionConfiguration:
+            # - ServerSideEncryptionByDefault:
+                # KMSMasterKeyID:
+                  # Ref: S3PIIEncryptionKey
+                # SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -557,12 +558,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHrPii}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+        # BucketEncryption:
+          # ServerSideEncryptionConfiguration:
+            # - ServerSideEncryptionByDefault:
+                # KMSMasterKeyID:
+                  # Ref: S3PIIEncryptionKey
+                # SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -641,12 +642,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.deliveryCustomerPii}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+        # BucketEncryption:
+          # ServerSideEncryptionConfiguration:
+            # - ServerSideEncryptionByDefault:
+                # KMSMasterKeyID:
+                  # Ref: S3PIIEncryptionKey
+                # SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -718,12 +719,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryCustomerPii}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+        # BucketEncryption:
+          # ServerSideEncryptionConfiguration:
+            # - ServerSideEncryptionByDefault:
+                # KMSMasterKeyID:
+                  # Ref: S3PIIEncryptionKey
+                # SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: IA-Glacier-Expire-Rule
@@ -776,12 +777,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedCustomerPii}
-        BucketEncryption:
-          ServerSideEncryptionConfiguration:
-            - ServerSideEncryptionByDefault:
-                KMSMasterKeyID:
-                  Ref: S3PIIEncryptionKey
-                SSEAlgorithm: aws:kms
+        # BucketEncryption:
+          # ServerSideEncryptionConfiguration:
+            # - ServerSideEncryptionByDefault:
+                # KMSMasterKeyID:
+                  # Ref: S3PIIEncryptionKey
+                # SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: IA-Glacier-Expire-Rule
@@ -868,7 +869,7 @@ resources:
       Properties:
         AlarmDescription: Alarm when read capacity reaches provisioned read capacity
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.dynamo.fileMetadata.readmetricname}
         Namespace: AWS/DynamoDB
         Statistic: Average
@@ -886,7 +887,7 @@ resources:
       Properties:
         AlarmDescription: Alarm when write capacity reaches provisioned write capacity
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.dynamo.fileMetadata.writemetricname}
         Namespace: AWS/DynamoDB
         Statistic: Average
@@ -904,7 +905,7 @@ resources:
       Properties:
         AlarmDescription: Alarm when read capacity reaches provisioned read capacity
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.dynamo.processMetadata.readmetricname}
         Namespace: AWS/DynamoDB
         Statistic: Average
@@ -922,7 +923,7 @@ resources:
       Properties:
         AlarmDescription: Alarm when write capacity reaches provisioned write capacity
         AlarmActions:
-         - Ref: SNSNotificationTopic1
+         - Ref: SNSNotificationTopic
         MetricName: ${self:custom.dynamo.processMetadata.writemetricname}
         Namespace: AWS/DynamoDB
         Statistic: Average
@@ -940,7 +941,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for routeRaw Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -960,7 +961,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for extractMetadata Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -980,7 +981,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1000,7 +1001,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsCustomer Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1020,7 +1021,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsEmployee Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1040,7 +1041,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsProduct Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1060,7 +1061,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsStoreCustomerExperience Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1080,7 +1081,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsGoalsKPI Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1100,7 +1101,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesOthers Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1120,7 +1121,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesTransactions Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1140,7 +1141,7 @@ resources:
       Properties:
         AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesKPIandDetails Lambda Function
         AlarmActions:
-          - Ref: SNSNotificationTopic1
+          - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
         Namespace: AWS/Lambda
         Statistic: Sum
@@ -1155,13 +1156,17 @@ resources:
                 - AddJobFlowStepsSalesKPIandDetailsLambdaFunction
                 - Arn
 
-    SNSNotificationTopic1: 		
+    ######################################################################
+    # SNS Notification Topic
+    ######################################################################
+
+    SNSNotificationTopic:
       Type: AWS::SNS::Topic
       Properties:
         Subscription:
           - Endpoint: ${self:custom.sns.snsendpoint}
             Protocol: email
-        TopicName: SNSNotification
+        TopicName: ${self:custom.sns.snsnotification}
 
     # SNSTopicPolicy:
     #  Type: AWS::SNS::TopicPolicy
@@ -1175,98 +1180,98 @@ resources:
     #            - sns:Publish
     #          Resource: '*'
     #    Topics:
-    #      - Ref: SNSNotificationTopic1
+    #      - Ref: SNSNotificationTopic
 
     ######################################################################
     # CMK - KMS
     ######################################################################
 
-    S3PIIEncryptionKey:
-      Type: AWS::KMS::Key
-      Properties:
-        Description: A Encryption key for PII Buckets
-        KeyPolicy:
-          Version: '2012-10-17'
-          Id: key-default-1
-          Statement:
-            - Sid: Enable IAM User Permissions
-              Effect: Allow
-              Principal:
-                AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - root
-              Action:
-                - kms:*
-              Resource: '*'
-            - Sid: Allow access for Key Administrators
-              Effect: Allow
-              Principal:
-                AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - Ref: GMEDataLakeuser 
-              Action:
-                - kms:Create*
-                - kms:Describe*
-                - kms:Enable*
-                - kms:List*
-                - kms:Put*
-                - kms:Update*
-                - kms:Revoke*
-                - kms:Disable*
-                - kms:Get*
-                - kms:Delete*
-                - kms:TagResource
-                - kms:UntagResource
-                - kms:ScheduleKeyDeletion
-                - kms:CancelKeyDeletion
-              Resource: '*'
-            - Sid: Allow use of the key
-              Effect: Allow
-              Principal:
-                AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - Ref: GMEDataLakeuser 
-              Action:
-                - kms:Encrypt
-                - kms:Decrypt
-                - kms:ReEncrypt*
-                - kms:GenerateDataKey*
-                - kms:DescribeKey
-              Resource: '*'
-            - Sid: Allow attachment of persistent resources
-              Effect: Allow
-              Principal:
-                AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - Ref: GMEDataLakeuser 
-              Action:
-                - kms:CreateGrant
-                - kms:ListGrants
-                - kms:RevokeGrant
-              Resource: '*'
-              Condition:
-                Bool:
-                  'kms:GrantIsForAWSResource': 'true'
+    # S3PIIEncryptionKey:
+      # Type: AWS::KMS::Key
+      # Properties:
+        # Description: A Encryption key for PII Buckets
+        # KeyPolicy:
+          # Version: '2012-10-17'
+          # Id: key-default-1
+          # Statement:
+            # - Sid: Enable IAM User Permissions
+              # Effect: Allow
+              # Principal:
+                # AWS:
+                  # Fn::Join:
+                    # - ':'
+                    # - - arn
+                      # - aws
+                      # - iam
+                      # - Ref: AWS::AccountId
+                      # - root
+              # Action:
+                # - kms:*
+              # Resource: '*'
+            # - Sid: Allow access for Key Administrators
+              # Effect: Allow
+              # Principal:
+                # AWS:
+                  # Fn::Join:
+                    # - ':'
+                    # - - arn
+                      # - aws
+                      # - iam
+                      # - Ref: AWS::AccountId
+                      # - Ref: GMEDataLakeuser 
+              # Action:
+                # - kms:Create*
+                # - kms:Describe*
+                # - kms:Enable*
+                # - kms:List*
+                # - kms:Put*
+                # - kms:Update*
+                # - kms:Revoke*
+                # - kms:Disable*
+                # - kms:Get*
+                # - kms:Delete*
+                # - kms:TagResource
+                # - kms:UntagResource
+                # - kms:ScheduleKeyDeletion
+                # - kms:CancelKeyDeletion
+              # Resource: '*'
+            # - Sid: Allow use of the key
+              # Effect: Allow
+              # Principal:
+                # AWS:
+                  # Fn::Join:
+                    # - ':'
+                    # - - arn
+                      # - aws
+                      # - iam
+                      # - Ref: AWS::AccountId
+                      # - Ref: GMEDataLakeuser 
+              # Action:
+                # - kms:Encrypt
+                # - kms:Decrypt
+                # - kms:ReEncrypt*
+                # - kms:GenerateDataKey*
+                # - kms:DescribeKey
+              # Resource: '*'
+            # - Sid: Allow attachment of persistent resources
+              # Effect: Allow
+              # Principal:
+                # AWS:
+                  # Fn::Join:
+                    # - ':'
+                    # - - arn
+                      # - aws
+                      # - iam
+                      # - Ref: AWS::AccountId
+                      # - Ref: GMEDataLakeuser 
+              # Action:
+                # - kms:CreateGrant
+                # - kms:ListGrants
+                # - kms:RevokeGrant
+              # Resource: '*'
+              # Condition:
+                # Bool:
+                  # 'kms:GrantIsForAWSResource': 'true'
     ######################################################################
     # Glue - Crawler
     ######################################################################
@@ -1572,22 +1577,22 @@ resources:
     ######################################################################
     # IAM User for KMS
     ######################################################################
-    GMEDataLakeuser:
-      Type: AWS::IAM::User
-      Properties:
-        Path: /
+    # GMEDataLakeuser:
+      # Type: AWS::IAM::User
+      # Properties:
+        # Path: /
 
-    GMEDataLakePolicies:
-      Type: AWS::IAM::Policy
-      Properties:
-        PolicyName: GMEDataLakeusers
-        PolicyDocument:
-          Statement:
-            - Effect: Allow
-              Action: '*'
-              Resource: '*'
-        Users:
-          - Ref: GMEDataLakeuser
+    # GMEDataLakePolicies:
+      # Type: AWS::IAM::Policy
+      # Properties:
+        # PolicyName: GMEDataLakeusers
+        # PolicyDocument:
+          # Statement:
+            # - Effect: Allow
+              # Action: '*'
+              # Resource: '*'
+        # Users:
+          # - Ref: GMEDataLakeuser
 
     ######################################################################
     # IAM ROLES
