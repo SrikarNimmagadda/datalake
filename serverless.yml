@@ -1211,9 +1211,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn 
+                  - 'Fn::GetAtt':
+                      - GMEDataLakeuser
+                      - Arn 
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1234,9 +1234,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn
+                  - 'Fn::GetAtt':
+                      - GMEDataLakeuser
+                      - Arn
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1248,9 +1248,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn 
+                  - 'Fn::GetAtt':
+                      - GMEDataLakeuser
+                      - Arn
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
