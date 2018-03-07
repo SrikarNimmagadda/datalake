@@ -1211,13 +1211,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - user/Ref: GMEDataLakeuser 
+                  'Fn::GetAtt':
+                    - GMEDataLakeuser
+                    - Arn 
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1238,13 +1234,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - user/Ref: GMEDataLakeuser 
+                  'Fn::GetAtt':
+                    - GMEDataLakeuser
+                    - Arn
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1256,13 +1248,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - user/Ref: GMEDataLakeuser 
+                  'Fn::GetAtt':
+                    - GMEDataLakeuser
+                    - Arn 
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
