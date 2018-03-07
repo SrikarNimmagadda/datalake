@@ -1191,19 +1191,18 @@ resources:
       Properties:
         Description: A Encryption key for PII Buckets
         KeyPolicy:
+          Id: KmsPolicy
           Version: '2012-10-17'
           Statement:
             - Sid: Enable IAM User Permissions
               Effect: Allow
               Principal:
                 AWS:
-                  Fn::Join:
-                    - ':'
-                    - - arn
-                      - aws
-                      - iam
-                      - Ref: AWS::AccountId
-                      - root
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - root
               Action: kms:*
               Resource: '*'
 
