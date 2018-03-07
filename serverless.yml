@@ -1577,22 +1577,23 @@ resources:
     ######################################################################
     # IAM User for KMS
     ######################################################################
-    # GMEDataLakeuser:
-      # Type: AWS::IAM::User
-      # Properties:
-        # Path: /
+    GMEDataLakeuser:
+      Type: AWS::IAM::User
+      Properties:
+        Path: /
 
-    # GMEDataLakePolicies:
-      # Type: AWS::IAM::Policy
-      # Properties:
-        # PolicyName: GMEDataLakeusers
-        # PolicyDocument:
-          # Statement:
-            # - Effect: Allow
-              # Action: '*'
-              # Resource: '*'
-        # Users:
-          # - Ref: GMEDataLakeuser
+    GMEDataLakePolicies:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: GMEDataLakeusers
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Action:
+                - kms:*
+              Resource: '*'
+        Users:
+          - Ref: GMEDataLakeuser
 
     ######################################################################
     # IAM ROLES
