@@ -1168,19 +1168,19 @@ resources:
             Protocol: email
         TopicName: ${self:custom.sns.snsnotification}
 
-    # SNSTopicPolicy:
-    #  Type: AWS::SNS::TopicPolicy
-    #  Properties:
-    #    PolicyDocument:
-    #      Version: '2012-10-17'
-    #      Statement:
-    #        - Effect: Allow
-    #          Principal: '*'
-    #          Action:
-    #            - sns:Publish
-    #          Resource: '*'
-    #    Topics:
-    #      - Ref: SNSNotificationTopic
+    SNSTopicPolicy:
+      Type: AWS::SNS::TopicPolicy
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - sns:Publish
+              Resource: '*'
+        Topics:
+          - Ref: SNSNotificationTopic
 
     ######################################################################
     # CMK - KMS
