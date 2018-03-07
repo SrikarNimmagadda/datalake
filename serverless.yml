@@ -455,17 +455,17 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
-    #    NotificationConfiguration:
-    #      TopicConfigurations:
-    #        - Event: s3:ObjectCreated:*
-    #          Topic:
-    #            Ref: SNSNotificationTopic
+        NotificationConfiguration:
+          TopicConfigurations:
+            - Event: s3:ObjectCreated:*
+              Topic:
+                Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
-    #  DependsOn: SNSNotificationTopic
+      DependsOn: SNSTopicPolicy
 
     ######################################################################
     # LANDING BUCKET
