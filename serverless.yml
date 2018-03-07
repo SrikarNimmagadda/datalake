@@ -1204,8 +1204,7 @@ resources:
                       - iam
                       - Ref: AWS::AccountId
                       - root
-              Action:
-                - kms:*
+              Action: kms:*
               Resource: '*'
 
     ######################################################################
