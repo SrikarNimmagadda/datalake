@@ -476,12 +476,6 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.landing}
-    #    BucketEncryption:
-    #      ServerSideEncryptionConfiguration:
-    #        - ServerSideEncryptionByDefault:
-    #            KMSMasterKeyID:
-    #              Ref: S3PIIEncryptionKey
-    #            SSEAlgorithm: aws:kms
         NotificationConfiguration:
           LambdaConfigurations:
             - Event: s3:ObjectCreated:*
