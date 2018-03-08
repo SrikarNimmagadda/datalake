@@ -1201,7 +1201,7 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:iam:'
+                      - - 'arn:aws:sts:'
                         - Ref: AWS::AccountId
                         - root
               Action: kms:*
@@ -1212,9 +1212,9 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:iam:'
+                      - - 'arn:aws:sts:'
                         - Ref: AWS::AccountId
-                        - role/GS-GMEDataLakeEng
+                        - assumed-role/GS-GMEDataLakeEng
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1237,9 +1237,9 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:iam:'
+                      - - 'arn:aws:sts:'
                         - Ref: AWS::AccountId
-                        - role/GS-GMEDataLakeEng
+                        - assumed-role/GS-GMEDataLakeEng
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1253,9 +1253,9 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:iam:'
+                      - - 'arn:aws:sts:'
                         - Ref: AWS::AccountId
-                        - role/GS-GMEDataLakeEng
+                        - assumed-role/GS-GMEDataLakeEng
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
