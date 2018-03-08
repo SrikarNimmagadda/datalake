@@ -1244,6 +1244,19 @@ resources:
               Action: kms:Encrypt
               Resource: '*'
 
+    S3PIIEncryptionKeyAlias:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName:
+          'Fn::Join':
+            - '-'
+            - - alias/${self:service}
+              - KMS
+              - ${self:custom.hen}
+              - ${self:provider.stage}
+        TargetKeyId:
+          Ref: S3PIIEncryptionKey
+
     ######################################################################
     # Glue - Crawler
     ######################################################################
