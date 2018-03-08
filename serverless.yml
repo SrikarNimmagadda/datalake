@@ -1790,7 +1790,6 @@ resources:
         Path: /
         ManagedPolicyArns:
           - 'arn:aws:iam::aws:policy/AmazonEC2FullAccess'
-          - 'arn:aws:iam::aws:policy/AWSQuicksightAthenaAccess'
           - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
           - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
           - 'arn:aws:iam::aws:policy/AmazonAthenaFullAccess'
