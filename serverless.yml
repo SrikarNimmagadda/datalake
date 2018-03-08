@@ -1201,7 +1201,7 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:sts:'
+                      - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
                         - root
               Action: kms:*
@@ -1212,7 +1212,7 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:sts:'
+                      - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
                         - assumed-role/GS-GMEDataLakeEng
               Action:
@@ -1237,7 +1237,7 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:sts:'
+                      - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
                         - assumed-role/GS-GMEDataLakeEng
               Action:
@@ -1253,7 +1253,7 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:sts:'
+                      - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
                         - assumed-role/GS-GMEDataLakeEng
               Action:
