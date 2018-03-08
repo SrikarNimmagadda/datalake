@@ -1215,7 +1215,6 @@ resources:
                       - - 'arn:aws:sts:'
                         - Ref: AWS::AccountId
                         - assumed-role/GS-GMEDataLakeEng/v_skp
-				
               Action:
                 - kms:Create*
                 - kms:Describe*
