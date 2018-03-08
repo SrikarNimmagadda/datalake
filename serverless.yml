@@ -1180,84 +1180,84 @@ resources:
     # CMK - KMS
     ######################################################################
 
-    # S3PIIEncryptionKey:
-      # Type: AWS::KMS::Key
-      # Properties:
-        # Description: A Encryption key for PII Buckets
-        # Enabled: true
-        # KeyPolicy:
-          # Id: KmsPolicy
-          # Version: '2012-10-17'
-          # Statement:
-            # - Sid: Enable IAM User Permissions
-              # Effect: Allow
-              # Principal:
-                # AWS:
-                  # - 'Fn::Join':
-                      # - ':'
-                      # - - 'arn:aws:sts:'
-                        # - Ref: AWS::AccountId
-                        # - root
-              # Action: kms:*
-              # Resource: '*'
-            # - Sid: Allow access for Key Administrators
-              # Effect: Allow
-              # Principal:
-                # AWS:
-                  # - 'Fn::Join':
-                      # - ':'
-                      # - - 'arn:aws:sts:'
-                        # - Ref: AWS::AccountId
-                        # - assumed-role/GS-GMEDataLakeEng/v_skp
-              # Action:
-                # - kms:Create*
-                # - kms:Describe*
-                # - kms:Enable*
-                # - kms:List*
-                # - kms:Put*
-                # - kms:Update*
-                # - kms:Revoke*
-                # - kms:Disable*
-                # - kms:Get*
-                # - kms:Delete*
-                # - kms:TagResource
-                # - kms:UntagResource
-                # - kms:ScheduleKeyDeletion
-                # - kms:CancelKeyDeletion
-              # Resource: '*'
-            # - Sid: Allow use of the key
-              # Effect: Allow
-              # Principal:
-                # AWS:
-                  # - 'Fn::Join':
-                      # - ':'
-                      # - - 'arn:aws:sts:'
-                        # - Ref: AWS::AccountId
-                        # - assumed-role/GS-GMEDataLakeEng/v_skp
-              # Action:
-                # - kms:Encrypt
-                # - kms:Decrypt
-                # - kms:ReEncrypt*
-                # - kms:GenerateDataKey*
-                # - kms:DescribeKey
-              # Resource: '*'
-            # - Sid: Allow attachment of persistent resources
-              # Effect: Allow
-              # Principal:
-                # AWS:
-                  # - 'Fn::Join':
-                      # - ':'
-                      # - - 'arn:aws:sts:'
-                        # - Ref: AWS::AccountId
-                        # - assumed-role/GS-GMEDataLakeEng/v_skp
-              # Action:
-                # - kms:CreateGrant
-                # - kms:ListGrants
-                # - kms:RevokeGrant
-              # Resource: '*'
-              # Condition:
-                # Bool:
-                  # 'kms:GrantIsForAWSResource': 'true'
+    S3PIIEncryptionKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: A Encryption key for PII Buckets
+        Enabled: true
+        KeyPolicy:
+          Id: KmsPolicy
+          Version: '2012-10-17'
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:sts:'
+                        - Ref: AWS::AccountId
+                        - root
+              Action: kms:*
+              Resource: '*'
+            - Sid: Allow access for Key Administrators
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:sts:'
+                        - Ref: AWS::AccountId
+                        - assumed-role/GS-GMEDataLakeEng/v_skp@gmelogin.com
+              Action:
+                - kms:Create*
+                - kms:Describe*
+                - kms:Enable*
+                - kms:List*
+                - kms:Put*
+                - kms:Update*
+                - kms:Revoke*
+                - kms:Disable*
+                - kms:Get*
+                - kms:Delete*
+                - kms:TagResource
+                - kms:UntagResource
+                - kms:ScheduleKeyDeletion
+                - kms:CancelKeyDeletion
+              Resource: '*'
+            - Sid: Allow use of the key
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:sts:'
+                        - Ref: AWS::AccountId
+                        - assumed-role/GS-GMEDataLakeEng/v_skp@gmelogin.com
+              Action:
+                - kms:Encrypt
+                - kms:Decrypt
+                - kms:ReEncrypt*
+                - kms:GenerateDataKey*
+                - kms:DescribeKey
+              Resource: '*'
+            - Sid: Allow attachment of persistent resources
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:sts:'
+                        - Ref: AWS::AccountId
+                        - assumed-role/GS-GMEDataLakeEng/v_skp@gmelogin.com
+              Action:
+                - kms:CreateGrant
+                - kms:ListGrants
+                - kms:RevokeGrant
+              Resource: '*'
+              Condition:
+                Bool:
+                  'kms:GrantIsForAWSResource': 'true'
     ######################################################################
     # Glue - Crawler
     ######################################################################
