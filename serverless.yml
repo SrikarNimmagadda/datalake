@@ -1229,11 +1229,9 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  - 'Fn::Join':
-                      - ':'
-                      - - 'arn:aws:iam:'
-                        - Ref: AWS::AccountId
-                        - role/GS-GMEDataLakeEng
+                  - 'Fn::GetAtt':
+                      - KmsKeyServiceRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1772,6 +1770,32 @@ resources:
                 - Effect: Allow
                   Action: '*'
                   Resource: '*'
+
+    # This role will be used to KMS - Encryption key
+    KmsKeyServiceRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Action: 'sts:AssumeRole'
+              Effect: Allow
+              Principal:
+                AWS:
+                  'Fn::Join':
+                    - ''
+                    - - 'arn:aws:iam::'
+                      - Ref: AWS::AccountId
+                      - :root
+        Path: /
+        ManagedPolicyArns:
+          - 'arn:aws:iam::aws:policy/AmazonEC2FullAccess'
+          - 'arn:aws:iam::aws:policy/AWSQuicksightAthenaAccess'
+          - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+          - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
+          - 'arn:aws:iam::aws:policy/AmazonAthenaFullAccess'
+          - 'arn:aws:iam::aws:policy/AmazonElasticMapReduceFullAccess'
+          - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
 
   ######################################################################
   # OUTPUTS
