@@ -1190,6 +1190,7 @@ resources:
       Type: AWS::KMS::Key
       Properties:
         Description: A Encryption key for PII Buckets
+        Enabled: true
         KeyPolicy:
           Id: KmsPolicy
           Version: '2012-10-17'
@@ -1209,9 +1210,11 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  - 'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn 
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1232,9 +1235,11 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  - 'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn 
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1246,9 +1251,11 @@ resources:
               Effect: Allow
               Principal:
                 AWS:
-                  - 'Fn::GetAtt':
-                    - GMEDataLakeuser
-                    - Arn 
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
