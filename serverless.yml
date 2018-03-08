@@ -1186,7 +1186,7 @@ resources:
         Description: A Encryption key for PII Buckets
         Enabled: true
         KeyPolicy:
-          Id: KmsPolicy
+          Id: KmsKeyPolicy
           Version: '2012-10-17'
           Statement:
             - Sid: Enable IAM User Permissions
@@ -1195,10 +1195,53 @@ resources:
                 AWS:
                   - 'Fn::Join':
                       - ':'
-                      - - 'arn:aws:sts:'
+                      - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
                         - root
               Action: kms:*
+              Resource: '*'
+            - Sid: Allow access for Key Administrators
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - role/GS-FullAdmin
+              Action:
+                - kms:Create*
+                - kms:Describe*
+                - kms:Enable*
+                - kms:List*
+                - kms:Put*
+                - kms:Update*
+                - kms:Revoke*
+                - kms:Disable*
+                - kms:Get*
+                - kms:Delete*
+                - kms:TagResource
+                - kms:UntagResource
+                - kms:ScheduleKeyDeletion
+                - kms:CancelKeyDeletion
+              Resource: '*'
+            - Sid: Allow use of the key
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::Join':
+                      - ':'
+                      - - 'arn:aws:iam:'
+                        - Ref: AWS::AccountId
+                        - role/GS-GMEDataLakeEng
+              Action:
+                - kms:*
+              Resource: '*'
+            - Sid: Allow everyone to encrypt
+              Effect: Allow
+              Principal:
+                AWS: '*'
+              Action: kms:Encrypt
               Resource: '*'
 
     ######################################################################
