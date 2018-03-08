@@ -509,12 +509,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawCustomerPii}
-        # BucketEncryption:
-          # ServerSideEncryptionConfiguration:
-            # - ServerSideEncryptionByDefault:
-                # KMSMasterKeyID:
-                  # Ref: S3PIIEncryptionKey
-                # SSEAlgorithm: aws:kms
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -552,12 +552,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.rawHrPii}
-        # BucketEncryption:
-          # ServerSideEncryptionConfiguration:
-            # - ServerSideEncryptionByDefault:
-                # KMSMasterKeyID:
-                  # Ref: S3PIIEncryptionKey
-                # SSEAlgorithm: aws:kms
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: Glacier-Expiration-Rule
@@ -636,12 +636,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.deliveryCustomerPii}
-        # BucketEncryption:
-          # ServerSideEncryptionConfiguration:
-            # - ServerSideEncryptionByDefault:
-                # KMSMasterKeyID:
-                  # Ref: S3PIIEncryptionKey
-                # SSEAlgorithm: aws:kms
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
@@ -713,12 +713,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.discoveryCustomerPii}
-        # BucketEncryption:
-          # ServerSideEncryptionConfiguration:
-            # - ServerSideEncryptionByDefault:
-                # KMSMasterKeyID:
-                  # Ref: S3PIIEncryptionKey
-                # SSEAlgorithm: aws:kms
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
             - Id: IA-Glacier-Expire-Rule
@@ -771,12 +771,12 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.refinedCustomerPii}
-        # BucketEncryption:
-          # ServerSideEncryptionConfiguration:
-            # - ServerSideEncryptionByDefault:
-                # KMSMasterKeyID:
-                  # Ref: S3PIIEncryptionKey
-                # SSEAlgorithm: aws:kms
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                KMSMasterKeyID:
+                  Ref: S3PIIEncryptionKey
+                SSEAlgorithm: aws:kms
         LifecycleConfiguration:
           Rules:
           - Id: IA-Glacier-Expire-Rule
@@ -1545,27 +1545,6 @@ resources:
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
           ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    ######################################################################
-    # IAM User for KMS Key
-    ######################################################################
-    GMEDataLakeuser:
-      Type: AWS::IAM::User
-      Properties:
-        Path: /
-
-    GMEDataLakePolicies:
-      Type: AWS::IAM::Policy
-      Properties:
-        PolicyName: GMEDataLakeusers
-        PolicyDocument:
-          Statement:
-            - Effect: Allow
-              Action:
-                - kms:*
-              Resource: '*'
-        Users:
-          - Ref: GMEDataLakeuser
 
     ######################################################################
     # IAM ROLES
