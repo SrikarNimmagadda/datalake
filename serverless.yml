@@ -1214,7 +1214,7 @@ resources:
                       - ':'
                       - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
-                        - assumed-role/GS-GMEDataLakeEng
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:Create*
                 - kms:Describe*
@@ -1239,7 +1239,7 @@ resources:
                       - ':'
                       - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
-                        - assumed-role/GS-GMEDataLakeEng
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:Encrypt
                 - kms:Decrypt
@@ -1255,7 +1255,7 @@ resources:
                       - ':'
                       - - 'arn:aws:iam:'
                         - Ref: AWS::AccountId
-                        - assumed-role/GS-GMEDataLakeEng
+                        - role/GS-GMEDataLakeEng
               Action:
                 - kms:CreateGrant
                 - kms:ListGrants
