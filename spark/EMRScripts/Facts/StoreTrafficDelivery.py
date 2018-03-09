@@ -24,7 +24,7 @@ class StoreTrafficDelivery(object):
                                                  "a.sourcesystemlocationid  as SRC_SYS_LOC_ID, a.sourcesystemname SRC_SYS_NM , a.traffictype TRAFFIC_TYP, a.trafficcount TRAFFIC_CNT "
                                                  "from StoreTrafficTable a")
 
-                final_Df.coalesce(1).select("*").write.format("com.databricks.spark.csv").option("quoteMode", "All").option("header", "true").mode("overwrite").save(self.storeTrafficOutput+'/'+'Current')
+                final_Df.coalesce(1).select("*").write.format("com.databricks.spark.csv").option("quoteMode", "All").option("header", "true").mode("overwrite").save(self.storeTrafficOutput + '/' + 'Current')
 
                 self.sparkSession.stop()
 
