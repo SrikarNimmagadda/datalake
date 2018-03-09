@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 import sys
 import boto3
 from datetime import datetime
+from urlparse import urlparse
 
 
 class DimStoreDelivery(object):
@@ -12,6 +13,8 @@ class DimStoreDelivery(object):
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
+        self.client = boto3.client('s3')
+        self.s3 = boto3.resource('s3')
 
         self.refinedBucketWorking = sys.argv[1]
         self.storeCurrentPath = sys.argv[2]
@@ -87,6 +90,20 @@ class DimStoreDelivery(object):
                                          + "dtv_now_ind ,a.BAEWorkDayId as bae_wrkday_id ,a.BSISWorkDayId as " \
                                          + "bsis_wrkday_id,a.store_hier_id,a.att_hier_id,a.cdc_ind_cd from store a"
 
+    def makeZeroByteFile(self, destinationPath, fileName):
+
+        newBucketWithPath = urlparse(destinationPath)
+        newBucket = newBucketWithPath.netloc
+        newBucketNode = self.s3.Bucket(name=newBucket)
+        newPath = newBucketWithPath.path.lstrip('/')
+        objs = newBucketNode.objects.filter(Prefix=newPath)
+        for s3Object in objs:
+            s3Object.delete()
+
+        newFile = open(fileName, 'w')
+        newFile.close()
+        self.client.upload_file(fileName, newBucket, newPath + '/' + fileName)
+
     def findLastModifiedFile(self, bucketNode, prefixType, bucket, currentOrPrev=1):
 
         prefixPath = prefixType + '/year=' + datetime.now().strftime('%Y')
@@ -123,9 +140,8 @@ class DimStoreDelivery(object):
 
         storeColumnsWithAlias = ','.join(['a.' + x for x in self.storeColumns.split(',')])
 
-        s3 = boto3.resource('s3')
         self.log.info('bucket name: ' + self.refinedBucket)
-        refinedBucketNode = s3.Bucket(name=self.refinedBucket)
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
 
         lastUpdatedAttDealerCodeFile = self.findLastModifiedFile(refinedBucketNode, self.prefixAttDealerPath,
                                                                  self.refinedBucket)
@@ -173,10 +189,7 @@ class DimStoreDelivery(object):
                 dfStoreDelta.coalesce(1).write.mode("overwrite").csv(self.storeCurrentPath, header=True)
                 dfStoreDelta.coalesce(1).write.mode("append").csv(self.storePreviousPath, header=True)
             else:
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
-                    .csv(self.storeCurrentPath)
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
-                    .csv(self.storePreviousPath)
+                self.makeZeroByteFile(self.storeCurrentPath, 'wt_store.csv')
                 self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")

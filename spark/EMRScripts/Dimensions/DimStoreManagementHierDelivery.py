@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 import sys
 import boto3
 from datetime import datetime
+from urlparse import urlparse
 
 
 class DimStoreManagementHierDelivery(object):
@@ -16,6 +17,9 @@ class DimStoreManagementHierDelivery(object):
         self.refinedBucketWorking = sys.argv[1]
         self.springMobileWorkingPath = sys.argv[2]
         self.storeMgmtHierCurrentPath = sys.argv[3]
+
+        self.client = boto3.client('s3')
+        self.s3 = boto3.resource('s3')
 
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
 
@@ -45,6 +49,20 @@ class DimStoreManagementHierDelivery(object):
         self.storeMgmtJoinWithCondition = "join employee_curr b on a.RVPID = b.workdayid join employee_curr" \
                                           " c on a.MDIRID = c.workdayid join employee_curr d on " \
                                           "a.DMID = d.workdayid"
+
+    def makeZeroByteFile(self, destinationPath, fileName):
+
+        newBucketWithPath = urlparse(destinationPath)
+        newBucket = newBucketWithPath.netloc
+        newBucketNode = self.s3.Bucket(name=newBucket)
+        newPath = newBucketWithPath.path.lstrip('/')
+        objs = newBucketNode.objects.filter(Prefix=newPath)
+        for s3Object in objs:
+            s3Object.delete()
+
+        newFile = open(fileName, 'w')
+        newFile.close()
+        self.client.upload_file(fileName, newBucket, newPath + '/' + fileName)
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket, currentOrPrev=1):
 
@@ -80,8 +98,7 @@ class DimStoreManagementHierDelivery(object):
 
     def loadDelivery(self):
 
-        s3 = boto3.resource('s3')
-        refinedBucketNode = s3.Bucket(name=self.refinedBucket)
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
 
         lastUpdatedStoreFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStoreRefinePath,
                                                          self.refinedBucket)
@@ -155,10 +172,7 @@ class DimStoreManagementHierDelivery(object):
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("overwrite").csv(self.storeMgmtHierCurrentPath, header=True)
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("append").csv(self.storeMgmtHierPrevPath, header=True)
             else:
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
-                    .csv(self.storeMgmtHierCurrentPath)
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
-                    .csv(self.storeMgmtHierPrevPath)
+                self.makeZeroByteFile(self.storeMgmtHierCurrentPath, 'wt_store_mgmt_hier.csv')
                 self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
 
         else:
