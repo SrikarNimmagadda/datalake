@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, regexp_extract, regexp_replace, col, when, hash, from_unixtime, \
-    unix_timestamp, substring, year, lit
-from pyspark.sql.types import IntegerType, DateType
+    unix_timestamp, substring, year
+from pyspark.sql.types import DateType
 import boto3
 import sys
 from pyspark.sql.utils import AnalysisException
@@ -25,14 +25,14 @@ class DimStoreRefined(object):
         self.storeWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + self.workingName
         self.storePartitonPath = 's3://' + self.refinedBucket + '/' + self.storeName
         self.storeCSVPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + 'csv'
-        self.dataProcessingErrorPath = sys.argv[3]
+        self.dataProcessingErrorPath = sys.argv[3] + '/Refined'
 
         self.locationName = "Location"
         self.baeName = "BAE"
         self.multiTrackerName = "MultiTracker"
-        self.springMobileName = "SpringMobile"
-        self.dtvLocationName = "DTVLocation"
-        self.dealerName = "Dealer"
+        self.springMobileName = "SpringMobileStore"
+        self.dtvLocationName = "DTV"
+        self.dealerName = "DealerCodes"
         self.storeRefinedName = "StoreRefined"
 
         self.prefixLocationDiscoveryPath = self.storeName + '/' + self.locationName
@@ -143,12 +143,10 @@ class DimStoreRefined(object):
         self.log.info("Exception Handling of Store Refine starts")
 
         dfLocationMaster.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.locationName + '/' + self.storeRefinedName + '/' +
-                self.locationName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.locationName, header=True)
 
         dfSpringMobile.filter("Store == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.springMobileName + '/' + self.storeRefinedName + '/' +
-                self.springMobileName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.springMobileName, header=True)
         try:
             dfSpringMobile = dfSpringMobile.withColumn('OpenDate1', dfSpringMobile['OpenDate'].cast(DateType()))
         except AnalysisException:
@@ -170,20 +168,16 @@ class DimStoreRefined(object):
             return
 
         dfRealEstate.filter("Loc == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.multiTrackerName + '/' + self.storeRefinedName + '/' +
-                self.multiTrackerName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.multiTrackerName, header=True)
 
         dfDealer.filter("StoreNo == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.dealerName + '/' + self.storeRefinedName + '/' +
-                self.dealerName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.dealerName, header=True)
 
         dfDTVLocation.filter("Location == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.dtvLocationName + '/' + self.storeRefinedName + '/' +
-                self.dtvLocationName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.dtvLocationName, header=True)
 
         dfBAE.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.baeName + '/' + self.storeRefinedName + '/' +
-                self.baeName, header=True)
+            csv(self.dataProcessingErrorPath + '/' + self.baeName, header=True)
 
         self.log.info("Exception Handling of Store Refine Ends")
 
@@ -192,9 +186,8 @@ class DimStoreRefined(object):
         dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
         dfDealer.filter(dfDealer.StoreNo > 0).registerTempTable("Dealer")
         dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
-        dfSpringMobile.filter("Store != ''").registerTempTable("SpringMobile")
-        dfRealEstate.filter("Loc != ''").withColumn("StoreNo", dfRealEstate["Loc"].cast(IntegerType())).\
-            registerTempTable("RealEstate")
+        dfSpringMobile.filter(dfSpringMobile.Store > 0).registerTempTable("SpringMobile")
+        dfRealEstate.filter(dfRealEstate.Loc > 0).registerTempTable("RealEstate")
 
         dfLocationMaster = dfLocationMaster.withColumn('Location', regexp_replace(col('StoreName'), '[0-9]', ''))
         dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe', regexp_replace(
@@ -249,7 +242,7 @@ class DimStoreRefined(object):
             ", a.Location as LocationName"
             ", a.Abbreviation as Abbreviation"
             ",  a.GLCode as GLCode"
-            ", a.Disabled as StoreStatus"
+            ", case when a.Disabled = 1 then 0 else 1 as StoreStatus"
             ", a.ManagerEmployeeID as StoreManagerEmployeeId"
             ", case when lower(a.ManagerCommissionable) = 'true' then '1' when lower(a.ManagerCommissionable) = 'false'"
             " then '0' else ' ' end as ManagerCommisionableIndicator"
@@ -313,7 +306,7 @@ class DimStoreRefined(object):
             ", a.SatCloseTm as SaturdayCloseTime"
             ", a.SunOpenTm as SundayOpenTime"
             ", a.SunCloseTm as SundayCloseTime"
-            ", e.AcquisitionName as AcquisitionName"
+            ", e.AcquisitionType as AcquisitionName"
             ", case when lower(e.Base) = 'x' or lower(e.Base) = 'yes' or lower(e.Base) = 'true' then '1' end as "
             "BaseStoreIndicator"
             ", case when lower(e.Comp) = 'x' or lower(e.Comp) = 'yes' or lower(e.Comp) = 'true' then '1' end as "
@@ -353,10 +346,9 @@ class DimStoreRefined(object):
             ", e.DistrictManager as SpringDistrictManager from API a "
             "left outer join BAE b on a.StoreNumber = b.StoreNumber "
             "left outer join Dealer c on a.StoreNumber = c.StoreNo "
-            "left outer join RealEstate d on a.StoreNumber = d.StoreNo "
+            "left outer join RealEstate d on a.StoreNumber = d.Loc "
             "left outer join SpringMobile e on a.StoreNumber = e.Store "
-            "left outer join dtvLocation f on a.StoreName = f.Location"
-            ).drop_duplicates().registerTempTable("store")
+            "left outer join dtvLocation f on a.StoreName = f.Location").drop_duplicates().registerTempTable("store")
 
         dfStoreSource = self.sparkSession.sql("select " + self.storeColumns + " from store")
         self.sparkSession.sql("select " + self.storeColumns + " from store ").\
@@ -443,8 +435,8 @@ class DimStoreRefined(object):
             if updateRowsCount > 0 or newRowsCount > 0:
                 dfStoreWithCDC = self.sparkSession.sql("select " + self.storeColumns +
                                                        " from store_no_change_data union all select " +
-                                                       self.storeColumns + " from store_updated_data union all select "
-                                                       + self.storeColumns + " from store_new_data")
+                                                       self.storeColumns + " from store_updated_data union all select " +
+                                                       self.storeColumns + " from store_new_data")
                 self.log.info("Updated file has arrived..")
                 dfStoreWithCDC.coalesce(1).write.mode("overwrite").parquet(self.storeWorkingPath)
                 dfStoreWithCDC.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
