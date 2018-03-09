@@ -1,9 +1,9 @@
-""" Contains the class StepBuilderCustomer.
-Builds EMR Steps for Customer files.
+""" Contains the class StepBuilderEmployee.
+Builds EMR Steps for employee files.
 """
 
 
-class StepBuilderCustomer(object):
+class StepBuilderEmployee(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -24,11 +24,11 @@ class StepBuilderCustomer(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_customer(),
-            self._build_step_customer_refinery(),
-            self._build_step_customer_delivery(),
-            self._build_step_customer_pii_refinery(),
-            self._build_step_customer_pii_delivery(),
+            self._build_step_csv_to_parquet(),
+            self._build_step_employee_refinery(),
+            self._build_step_employee_delivery(),
+            self._build_step_emp_store_assoc_refinery(),
+            self._build_step_emp_store_assoc_delivery()
         ]
 
         return steps
@@ -37,68 +37,68 @@ class StepBuilderCustomer(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_customer(self):
-        step_name = 'CSVToParquetcustomer'
-        script_name = 'Dimensions/CustomerRawToDiscovery.py'
-        input_bucket = self.buckets['raw_customer_pii']
-        output_bucket = self.buckets['discovery_customer_pii']
+    def _build_step_csv_to_parquet(self):
+        step_name = 'CSVToParquetEmployee'
+        script_name = 'Dimensions/EmployeeCSVToParquet.py'
+        input_bucket = self.buckets['raw_hr_pii']
+        output_bucket = self.buckets['discovery_hr_pii']
 
         script_args = [
-
-            's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/Customer/'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + 'Employee/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_customer_refinery(self):
-        step_name = 'CustomerRefinery'
-        script_name = 'Dimensions/CustomerDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_customer_pii']
+    def _build_step_employee_refinery(self):
+        step_name = 'EmployeeRefinery'
+        script_name = 'Dimensions/EmployeeDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_hr_pii']
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/Customer/'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_customer_delivery(self):
-        step_name = 'CustomerDelivery'
-        script_name = 'Dimensions/CustomerRefinedToDelivery.py'
+    def _build_step_employee_delivery(self):
+        step_name = 'EmployeeDelivery'
+        script_name = 'Dimensions/EmployeeRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/WT_CUST/'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/WT_EMP/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_customer_pii_refinery(self):
-        step_name = 'CustomerPiiRefinery'
-        script_name = 'Dimensions/CustomerPIIDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_customer_pii']
-        output_bucket = self.buckets['refined_customer_pii']
+    def _build_step_emp_store_assoc_refinery(self):
+        step_name = 'EmpStoreAssocRefinery'
+        script_name = 'Associations/EmpStoreAssociationDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_hr_pii']
+        output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Customer/Working/',
-            's3://' + output_bucket + '/CustomerPII/'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/EmpStoreAssociation/',
+            's3://' + output_bucket + '/EmpStoreAssociation/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_customer_pii_delivery(self):
-        step_name = 'CustomerPiiDelivery'
-        script_name = 'Dimensions/CustomerPIIRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_customer_pii']
-        output_bucket = self.buckets['delivery_customer_pii']
+    def _build_step_emp_store_assoc_delivery(self):
+        step_name = 'EmpStoreAssocDelivery'
+        script_name = 'Associations/EmpStoreAsscociationRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/CustomerPII/Working/',
-            's3://' + output_bucket + '/WT_CUST_PII/'
+            's3://' + input_bucket + '/EmpStoreAssociation/Working/',
+            's3://' + output_bucket + '/WT_EMP_STORE_ASSOC/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -106,34 +106,6 @@ class StepBuilderCustomer(object):
     # ============================================
     # Support Methods
     # ============================================
-
-    def _build_discovery_paths(self, bucket):
-        return
-        {
-            'employee': self._build_path(
-                bucket, 'Employee', 'working')
-
-        }
-
-    def _build_refined_paths(self, bucket):
-        return
-        {
-            'employee': self._build_path(
-                bucket, 'Employee', 'working')
-
-        }
-
-    def _build_path(self, bucket, domain, name):
-        path_parts = [
-            's3://' + bucket,
-            domain,
-            self.date_parts['year'],
-            self.date_parts['month'],
-            name + self.date_parts['time'],
-            '*.parquet'
-        ]
-
-        return '/'.join(path_parts)
 
     def _find_source_file(self, bucketname, filter_prefix):
         bucket = self.s3_client.Bucket(bucketname)
@@ -163,7 +135,7 @@ class StepBuilderCustomer(object):
 
         for file_filter in filters:
             file_name = self._find_source_file(
-                self.buckets['raw_customer_pii'],
+                self.buckets['raw_hr_pii'],
                 file_filter)
 
             if file_name is None:

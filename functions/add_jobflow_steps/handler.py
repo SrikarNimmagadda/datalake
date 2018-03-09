@@ -1,5 +1,4 @@
 """ Lambda entry point for add_jobflow_steps functions
-
 Acts as the composition root for the application and calls other classes
 to do all the work, which allows for easier unit testing of the other
 components.
@@ -15,6 +14,13 @@ from step_factory import StepFactory
 
 from step_builder_store import StepBuilderStore
 from step_builder_customer import StepBuilderCustomer
+from step_builder_employee import StepBuilderEmployee
+from step_builder_product import StepBuilderProduct
+from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
+from step_builder_goalskpi import StepBuilderGoalskpi
+from step_builder_salesothers import StepBuilderSalesOthers
+from step_builder_salestransactions import StepBuilderSalesTransactions
+from step_builder_salesKPI_and_details import StepBuilderSalesKPIandDetails
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -22,16 +28,18 @@ EMR = boto3.client('emr')
 
 BUCKETS = {
     'code': os.getenv('CODE_BUCKET'),
-    'raw_pii': os.getenv('RAW_PII_BUCKET'),
-    'raw_hr': os.getenv('RAW_HR_BUCKET'),
+    'data_processing_errors': os.getenv('DATA_PROCESSING_ERRORS_BUCKET'),
+    'raw_customer_pii': os.getenv('RAW_CUSTOMER_PII_BUCKET'),
+    'raw_hr_pii': os.getenv('RAW_HR_PII_BUCKET'),
     'raw_regular': os.getenv('RAW_REGULAR_BUCKET'),
-    'discovery_pii': os.getenv('DISCOVERY_PII_BUCKET'),
-    'discovery_hr': os.getenv('DISCOVERY_HR_BUCKET'),
+    'discovery_customer_pii': os.getenv('DISCOVERY_CUSTOMER_PII_BUCKET'),
+    'discovery_hr_pii': os.getenv('DISCOVERY_HR_PII_BUCKET'),
     'discovery_regular': os.getenv('DISCOVERY_REGULAR_BUCKET'),
-    'refined_pii': os.getenv('REFINED_PII_BUCKET'),
-    'refined_hr': os.getenv('REFINED_HR_BUCKET'),
+    'refined_customer_pii': os.getenv('REFINED_CUSTOMER_PII_BUCKET'),
+    'refined_hr_pii': os.getenv('REFINED_HR_PII_BUCKET'),
     'refined_regular': os.getenv('REFINED_REGULAR_BUCKET'),
-    'delivery': os.getenv('DELIVERY_BUCKET')
+    'delivery_customer_pii': os.getenv('DELIVERY_CUSTOMER_PII_BUCKET'),
+    'delivery_regular': os.getenv('DELIVERY_REGULAR_BUCKET')
 }
 
 EMR_STACK_NAME = os.getenv('EMR_STACK_NAME')
@@ -44,7 +52,7 @@ def lambda_handler(event, context):
     clusterid = finder.find_cluster(EMR_STACK_NAME)
 
     builder = choose_builder(event)
-    steps = builder.BuildSteps()
+    steps = builder.build_steps()
 
     EMR.add_job_flow_steps(
         JobFlowId=clusterid,
@@ -62,5 +70,19 @@ def choose_builder(event):
         return StepBuilderStore(factory, S3, BUCKETS, now)
     elif switch == 'customer':
         return StepBuilderCustomer(factory, S3, BUCKETS, now)
+    elif switch == 'employee':
+        return StepBuilderEmployee(factory, S3, BUCKETS, now)
+    elif switch == 'product':
+        return StepBuilderProduct(factory, S3, BUCKETS, now)
+    elif switch == 'storecustomerexperience':
+        return StepBuilderStoreCustomerExperience(factory, S3, BUCKETS, now)
+    elif switch == 'goalskpi':
+        return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
+    elif switch == 'salesothers':
+        return StepBuilderSalesOthers(factory, S3, BUCKETS, now)
+    elif switch == 'salestransactions':
+        return StepBuilderSalesTransactions(factory, S3, BUCKETS, now)
+    elif switch == 'saleskpianddetails':
+        return StepBuilderSalesKPIandDetails(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)

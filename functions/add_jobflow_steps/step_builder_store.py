@@ -1,6 +1,5 @@
-""" Contains the class StepBuilderStore.
-
-Builds EMR Steps for store files.
+"""Contains the class StepBuilderStore.
+Builds EMR Steps for Store files.
 """
 
 
@@ -28,21 +27,18 @@ class StepBuilderStore(object):
 
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
-        discovery_paths = self._build_discovery_paths(
-            self.buckets['discovery_regular'])
-
-        refined_paths = self._build_refined_paths(
-            self.buckets['refined_regular'])
 
         steps = [
-            self._build_step_csv_to_parquet(),
-            self._build_step_store_refinery(discovery_paths),
-            self._build_step_att_dealer_refinery(discovery_paths),
-            self._build_step_store_dealer_assn_refinery(discovery_paths),
-            self._build_step_tech_brand_hierarchy(refined_paths),
-            self._build_step_dealer_code_delivery(refined_paths),
-            self._build_step_store_dealer_association_delivery(refined_paths),
-            self._build_step_dim_store_delivery(refined_paths)
+            self._build_step_csv_to_parquet_store(),
+            self._build_step_store_refinery(),
+            self._build_step_csv_to_parquet_ATT_Dealer_code(),
+            self._build_step_ATT_Dealer_code_refinery(),
+            self._build_step_ATT_Dealer_code_delivery(),
+            self._build_step_store_dlcode_assoc_refinery(),
+            self._build_step_store_dlcode_assoc_delivery(),
+            self._build_step_store_delivery(),
+            self._build_step_store_hier_delivery(),
+            self._build_step_store_management_hier_delivery()
         ]
 
         return steps
@@ -51,125 +47,145 @@ class StepBuilderStore(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet(self):
-        step_name = 'CSVToParquet'
-        script_name = 'LocationMasterRQ4Parquet.py'
-        bucket = self.buckets['discovery_regular']
-
-        filters = [
-            'Store/locationMasterList',
-            'Store/BAE',
-            'Store/dealer',
-            'Store/multiTracker',
-            'Store/springMobile'
-        ]
-        raw_file_list = self._build_raw_file_list(filters)
+    def _build_step_csv_to_parquet_store(self):
+        step_name = 'CSVToParquetStore'
+        script_name = 'Dimensions/DimStoreCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            raw_file_list[0],
-            raw_file_list[1],
-            raw_file_list[2],
-            raw_file_list[3],
-            raw_file_list[4],
-            's3://' + bucket + '/Store',
-            self.date_parts['time']
+            's3://' + input_bucket + '/Location/Working',
+            's3://' + input_bucket + '/BAE/Working',
+            's3://' + input_bucket + '/DealerCodes/Working',
+            's3://' + input_bucket + '/MultiTracker/Working',
+            's3://' + input_bucket + '/SpringMobileStore/Working',
+            's3://' + input_bucket + '/DTV/Working',
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_refinery(self, discovery_paths):
+    def _build_step_store_refinery(self):
         step_name = 'StoreRefinery'
-        script_name = 'DimStoreRefined.py'
-        bucket = self.buckets['refined_regular']
+        script_name = 'Dimensions/DimStoreRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            discovery_paths['location'],
-            discovery_paths['bae'],
-            discovery_paths['dealer'],
-            discovery_paths['spring'],
-            discovery_paths['multi'],
-            's3://' + bucket + '/Store',
-            self.date_parts['time']
+            's3://' + input_bucket + '/Store/Working',
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_att_dealer_refinery(self, discovery_paths):
-        step_name = 'ATTDealerRefinery'
-        script_name = 'ATTDealerCodeRefine.py'
-        bucket = self.buckets['refined_regular']
+    def _build_step_csv_to_parquet_ATT_Dealer_code(self):
+        step_name = 'CSVToParquetATTDealerCode'
+        script_name = 'Dimensions/ATTDealerCodeCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
 
         script_args = [
-            discovery_paths['dealer'],
-            's3://' + bucket + '/Store',
-            self.date_parts['time']
+            's3://' + output_bucket + '/ATTDealerCode',
+            's3://' + input_bucket + '/ATTDealerCodes/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_dealer_assn_refinery(self, discovery_paths):
-        step_name = 'StoreDealerAssociationRefinery'
-        script_name = 'StoreDealerCodeAssociationRefine.py'
-        bucket = self.buckets['refined_regular']
+    def _build_step_ATT_Dealer_code_refinery(self):
+        step_name = 'ATTDealerCodeRefinery'
+        script_name = 'Dimensions/ATTDealerCodeRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            discovery_paths['dealer'],
-            's3://' + bucket + '/Store',
-            self.date_parts['time']
+            's3://' + output_bucket + '/ATTDealerCode',
+            's3://' + input_bucket + '/ATTDealerCode/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_tech_brand_hierarchy(self, refined_paths):
-        step_name = 'TechBrandHierarchy'
-        script_name = 'DimTechBrandHierarchy.py'
-        bucket = self.buckets['delivery_regular']
+    def _build_step_ATT_Dealer_code_delivery(self):
+        step_name = 'ATTDealerCodeDelivery'
+        script_name = 'Dimensions/ATTDealerCodeDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            refined_paths['store_refine'],
-            refined_paths['att_dealer'],
-            's3://' + bucket + '/Store/Store_Hier/Current/'
+            's3://' + output_bucket + '/WT_ATT_DELR_CDS',
+            's3://' + input_bucket + '/ATTDealerCode/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_dealer_code_delivery(self, refined_paths):
-        step_name = 'DealerCodeDelivery'
-        script_name = 'ATTDealerCodeDelivery.py'
-        bucket = self.buckets['delivery_regular']
+    def _build_step_store_dlcode_assoc_refinery(self):
+        step_name = 'StoreDelaerCodeAssociationRefinery'
+        script_name = 'Associations/StoreDealerCodeAssociationRefine.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            refined_paths['att_dealer'],
-            's3://' + bucket + '/WT_ATT_DELR_CDS/Current'
+            's3://' + input_bucket + '/StoreDealerAssociation/Working',
+            's3://' + output_bucket + '/StoreDealerAssociation/Working',
+            's3://' + error_bucket + '/StoreDealerAssociation'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_dealer_association_delivery(self, refined_paths):
-        step_name = 'StoreDealerAssociationDelivery'
-        script_name = 'StoreDealerCodeAssociationDelivery.py'
-        bucket = self.buckets['delivery_regular']
+    def _build_step_store_dlcode_assoc_delivery(self):
+        step_name = 'StoreDealerCodeAssociationDelivery'
+        script_name = 'Associations/StoreDealerCodeAssociationDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            refined_paths['association'],
-            's3://' + bucket + '/WT_STORE_DELR_CD_ASSOC/Current/'
+            's3://' + input_bucket + '/StoreDealerAssociation/Working',
+            's3://' + output_bucket + '/WT_STORE_DELR_CD_ASSOC/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_dim_store_delivery(self, refined_paths):
-        step_name = 'DimStoreDelivery'
-        script_name = 'DimStoreDelivery.py'
-        bucket = self.buckets['delivery_regular']
-
-        tech_brand_op_name = 's3://' + bucket + '/Store/Store_Hier/Current/'
+    def _build_step_store_delivery(self):
+        step_name = 'StoreDelivery'
+        script_name = 'Dimensions/DimStoreDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            refined_paths['att_dealer'],
-            refined_paths['association'],
-            refined_paths['store_refine'],
-            tech_brand_op_name,
-            's3://' + bucket + '/WT_STORE/Current/'
+            's3://' + input_bucket + '/Store/Working',
+            's3://' + output_bucket + '/WT_STORE/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_hier_delivery(self):
+        step_name = 'StoreHierarchyDelivery'
+        script_name = 'Dimensions/DimStoreHierDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/Store/Working',
+            's3://' + output_bucket + '/WT_STORE_HIER/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_management_hier_delivery(self):
+        step_name = 'StoreManagementHierarchyDelivery'
+        script_name = 'Dimensions/DimStoreManagementHierDelivery.py'
+        input_bucket_refined = self.buckets['refined_regular']
+        input_bucket_discovery = self.buckets['discovery_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket_refined + '/Store/Working',
+            's3://' + input_bucket_discovery + '/Store/SpringMobileStore/Working',
+            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -177,25 +193,6 @@ class StepBuilderStore(object):
     # ============================================
     # Support Methods
     # ============================================
-
-    def _build_discovery_paths(self, bucket):
-        return {
-            'location': self._build_path(bucket, 'Store', 'location'),
-            'dealer': self._build_path(bucket, 'Store', 'Dealer'),
-            'multi': self._build_path(bucket, 'Store', 'multiTracker'),
-            'spring': self._build_path(bucket, 'Store', 'springMobile'),
-            'bae': self._build_path(bucket, 'Store', 'BAE')
-        }
-
-    def _build_refined_paths(self, bucket):
-        return {
-            'att_dealer': self._build_path(
-                bucket, 'Store', 'ATTDealerCodeRefine'),
-            'association': self._build_path(
-                bucket, 'Store', 'StoreDealerAssociationRefine'),
-            'store_refine': self._build_path(
-                bucket, 'Store', 'StoreRefined')
-        }
 
     def _build_path(self, bucket, domain, name):
         path_parts = [
@@ -246,6 +243,6 @@ class StepBuilderStore(object):
                 # Need to use a proxy null value.
                 file_list.append('nofile')
             else:
-                file_list.append(file)
+                file_list.append(file_name)
 
-        return file_list
+                return file_list

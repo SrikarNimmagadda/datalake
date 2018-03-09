@@ -42,11 +42,14 @@ class StepFactory(object):
     def _build_step_args(self, script_name, script_args):
         csv_jar = 's3://' + self.bucket + '/EMRJars/spark-csv_2.11-1.5.0.jar'
         excel_jar = 's3://' + self.bucket + '/EMRJars/spark-excel_2.11-0.8.6.jar'
+        parser_jar = 's3://' + self.bucket + '/EMRJars/univocity-parsers-2.5.9.jar'
 
-        jars_arg = csv_jar + ',' + excel_jar
+        jars_arg = csv_jar + ',' + excel_jar + ',' + parser_jar
 
         args = [
             '/usr/bin/spark-submit',
+            '--deploy-mode',
+            'cluster',
             '--jars', jars_arg,
             's3://' + self.bucket + '/EMRScripts/' + script_name
         ]

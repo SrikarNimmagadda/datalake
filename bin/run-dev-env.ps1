@@ -1,29 +1,34 @@
 # RUN THIS FROM THE ROOT OF THE PROJECT: > bin/run-dev-env
 
-# create an apphash.txt file containing the git commit hash of the current commit
-# this is normally done in the deploy step of the scripts, but if we're running locally, we won't have a pipeline to query for this information
-git rev-parse --short HEAD | Out-File apphash.txt -Encoding UTF8
-# because Out-File writes files with CRLF endings, and we want to read this file in linux, we need to replace the line endings
-$lf_content = [IO.File]::ReadAllText("apphash.txt") -replace "`r`n", "`n"
-[IO.File]::WriteAllText("apphash.txt", $lf_content)
+# Set up the environment variables that change between projects
+$COOP = "tbdatalake"
+$HEN_NAME = "d0062"
+$SERVICE_NAME = "tb-app-datalake"
+$IMAGE = "gamestop/gs.docker.buildenv.serverless:1.25.0"
+$REGION = "us-east-1"
+
+#
+# from here down should be all template--shouldn't change per project
+#
 
 # the current branch name
 $STAGE = (git symbolic-ref --short HEAD)
 
-# Builds and runs a docker container
-docker build -f docker/dev/Dockerfile -t tb-app-datalake-dev .
-docker run `
-    --rm `
-    --mount type=bind,source="$(Get-Location)",target=/app `
-    -e AWS_ACCESS_KEY_ID `
-    -e AWS_SECRET_ACCESS_KEY `
-    -e AWS_SESSION_TOKEN `
-    -e AWS_DEFAULT_REGION `
-    -e AWS_DEFAULT_OUTPUT `
-    -e SHELL=/bin/bash `
-    -e STAGE=$STAGE `
-    -it tb-app-datalake-dev
+$STACK_NAME = "$SERVICE_NAME-$STAGE"
 
-# since we only have a latest tag for our image, we generate some cruft when we recreate it. This line removes the cruft
-Write-Output "Pruning old images for this application"
-docker system prune --force --filter label=application=tb-app-datalake-dev
+docker run `
+  --rm `
+  --mount type=bind,source="$(Get-Location)",target=/app `
+  -e SHELL=/bin/bash `
+  -e AWS_ACCESS_KEY_ID `
+  -e AWS_SECRET_ACCESS_KEY `
+  -e AWS_SESSION_TOKEN `
+  -e AWS_DEFAULT_REGION=$REGION `
+  -e AWS_DEFAULT_OUTPUT=json `
+  -e COOP=$COOP `
+  -e HEN_NAME=$HEN_NAME `
+  -e STAGE=$STAGE `
+  -e STACK_NAME=$STACK_NAME `
+  -w /app `
+  -it $IMAGE `
+  bash
