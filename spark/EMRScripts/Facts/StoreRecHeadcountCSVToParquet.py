@@ -101,12 +101,11 @@ if storeRecHCFileCheck == 1:
             registerTempTable("StoreRecHCTempTable")
 
         dfStoreRecHCFinal = spark.sql(
-            "select store_number,store_name,actual_headcount,store_manager,business_assistant_manager_count,"
-            + "fulltime_equivalent_count,parttime_equivalent_count,fulltime_floater_count,"
-            + "district_lead_sales_consultant_count,mit_count,seasonal_count,approved_headcount,"
-            + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month"
-            + " from StoreRecHCTempTable "
-        )
+            "select store_number,store_name,actual_headcount,store_manager,business_assistant_manager_count, "
+            "fulltime_equivalent_count,parttime_equivalent_count,fulltime_floater_count, "
+            "district_lead_sales_consultant_count,mit_count,seasonal_count,approved_headcount, "
+            "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month"
+            " from StoreRecHCTempTable ")
 
         todayyear = datetime.now().strftime('%Y')
         todaymonth = datetime.now().strftime('%m')
