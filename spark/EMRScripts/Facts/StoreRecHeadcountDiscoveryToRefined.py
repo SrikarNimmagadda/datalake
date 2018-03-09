@@ -123,7 +123,7 @@ dfStoreRecHCFile = spark.read.parquet(StoreRecHCInputPath + '/StoreRecruitingHea
     "StoreRecHCTempTable1")
 
 storeBadRecsDF = spark.sql("select * from StoreRecHCTempTable1 "
-                           + " where store_name is null"
+                           " where store_name is null"
                            )
 
 if storeBadRecsDF.count() > 0:

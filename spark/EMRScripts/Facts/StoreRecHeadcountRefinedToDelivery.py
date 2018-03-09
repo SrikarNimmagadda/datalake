@@ -17,8 +17,8 @@ StoreRecHCInputPath = sys.argv[2]
 
 Config = SparkConf().setAppName("StoreRecHeadcountDelivery")
 SparkCtx = SparkContext(conf=Config)
-spark = SparkSession.builder.config(conf=Config).\
-        getOrCreate()
+spark = SparkSession.builder.config(conf=Config). \
+    getOrCreate()
 
 Log4jLogger = SparkCtx._jvm.org.apache.log4j
 logger = Log4jLogger.LogManager.getLogger('store_rec_hc_ref_to_delivery')
