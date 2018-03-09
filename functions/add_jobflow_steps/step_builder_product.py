@@ -29,12 +29,12 @@ class StepBuilderProduct(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_product(),
-            self._build_step_product_refinery(),
-            self._build_step_product_delivery(),
             self._build_step_csv_to_parquet_productcategory(),
             self._build_step_productcategory_refinery(),
-            self._build_step_productcategory_delivery()
+            self._build_step_productcategory_delivery(),
+            self._build_step_csv_to_parquet_product(),
+            self._build_step_product_refinery(),
+            self._build_step_product_delivery()
         ]
 
         return steps
@@ -42,48 +42,6 @@ class StepBuilderProduct(object):
     # ============================================
     # Step Definitions
     # ============================================
-
-    def _build_step_csv_to_parquet_product(self):
-        step_name = 'CSVToParquetProduct'
-        script_name = 'Dimensions/ProductCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-
-        script_args = [
-            's3://' + output_bucket,
-            input_bucket
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_product_refinery(self):
-        step_name = 'ProductRefinery'
-        script_name = 'Dimensions/ProductDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
-
-        script_args = [
-            's3://' + output_bucket,
-            output_bucket,
-            error_bucket,
-            's3://' + input_bucket
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_product_delivery(self):
-        step_name = 'ProductDelivery'
-        script_name = 'Dimensions/ProductRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_PROD'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet_productcategory(self):
         step_name = 'CSVToParquetProductCategory'
@@ -125,6 +83,48 @@ class StepBuilderProduct(object):
         script_args = [
             input_bucket,
             's3://' + output_bucket + '/WT_PROD_CAT'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_product(self):
+        step_name = 'CSVToParquetProduct'
+        script_name = 'Dimensions/ProductCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + output_bucket,
+            input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_product_refinery(self):
+        step_name = 'ProductRefinery'
+        script_name = 'Dimensions/ProductDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
+
+        script_args = [
+            's3://' + output_bucket,
+            output_bucket,
+            error_bucket,
+            's3://' + input_bucket
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_product_delivery(self):
+        step_name = 'ProductDelivery'
+        script_name = 'Dimensions/ProductRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            input_bucket,
+            's3://' + output_bucket + '/WT_PROD'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
