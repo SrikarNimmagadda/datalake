@@ -1,5 +1,4 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType
 import sys
 import os
 import csv
@@ -28,14 +27,14 @@ class DimStoreCSVToParquet(object):
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
         self.storeName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[1]
         self.workingName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[2]
-        self.dataProcessingErrorPath = sys.argv[8]
+        self.dataProcessingErrorPath = sys.argv[8] + '/Discovery'
 
         self.locationName = "Location"
         self.baeName = "BAE"
         self.multiTrackerName = "MultiTracker"
-        self.springMobileName = "SpringMobile"
-        self.dtvLocationName = "DTVLocation"
-        self.dealerName = "Dealer"
+        self.springMobileName = "SpringMobileStore"
+        self.dtvLocationName = "DTV"
+        self.dealerName = "DealerCodes"
         self.fileFormat = ".csv"
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
@@ -66,8 +65,9 @@ class DimStoreCSVToParquet(object):
         self.multiTrackerFile, self.multiTrackerHeader = self.searchFile(self.multiTrackerStore, self.multiTrackerName)
         self.log.info(self.multiTrackerFile)
         self.log.info(column.decode('utf-8') for column in self.multiTrackerHeader)
-        self.multiTrackerCols = [column.replace(' ', '').replace(',', '').replace('/', '').replace('&', '_') for column
-                                 in self.multiTrackerHeader]
+        self.multiTrackerCols = [column.replace(' ', '').replace(',', '').replace('/', '').replace('&', '_')
+                                 for column in self.multiTrackerHeader]
+        # self.multiTrackerCols = self.multiTrackerCols[:-1]
         self.log.info("Multi Tracker Columns:" + ','.join(self.multiTrackerCols))
 
         self.springMobileStoreFile, self.springMobileHeader = self.searchFile(self.springMobileStoreList,
@@ -75,7 +75,7 @@ class DimStoreCSVToParquet(object):
         self.log.info(self.springMobileStoreFile)
         self.log.info(column.decode('utf-8') for column in self.springMobileHeader)
 
-        self.springMobileCols = [column.decode('ascii', 'ignore').replace(' ', '').replace('#', '')
+        self.springMobileCols = [column.decode('ascii', 'ignore').replace(' ', '').replace('#', '').replace('/', '')
                                  for index, column in enumerate(self.springMobileHeader)]
 
         self.log.info("Spring Mobile Columns:" + ','.join(self.springMobileCols))
@@ -107,6 +107,8 @@ class DimStoreCSVToParquet(object):
                                           self.dealerName + '/' + self.workingName
         self.multiTrackerWorkingStoreFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
                                                 self.multiTrackerName + '/' + self.workingName
+        self.multiTrackerWorkingStoreCSVFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
+                                                   self.multiTrackerName + '/csv'
         self.springMobileStoreWorkingFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
                                                 self.springMobileName + '/' + self.workingName
         self.dtvLocationStoreWorkingFilePath = 's3://' + self.discoveryBucket + '/' + self.storeName + '/' + \
@@ -147,10 +149,6 @@ class DimStoreCSVToParquet(object):
             for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
                 if i == 2:
                     header = line
-        # elif name == self.springMobileName:
-        #     for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
-        #         if i == 1:
-        #             header = line[:-1]
         else:
             for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
                 if i == 0:
@@ -303,6 +301,9 @@ class DimStoreCSVToParquet(object):
                                 line[1] != 'Formula Link' and line[2] != 'Spring Mobile Multi-Tracker').\
             toDF(self.multiTrackerCols)
 
+        dfMultiTrackerStore.coalesce(1).write.mode("overwrite").csv(self.multiTrackerWorkingStoreCSVFilePath,
+                                                                    header=True)
+
         dfSpringMobileStoreList = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("encoding", "UTF-8"). \
             option("ignoreLeadingWhiteSpace", "true"). \
@@ -314,12 +315,6 @@ class DimStoreCSVToParquet(object):
             option("quote", "\""). \
             option("multiLine", "true"). \
             load(self.springMobileStoreFile).toDF(*self.springMobileCols)
-
-        # dfSpringMobileStoreList = self.sparkSession.sparkContext.textFile(self.springMobileStoreFile).\
-        #     mapPartitions(lambda partition: csv.
-        #                   reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
-        #     filter(lambda line: line[0] not in {'Spring Mobile - AT&T', 'Store #'}).\
-        #     toDF(self.springMobileCols)
 
         dfDTVLocation = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("encoding", "UTF-8"). \

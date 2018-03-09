@@ -152,7 +152,11 @@ class DimStoreHierDelivery(object):
                 dfStoreHierDelta.coalesce(1).write.mode("overwrite").csv(self.storeHierCurrentPath, header=True)
                 dfStoreHierDelta.coalesce(1).write.mode("append").csv(self.storeHierPrevPath, header=True)
             else:
-                self.log.info(" The prev and current are same. So no delta file will be generated in refined bucket.")
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
+                    .csv(self.storeHierCurrentPath)
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
+                    .csv(self.storeHierPrevPath)
+                self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")
             self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("store_refine_curr")

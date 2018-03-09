@@ -14,13 +14,14 @@ class DimStoreManagementHierDelivery(object):
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
 
         self.refinedBucketWorking = sys.argv[1]
-        self.storeMgmtHierCurrentPath = sys.argv[2]
+        self.springMobileWorkingPath = sys.argv[2]
+        self.storeMgmtHierCurrentPath = sys.argv[3]
 
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
 
         self.deliveryBucket = self.storeMgmtHierCurrentPath[self.storeMgmtHierCurrentPath.index('tb'):].split("/")[0]
-        self.storeMgmtHierDeliveryName = self.storeMgmtHierCurrentPath[
-                                         self.storeMgmtHierCurrentPath.index('tb'):].split("/")[1]
+        self.storeMgmtHierDeliveryName = self.storeMgmtHierCurrentPath[self.storeMgmtHierCurrentPath.index(
+            'tb'):].split("/")[1]
         self.currentName = self.storeMgmtHierCurrentPath[self.storeMgmtHierCurrentPath.index('tb'):].split("/")[2]
 
         self.prefixStoreRefinePath = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[1]
@@ -41,9 +42,9 @@ class DimStoreManagementHierDelivery(object):
                                     "b.sourceemployeeid as lvl_1_src_mgr_id,c.sourceemployeeid as lvl_2_src_mgr_id," \
                                     "d.sourceemployeeid as lvl_3_src_mgr_id,'' as lvl_4_src_mgr_id,'' as " \
                                     "lvl_5_src_mgr_id,'' as lvl_6_src_mgr_id"
-        self.storeMgmtJoinWithCondition = "join employee_curr b on a.SpringRegionVP = b.name join employee_curr c on " \
-                                          "a.SpringMarketDirector = c.name join employee_curr d on " \
-                                          "a.SpringDistrictManager = d.name"
+        self.storeMgmtJoinWithCondition = "join employee_curr b on a.RVPID = b.workdayid join employee_curr" \
+                                          " c on a.MDIRID = c.workdayid join employee_curr d on " \
+                                          "a.DMID = d.workdayid"
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket, currentOrPrev=1):
 
@@ -100,26 +101,27 @@ class DimStoreManagementHierDelivery(object):
 
         self.sparkSession.read.parquet(lastUpdatedEmployeeFile).registerTempTable("employee_refine_curr")
         dfEmployeeRefined = self.sparkSession.sql(
-            "select name,sourceemployeeid from employee_refine_curr where name != ''")
-        dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
+            "select workdayid,sourceemployeeid from employee_refine_curr where workdayid != ''")
+        # dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
         dfEmployeeRefined.registerTempTable("employee_curr")
+
+        dfSpringMobile = self.sparkSession.read.parquet(self.springMobileWorkingPath)
+        dfSpringMobile.filter(dfSpringMobile.Status == "Open").registerTempTable("SpringMobile")
 
         if lastPrevUpdatedStoreFile != '':
 
             self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("store_refine_curr")
-            self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,SpringMarket,"
-                                  "SpringRegion,SpringDistrict from store_refine_curr where SpringRegionVP != '' and"
-                                  " SpringMarketDirector != '' and SpringDistrictManager != ''").\
-                registerTempTable("store_curr")
+            self.sparkSession.sql("select b.RVPID, b.MDIRID, b.DMID, a.SpringMarket, a.SpringRegion, a.SpringDistrict "
+                                  "from store_refine_curr a left join SpringMobile b on a.StoreNumber = b.Store"). \
+                drop_duplicates().registerTempTable("store_curr")
 
             dfStoreMgmtHierCurr = self.sparkSession.sql(self.storeMgmtSelectQuery + " from store_curr a " +
                                                         self.storeMgmtJoinWithCondition)
 
             self.sparkSession.read.parquet(lastPrevUpdatedStoreFile).registerTempTable("store_refine_prev")
-            self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,SpringMarket,"
-                                  "SpringRegion,SpringDistrict from store_refine_prev where SpringRegionVP != '' and"
-                                  " SpringMarketDirector != '' and SpringDistrictManager != ''").\
-                registerTempTable("store_prev")
+            self.sparkSession.sql("select b.RVPID, b.MDIRID, b.DMID, a.SpringMarket, a.SpringRegion, a.SpringDistrict "
+                                  "from store_refine_prev a left join SpringMobile b on a.StoreNumber = b.Store").\
+                drop_duplicates().registerTempTable("store_prev")
 
             dfStoreMgmtHierPrev = self.sparkSession.sql(self.storeMgmtSelectQuery + " from store_prev a " +
                                                         self.storeMgmtJoinWithCondition)
@@ -145,26 +147,31 @@ class DimStoreManagementHierDelivery(object):
 
             if rowCountUpdateRecords > 0 or rowCountNewRecords > 0:
                 self.log.info("Updated file has arrived..")
-                dfStoreMgmtHierDelta = self.sparkSession.sql(
-                        "select " + self.storeMgmtHierColumns +
-                        ",cdc_ind_cd from store_mgmt_hier_updated_data union all select " + self.storeMgmtHierColumns +
-                        ",cdc_ind_cd from store_mgmt_hier_new_data").drop_duplicates()
+                dfStoreMgmtHierDelta = self.sparkSession.sql("select " + self.storeMgmtHierColumns +
+                                                             ",cdc_ind_cd from store_mgmt_hier_updated_data union all "
+                                                             "select " + self.storeMgmtHierColumns +
+                                                             ",cdc_ind_cd from store_mgmt_hier_new_data").\
+                    drop_duplicates()
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("overwrite").csv(self.storeMgmtHierCurrentPath, header=True)
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("append").csv(self.storeMgmtHierPrevPath, header=True)
             else:
-                self.log.info("The prev and current files are same. No delta file will be generated in refined bucket.")
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
+                    .csv(self.storeMgmtHierCurrentPath)
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
+                    .csv(self.storeMgmtHierPrevPath)
+                self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
 
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")
             self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("store_refine_curr")
 
-            self.sparkSession.sql("select * from store_refine_curr").coalesce(1).write.mode("overwrite").csv(
-                self.storeCSVPath, header=True)
+            self.sparkSession.sql("select b.RVPID, b.MDIRID, b.DMID, a.SpringMarket, a.SpringRegion, a.SpringDistrict,"
+                                  "a.StoreNumber from store_refine_curr a left join SpringMobile b "
+                                  "on a.StoreNumber = b.Store").drop_duplicates().registerTempTable("store_curr")
 
-            self.sparkSession.sql("select SpringRegionVP,SpringMarketDirector,SpringDistrictManager,"
-                                  "SpringMarket,SpringRegion,SpringDistrict from store_refine_curr "
-                                  "where SpringRegionVP != '' and SpringMarketDirector != '' and "
-                                  "SpringDistrictManager != ''").registerTempTable("store_curr")
+            # self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(
+            #     self.storeCSVPath, header=True)
+
             dfStoreManagementHierWithName = self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from"
                                                                                               " store_curr a " +
                                                                   self.storeMgmtJoinWithCondition).drop_duplicates()
