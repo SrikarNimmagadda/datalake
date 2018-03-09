@@ -1,72 +1,66 @@
-#!/usr/bin/python
-#######################################################################################################################
-# Author           : Harikesh R
-# Date Created     : 12/01/2018
-# Purpose          : To convert the csv file to parquet and move it to Discovery layer for Product Category
-# Version          : 1.0
-# Revision History :
-#   Version          : 1.1
-#   Revision History : Included CDC logic
-########################################################################################################################
-
 from pyspark.sql import SparkSession
 import sys
-from datetime import datetime
 
-OutputPath = sys.argv[1]
-ProdCatInputPath = sys.argv[2]
 
-spark = SparkSession.builder. \
-    appName("ProductCategory_CSVToParquet").getOrCreate()
+class ProductCategoryCSVToParquet(object):
 
-# logger = log4j_logger.LogManager.getLogger('prod_cat_csv_to_parquet')
+    def __init__(self):
 
-fileHasDataFlag = 0
+        self.outputPath = sys.argv[1]
+        self.prodCatInputPath = sys.argv[2]
 
-dfProductCatg = spark.read.format("com.databricks.spark.csv"). \
-    option("header", "true"). \
-    option("treatEmptyValuesAsNulls", "true"). \
-    option("inferSchema", "true"). \
-    load(ProdCatInputPath)
+        self.appName = self.__class__.__name__
+        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
+        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
+        self.log = self.log4jLogger.LogManager.getLogger(self.appName)
+        self.fileHasDataFlag = 0
 
-dfProductCatg = dfProductCatg.withColumnRenamed("ID", "id"). \
-    withColumnRenamed("Description", "description"). \
-    withColumnRenamed("CategoryPath", "categorypath"). \
-    withColumnRenamed("ParentID", "parentid"). \
-    withColumnRenamed("Enabled", "enabled")
+    def loadParquet(self):
+        dfProductCatg = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            load(self.prodCatInputPath)
 
-if dfProductCatg.count() > 1:
-    print("The product category file has data")
-    fileHasDataFlag = 1
-else:
-    print("The product category file does not have data")
-    fileHasDataFlag = 0
+        dfProductCatg = dfProductCatg.withColumnRenamed("ID", "id"). \
+            withColumnRenamed("Description", "description"). \
+            withColumnRenamed("CategoryPath", "categorypath"). \
+            withColumnRenamed("ParentID", "parentid"). \
+            withColumnRenamed("Enabled", "enabled")
 
-if fileHasDataFlag == 1:
-    print("Csv file loaded into dataframe properly")
+        if dfProductCatg.count() > 1:
+            print("The product category file has data")
+            fileHasDataFlag = 1
+        else:
+            print("The product category file does not have data")
+            fileHasDataFlag = 0
 
-    todayyear = datetime.now().strftime('%Y')
-    todaymonth = datetime.now().strftime('%m')
+        if fileHasDataFlag == 1:
+            print("Csv file loaded into dataframe properly")
 
-    dfProductCatgWithDupsRem = dfProductCatg.dropDuplicates(['id']).registerTempTable("ProdCatTempTable")
+            dfProductCatg.dropDuplicates(['id']).registerTempTable("ProdCatTempTable")
 
-    dfProductCatgFinal = spark.sql("select cast(id as string),description,categorypath,parentid,enabled,"
-                                   " YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                                   "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from ProdCatTempTable  "
-                                   "where id is not null")
+            dfProductCatgFinal = self.sparkSession.sql("select cast(id as string),description,categorypath,parentid,enabled,"
+                                                       " YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
+                                                       "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from ProdCatTempTable  "
+                                                       "where id is not null")
 
-    dfProductCatgFinal.coalesce(1). \
-        select('id', 'description', 'categorypath', 'parentid', 'enabled'). \
-        write.mode("overwrite"). \
-        format('parquet'). \
-        save(OutputPath + '/' + 'ProductCategory' + '/' + 'Working')
+            dfProductCatgFinal.coalesce(1). \
+                select('id', 'description', 'categorypath', 'parentid', 'enabled'). \
+                write.mode("overwrite"). \
+                format('parquet'). \
+                save(self.outputPath + '/' + 'ProductCategory' + '/' + 'Working')
 
-    dfProductCatgFinal.coalesce(1). \
-        write.mode('append').partitionBy('year', 'month'). \
-        format('parquet').\
-        save(OutputPath + '/' + 'ProductCategory')
+            dfProductCatgFinal.coalesce(1). \
+                write.mode('append').partitionBy('year', 'month'). \
+                format('parquet').\
+                save(self.outputPath + '/' + 'ProductCategory')
 
-else:
-    print("ERROR : Loading csv file into dataframe")
+        else:
+            print("ERROR : Loading csv file into dataframe")
 
-spark.stop()
+        self.sparkSession.stop()
+
+
+if __name__ == "__main__":
+    ProductCategoryCSVToParquet().loadParquet()
