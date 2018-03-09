@@ -31,14 +31,14 @@ class StepBuilderStore(object):
         steps = [
             self._build_step_csv_to_parquet_store(),
             self._build_step_store_refinery(),
-            self._build_step_store_delivery(),
             self._build_step_csv_to_parquet_ATT_Dealer_code(),
             self._build_step_ATT_Dealer_code_refinery(),
             self._build_step_ATT_Dealer_code_delivery(),
             self._build_step_store_dlcode_assoc_refinery(),
             self._build_step_store_dlcode_assoc_delivery(),
-            self._build_step_store_management_hier_delivery(),
-            self._build_step_store_hier_delivery()
+            self._build_step_store_delivery(),
+            self._build_step_store_hier_delivery(),
+            self._build_step_store_management_hier_delivery()
         ]
 
         return steps
@@ -57,7 +57,7 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Location/Working',
             's3://' + input_bucket + '/BAE/Working',
-            's3://' + input_bucket + '/ATTDealerCodes/Working',
+            's3://' + input_bucket + '/DealerCodes/Working',
             's3://' + input_bucket + '/MultiTracker/Working',
             's3://' + input_bucket + '/SpringMobileStore/Working',
             's3://' + input_bucket + '/DTV/Working',
@@ -78,19 +78,6 @@ class StepBuilderStore(object):
             's3://' + input_bucket + '/Store/Working',
             's3://' + output_bucket + '/Store/Working',
             's3://' + error_bucket + '/Store'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_store_delivery(self):
-        step_name = 'StoreDelivery'
-        script_name = 'Dimensions/DimStoreDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/Store/Working',
-            's3://' + output_bucket + '/WT_STORE/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -162,15 +149,15 @@ class StepBuilderStore(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_management_hier_delivery(self):
-        step_name = 'StoreManagementHierarchyDelivery'
-        script_name = 'Dimensions/DimStoreManagementHierDelivery.py'
+    def _build_step_store_delivery(self):
+        step_name = 'StoreDelivery'
+        script_name = 'Dimensions/DimStoreDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
             's3://' + input_bucket + '/Store/Working',
-            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
+            's3://' + output_bucket + '/WT_STORE/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -184,6 +171,21 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Store/Working',
             's3://' + output_bucket + '/WT_STORE_HIER/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_store_management_hier_delivery(self):
+        step_name = 'StoreManagementHierarchyDelivery'
+        script_name = 'Dimensions/DimStoreManagementHierDelivery.py'
+        input_bucket_refined = self.buckets['refined_regular']
+        input_bucket_discovery = self.buckets['discovery_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket_refined + '/Store/Working',
+            's3://' + input_bucket_discovery + '/Store/SpringMobileStore/Working',
+            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
