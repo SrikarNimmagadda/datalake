@@ -1,12 +1,3 @@
-#!/usr/bin/python
-#######################################################################################################################
-# Author           : Harikesh R
-# Date Created     : 12/01/2018
-# Purpose          : To transform and move data from Refined to Delivery layer for Product Category
-# Version          : 1.0
-# Revision History :
-########################################################################################################################
-
 from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
@@ -100,15 +91,13 @@ class ProductCategoryRefinedToDelivery:
                 "a.level_ten_id as LVL_10_ID, a.level_ten_name LVL_10_NME, a.active_indicator as PROD_CAT_ACT_IND from"
                 " CurrentProdCatTableTmp a").registerTempTable("CurrentProdCatTableTmpRenamed")
 
-            spark.sql(
-                "select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
-                "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
-                "from CurrentProdCatTableTmpRenamed a"
-            ).registerTempTable("CurrentProdCatTable")
+            spark.sql("select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                      "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                      "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
+                      "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                      "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                      "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
+                      "from CurrentProdCatTableTmpRenamed a").registerTempTable("CurrentProdCatTable")
 
             currTableCount = spark.sql("select count(*) from CurrentProdCatTable").show()
             print("Current Table count is : ", currTableCount)
@@ -120,27 +109,24 @@ class ProductCategoryRefinedToDelivery:
             spark.read.parquet(lastPrevUpdatedProdCatFile).\
                 registerTempTable("PrevProdCatTableTmp")
 
-            spark.sql(
-                "select NVL(a.category_Id,'NA') as CAT_ID,NVL(a.company_cd,-1) as CO_CD,NVL(a.category_name,'NA') as "
-                "CAT_NME, NVL(a.category_path,'NA') as CAT_PATH, NVL(a.parent_category_id,'NA') as PARNT_CAT_ID, "
-                "NVL(a.level_one_id,'NA') as LVL_1_ID, NVL(a.level_one_name,'NA') as LVL_1_NME, a.level_two_id as "
-                "LVL_2_ID, a.level_two_name as LVL_2_NME, a.level_three_id as LVL_3_ID, a.level_three_name as "
-                "LVL_3_NME, a.level_four_id as LVL_4_ID, a.level_four_name as LVL_4_NME, a.level_five_id as LVL_5_ID, "
-                "a.level_five_name as LVL_5_NME, a.level_six_id as LVL_6_ID, a.level_six_name as LVL_6_NME, "
-                "a.level_seven_id as LVL_7_ID, a.level_seven_name as LVL_7_NME, a.level_eight_id as LVL_8_ID, "
-                "a.level_eight_name as LVL_8_NME,  a.level_nine_id as LVL_9_ID, a.level_nine_name as LVL_9_NME, "
-                "a.level_ten_id as LVL_10_ID, a.level_ten_name LVL_10_NME, a.active_indicator as PROD_CAT_ACT_IND from"
-                " PrevProdCatTableTmp a").registerTempTable("PrevProdCatTableTmpRenamed")
+            spark.sql("select NVL(a.category_Id,'NA') as CAT_ID,NVL(a.company_cd,-1) as CO_CD,NVL(a.category_name,'NA') as "
+                      "CAT_NME, NVL(a.category_path,'NA') as CAT_PATH, NVL(a.parent_category_id,'NA') as PARNT_CAT_ID, "
+                      "NVL(a.level_one_id,'NA') as LVL_1_ID, NVL(a.level_one_name,'NA') as LVL_1_NME, a.level_two_id as "
+                      "LVL_2_ID, a.level_two_name as LVL_2_NME, a.level_three_id as LVL_3_ID, a.level_three_name as "
+                      "LVL_3_NME, a.level_four_id as LVL_4_ID, a.level_four_name as LVL_4_NME, a.level_five_id as LVL_5_ID, "
+                      "a.level_five_name as LVL_5_NME, a.level_six_id as LVL_6_ID, a.level_six_name as LVL_6_NME, "
+                      "a.level_seven_id as LVL_7_ID, a.level_seven_name as LVL_7_NME, a.level_eight_id as LVL_8_ID, "
+                      "a.level_eight_name as LVL_8_NME,  a.level_nine_id as LVL_9_ID, a.level_nine_name as LVL_9_NME, "
+                      "a.level_ten_id as LVL_10_ID, a.level_ten_name LVL_10_NME, a.active_indicator as PROD_CAT_ACT_IND from"
+                      " PrevProdCatTableTmp a").registerTempTable("PrevProdCatTableTmpRenamed")
 
-            spark.sql(
-                "select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
-                "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
-                "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
-                "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
-                "from PrevProdCatTableTmpRenamed a"
-            ).registerTempTable("PrevProdCatTable")
+            spark.sql("select CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                      "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                      "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND,"
+                      "hash(CAT_ID,CO_CD,CAT_NME,CAT_PATH,PARNT_CAT_ID,LVL_1_ID,LVL_1_NME,LVL_2_ID,LVL_2_NME,LVL_3_ID, "
+                      "LVL_3_NME, LVL_4_ID, LVL_4_NME, LVL_5_ID,LVL_5_NME, LVL_6_ID, LVL_6_NME, LVL_7_ID, LVL_7_NME, "
+                      "LVL_8_ID, LVL_8_NME,  LVL_9_ID, LVL_9_NME, LVL_10_ID,LVL_10_NME,PROD_CAT_ACT_IND) as hash_key "
+                      "from PrevProdCatTableTmpRenamed a").registerTempTable("PrevProdCatTable")
 
             prevTableCount = spark.sql("select count(*) from PrevProdCatTable").show()
             print("Previous Table count is : ", prevTableCount)
@@ -179,8 +165,7 @@ class ProductCategoryRefinedToDelivery:
             dfProdCatNew.registerTempTable("prod_cat_new_data")
 
             dfProdCatDelta = spark.sql(
-                "select " + self.prodCatColumns + " from prod_cat_updated_data union all select " + self.prodCatColumns
-                + " from prod_cat_new_data")
+                "select " + self.prodCatColumns + " from prod_cat_updated_data union all select " + self.prodCatColumns + " from prod_cat_new_data")
 
             print('Updated prod_cat ids are')
             dfProdCatUpdatedPrint = spark.sql("select CAT_ID from prod_cat_updated_data")

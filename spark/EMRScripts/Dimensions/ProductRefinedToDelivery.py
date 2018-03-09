@@ -1,16 +1,3 @@
-#!/usr/bin/python
-#######################################################################################################################
-# Author              : Harikesh R
-# Date Created        : 12/01/2018
-# Purpose             : To move the product file from refined to delivery layer
-# Version             : 1.1
-# Revision History    :
-# Revised Date      : 22/01/2018
-# Revision COmments : Included Coupons file integration
-# Version           : 1.2
-# Revision COmments : Included CDC logic
-########################################################################################################################
-
 from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
@@ -108,7 +95,7 @@ class ProductRefinedToDelivery:
                 "a.productname AS PROD_NME,a.productlabel AS PROD_LBL,a.categoryid AS CAT_ID,"
                 "a.defaultcost AS DFLT_COST,"
                 "a.averagecost AS AVERAGE_CST,a.unitcost AS UNT_CST,a.mostrecentcost AS MST_RCNT_CST,"
-                "a.manufacturer AS MFR,"
+                "a.manufacturername AS MFR,"
                 "a.manufacturerpartnumber AS MFR_PRT_NBR,"
                 "a.pricingtype AS PRC_TYP,a.defaultretailprice AS DFLT_RTL_PRC,a.defaultmargin AS DFLT_MRGN,"
                 "a.floorprice AS FLOOR_PRC,"
@@ -172,7 +159,7 @@ class ProductRefinedToDelivery:
                 "a.productname AS PROD_NME,a.productlabel AS PROD_LBL,a.categoryid AS CAT_ID,"
                 "a.defaultcost AS DFLT_COST,"
                 "a.averagecost AS AVERAGE_CST,a.unitcost AS UNT_CST,a.mostrecentcost AS MST_RCNT_CST,"
-                "a.manufacturer AS MFR,"
+                "a.manufacturername AS MFR,"
                 "a.manufacturerpartnumber AS MFR_PRT_NBR,"
                 "a.pricingtype AS PRC_TYP,a.defaultretailprice AS DFLT_RTL_PRC,a.defaultmargin AS DFLT_MRGN,"
                 "a.floorprice AS FLOOR_PRC,"
