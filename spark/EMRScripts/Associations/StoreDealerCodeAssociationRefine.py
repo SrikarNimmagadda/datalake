@@ -18,8 +18,8 @@ class StoreDealerCodeAssociationRefine(object):
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
         self.refinedBucketWorking = sys.argv[2]
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
-        self.storeDealerAssociationName = self.refinedBucketWorking[
-                                          self.refinedBucketWorking.index('tb'):].split("/")[1]
+        self.storeDealerAssociationName = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split(
+            "/")[1]
         self.workingName = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[2]
 
         self.storeAssociationWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeDealerAssociationName + '/' \
@@ -84,9 +84,9 @@ class StoreDealerCodeAssociationRefine(object):
                        otherwise(dfStoreAsstemp.SMFMapping)).withColumn('dealercode1', dfStoreAsstemp.DealerCode).\
             withColumn('AssociationType1', when((dfStoreAsstemp.RankDescription != 'SMF Only'), 'Retail').
                        otherwise('SMF')).\
-            withColumn('AssociationStatus1', when((dfStoreAsstemp.RankDescription == 'SMF Only')
-                                                  | (dfStoreAsstemp.RankDescription == 'Open Standard')
-                                                  | (dfStoreAsstemp.RankDescription == 'Bulk'), 'Active').
+            withColumn('AssociationStatus1', when((dfStoreAsstemp.RankDescription == 'SMF Only') |
+                                                  (dfStoreAsstemp.RankDescription == 'Open Standard') |
+                                                  (dfStoreAsstemp.RankDescription == 'Bulk'), 'Active').
                        otherwise('Closed')).drop(dfStoreAsstemp.DealerCode).\
             drop(dfStoreAsstemp.AssociationType).drop(dfStoreAsstemp.AssociationStatus).\
             select(col('StoreNumber'), col('dealercode1').alias('DealerCode'),
@@ -125,9 +125,9 @@ class StoreDealerCodeAssociationRefine(object):
 
         joined_DF.registerTempTable("store_assoc_source")
         self.sparkSession.sql("select StoreNumber, DealerCode, CompanyCode, AssociationType, AssociationStatus from"
-                              " store_assoc_source ").withColumn("Hash_Column",
-                                                                 hash("StoreNumber", "DealerCode", "CompanyCode",
-                                                                      "AssociationType", "AssociationStatus")).\
+                              " store_assoc_source ").withColumn("Hash_Column", hash("StoreNumber", "DealerCode",
+                                                                                     "CompanyCode", "AssociationType",
+                                                                                     "AssociationStatus")).\
             registerTempTable("store_assoc_curr")
 
         refinedBucketNode = s3.Bucket(name=self.refinedBucket)

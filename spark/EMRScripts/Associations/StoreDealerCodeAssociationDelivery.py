@@ -19,14 +19,14 @@ class StoreDealerCodeAssociationDelivery(object):
 
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
 
-        self.deliveryBucket = self.storeDealerAssocCurrentPath[
-                              self.storeDealerAssocCurrentPath.index('tb'):].split("/")[0]
-        self.storeDealerAssocDeliveryName = self.storeDealerAssocCurrentPath[
-                                            self.storeDealerAssocCurrentPath.index('tb'):].split("/")[1]
+        self.deliveryBucket = self.storeDealerAssocCurrentPath[self.storeDealerAssocCurrentPath.index('tb'):].split(
+            "/")[0]
+        self.storeDealerAssocDeliveryName = self.storeDealerAssocCurrentPath[self.storeDealerAssocCurrentPath.index(
+            'tb'):].split("/")[1]
         self.currentName = self.storeDealerAssocCurrentPath[self.storeDealerAssocCurrentPath.index('tb'):].split("/")[2]
 
-        self.prefixStoreDealerAssocRefineParttionPath = self.refinedBucketWorking[
-                                                        self.refinedBucketWorking.index('tb'):].split("/")[1]
+        self.prefixStoreDealerAssocRefineParttionPath = self.refinedBucketWorking[self.refinedBucketWorking.index(
+            'tb'):].split("/")[1]
 
         self.storeDealerAssocCurrentPath = 's3://' + self.deliveryBucket + '/' + self.storeDealerAssocDeliveryName \
                                            + '/' + self.currentName
@@ -117,7 +117,11 @@ class StoreDealerCodeAssociationDelivery(object):
                 dfStoreAssocDelta.coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCurrentPath, header=True)
                 dfStoreAssocDelta.coalesce(1).write.mode("append").csv(self.storeDealerAssocPreviousPath, header=True)
             else:
-                self.log.info("The prev and current files are same.No delta file will be generated in refined bucket.")
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
+                    .csv(self.storeDealerAssocCurrentPath)
+                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
+                    .csv(self.storeDealerAssocPreviousPath)
+                self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")
             dfStoreDealerAssocCurr.coalesce(1).withColumn("cdc_ind_cd", lit('I')).write.mode("overwrite").\
