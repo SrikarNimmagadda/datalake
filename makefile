@@ -140,7 +140,7 @@ lint-lambdas: prep-target
 
 lint-spark: prep-target
 	rm -f $(LINT_REPORT_SPARK)
-	pipenv run flake8 spark --statistics --output-file=$(LINT_REPORT_SPARK) --tee --exit-zero # remove --exit-zero to fail build on lint fail
+	pipenv run flake8 spark --statistics --output-file=$(LINT_REPORT_SPARK) --tee
 
 lint-tests: prep-target
 	rm -f $(LINT_REPORT_TESTS)
