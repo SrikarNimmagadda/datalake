@@ -178,7 +178,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-store-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
-          rate: rate(1 hour)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: store
             enabled: true
@@ -208,7 +208,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 5 * * ? *)
+          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
           input:
             builder: customer
           enabled: true
@@ -239,7 +239,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-employee-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-employee-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: employee
             enabled: true
@@ -269,7 +269,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-product-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 */8 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: product
           enabled: true
@@ -299,7 +299,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: storecustomerexperience
           enabled: true
@@ -329,7 +329,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-goalskpi-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: goalskpi
           enabled: true
@@ -359,7 +359,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: salesothers
           enabled: true
@@ -390,7 +390,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salestransactions-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: salestransactions
             enabled: true
