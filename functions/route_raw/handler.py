@@ -95,9 +95,9 @@ def handle_event(event, s3_service):
 
 def determine_target(key1):
     """Select a target bucket name string based on an object's key's prefix."""
-    if key1.startswith('PII'):
+    if key1.startswith('PII_Customer'):
         return BUCKETS['pii']
-    elif key1.startswith('HR'):
+    elif key1.startswith('HR_Employee'):
         return BUCKETS['hr']
     else:
         return BUCKETS['regular']
