@@ -79,12 +79,6 @@ def handle_event(event, s3_service):
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
         today = datetime.date.today()
         sysdate = today.strftime("%m-%d-%Y")
-        TargetBucketNode = s3r.Bucket(name=target_bucket)
-        WorkingPath = myKey[0] + '/Working/'
-
-        objs = TargetBucketNode.objects.filter(Prefix=WorkingPath)
-        for s3Object in objs:
-            s3Object.delete()
 
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + key1, CopySource=copy_source)
 
