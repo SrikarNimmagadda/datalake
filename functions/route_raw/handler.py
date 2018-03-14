@@ -40,9 +40,9 @@ def handle_event(event, s3_service):
 
         copy_source = {'Bucket': bucket, 'Key': key1}
 
-        target_bucket = determine_target('key')
+        target_bucket = determine_target(key1)
 
-        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
+        myDict = {'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
                   'AT_T_MyResults_RPT',
                   'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
@@ -93,11 +93,11 @@ def handle_event(event, s3_service):
         S3.delete_object(Bucket=bucket, Key=key1)
 
 
-def determine_target(key):
+def determine_target(key1):
     """Select a target bucket name string based on an object's key's prefix."""
-    if key.startswith('PII'):
+    if key1.startswith('PII'):
         return BUCKETS['pii']
-    elif key.startswith('HR'):
+    elif key1.startswith('HR'):
         return BUCKETS['hr']
     else:
         return BUCKETS['regular']
