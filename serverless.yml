@@ -178,7 +178,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-store-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
-          rate: rate(1 hour)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: store
             enabled: true
@@ -208,7 +208,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 5 * * ? *)
+          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
           input:
             builder: customer
           enabled: true
@@ -239,7 +239,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-employee-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-employee-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: employee
             enabled: true
@@ -269,7 +269,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-product-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 */8 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: product
           enabled: true
@@ -299,7 +299,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: storecustomerexperience
           enabled: true
@@ -329,7 +329,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-goalskpi-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: goalskpi
           enabled: true
@@ -359,7 +359,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 0 * * ? *)
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: salesothers
           enabled: true
@@ -390,7 +390,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salestransactions-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
+          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
           input:
             builder: salestransactions
             enabled: true
@@ -1185,6 +1185,7 @@ resources:
       Properties:
         Description: A Encryption key for PII Buckets
         Enabled: true
+        EnableKeyRotation: true
         KeyPolicy:
           Id: KmsKeyPolicy
           Version: '2012-10-17'
@@ -1232,6 +1233,9 @@ resources:
                   - 'Fn::GetAtt':
                       - KmsKeyServiceRole
                       - Arn
+                  - 'Fn::GetAtt':
+                      - RouteRawRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1241,6 +1245,22 @@ resources:
                 AWS: '*'
               Action: kms:Encrypt
               Resource: '*'
+
+            - Sid: Allow attachment of persistent resources
+              Effect: Allow
+              Principal:
+                AWS:
+                  - 'Fn::GetAtt':
+                      - KmsKeyServiceRole
+                      - Arn
+              Action:
+                - 'kms:CreateGrant'
+                - 'kms:ListGrants'
+                - 'kms:RevokeGrant'
+              Resource: '*'
+              Condition:
+                Bool:
+                  'kms:GrantIsForAWSResource': 'true'
 
     S3PIIEncryptionKeyAlias:
       Type: AWS::KMS::Alias
@@ -1265,7 +1285,7 @@ resources:
         CatalogId: 
           Ref: AWS::AccountId
         DatabaseInput:
-          Name: ${self:service}-discoveyglue-${self:provider.stage}
+          Name: ${self:service}-discoveyglue-${self:custom.hen}-${self:provider.stage}
           Description: Database for discovery layer
 
     RefinedDatabase:
@@ -1274,13 +1294,13 @@ resources:
         CatalogId: 
           Ref: AWS::AccountId
         DatabaseInput:
-          Name: ${self:service}-refinedglue-${self:provider.stage}
+          Name: ${self:service}-refinedglue-${self:custom.hen}-${self:provider.stage}
           Description: Database for refined layer
 
     CustomerDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-customer-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1300,7 +1320,7 @@ resources:
     CustomerRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-customer-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1320,7 +1340,7 @@ resources:
     CustomerPiiDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-customer-pii-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1340,7 +1360,7 @@ resources:
     CustomerPiiRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-customer-pii-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1360,7 +1380,7 @@ resources:
     EmployeeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-employee-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-employee-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1380,7 +1400,7 @@ resources:
     EmployeeRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-employee-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-employee-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1400,7 +1420,7 @@ resources:
     ProductDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-product-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-product-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1420,7 +1440,7 @@ resources:
     ProductRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-product-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-product-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1440,7 +1460,7 @@ resources:
     ProductCategoryDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-product-category-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-product-category-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1460,7 +1480,7 @@ resources:
     ProductCategoryRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-product-category-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-product-category-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1480,7 +1500,7 @@ resources:
     StoreDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-store-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-store-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1500,7 +1520,7 @@ resources:
     StoreRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-store-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-store-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1520,7 +1540,7 @@ resources:
     AttDealercodeDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-att-dealercode-discovery-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-att-dealercode-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1540,7 +1560,7 @@ resources:
     AttDealercodeRefinedCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-att-dealercode-refined-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-att-dealercode-refined-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1604,6 +1624,11 @@ resources:
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     ExtractMetadataRole:
       Type: AWS::IAM::Role
@@ -1796,9 +1821,9 @@ resources:
           - 'arn:aws:iam::aws:policy/AmazonElasticMapReduceFullAccess'
           - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
 
-  #######################################################################
+  ######################################################################
   # OUTPUTS
-  #######################################################################
+  ######################################################################
 
   Outputs:
     CodeBucket:
