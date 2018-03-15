@@ -1233,7 +1233,6 @@ resources:
                   - 'Fn::GetAtt':
                       - KmsKeyServiceRole
                       - Arn
-                AWS:
                   - 'Fn::GetAtt':
                       - RouteRawRole
                       - Arn
