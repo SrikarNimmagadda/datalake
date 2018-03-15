@@ -1628,7 +1628,7 @@ resources:
                   Action:
                     - kms:Decrypt
                     - kms:Encrypt
-                  Resource:'*'
+                  Resource: '*'
 
     ExtractMetadataRole:
       Type: AWS::IAM::Role
