@@ -1233,6 +1233,10 @@ resources:
                   - 'Fn::GetAtt':
                       - KmsKeyServiceRole
                       - Arn
+                AWS:
+                  - 'Fn::GetAtt':
+                      - RouteRawRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1621,6 +1625,11 @@ resources:
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource:'*'
 
     ExtractMetadataRole:
       Type: AWS::IAM::Role
