@@ -48,11 +48,13 @@ class StepBuilderProduct(object):
         script_name = 'Dimensions/ProductCategoryCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
-            's3://' + output_bucket,
-            input_bucket
+            's3://' + input_bucket + '/ProductCategory/Working'
+            's3://' + output_bucket + '/ProductCategory/Working'
+            's3://' + error_bucket + '/ProductCategory'
 
         ]
 
@@ -66,10 +68,9 @@ class StepBuilderProduct(object):
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + output_bucket,
-            output_bucket,
-            error_bucket,
-            's3://' + input_bucket + '/ProductCateogry/Working'
+            's3://' + input_bucket + '/ProductCategory/Working'
+            's3://' + output_bucket + '/ProductCategory/Working'
+            's3://' + error_bucket + '/ProductCategory'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -81,8 +82,8 @@ class StepBuilderProduct(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_PROD_CAT'
+            's3://' + input_bucket + '/ProductCategory/Working'
+            's3://' + output_bucket + '/WT_PROD_CAT/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -92,10 +93,14 @@ class StepBuilderProduct(object):
         script_name = 'Dimensions/ProductCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + output_bucket,
-            input_bucket
+            's3://' + input_bucket + '/Product/Working'
+            's3://' + input_bucket + '/Coupons/Working'
+            's3://' + input_bucket + '/ProductIdentifier/Working'
+            's3://' + output_bucket + '/Product/Working'
+            's3://' + error_bucket + '/Product'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -108,10 +113,9 @@ class StepBuilderProduct(object):
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + output_bucket,
-            output_bucket,
-            error_bucket,
-            's3://' + input_bucket
+            's3://' + input_bucket + '/Product/Working'
+            's3://' + output_bucket + '/Product/Working'
+            's3://' + error_bucket + '/Product'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -123,8 +127,8 @@ class StepBuilderProduct(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            input_bucket,
-            's3://' + output_bucket + '/WT_PROD'
+            's3://' + input_bucket + '/Product/Working'
+            's3://' + output_bucket + '/WT_PROD/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
