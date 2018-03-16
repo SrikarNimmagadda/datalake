@@ -17,6 +17,7 @@ BUCKETS = {
 }
 
 S3 = boto3.client('s3')
+s3r = boto3.resource('s3')
 
 
 def lambda_handler(event, context):  # pylint: disable=unused-argument
@@ -39,11 +40,11 @@ def handle_event(event, s3_service):
 
         copy_source = {'Bucket': bucket, 'Key': key1}
 
-        target_bucket = determine_target('key')
+        target_bucket = determine_target(key1)
 
-        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
+        myDict = {'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
                   'AT_T_MyResults_RPT',
-                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis.2_Grid_SFTP':
+                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
                   'C&C': 'C&C Training Report', 'CategoryNumber':
                   'ProductCategory',
@@ -67,10 +68,10 @@ def handle_event(event, s3_service):
                   'GoalPoints_EmployeeScorecard': 'TBGoalPointEmployee',
                   'GoalPoints_StoreScorecard': 'TBGoalPointStore',
                   'Coupons': 'Coupons',
-                  'ReportingDailyGP_Q4ForecastbyDay':
+                  'ReportingDefinations':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
-                  'CustExp_OurPromiseFIle': 'StoreCustomerExperience',
+                  'CustExp': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
                   'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
@@ -78,20 +79,19 @@ def handle_event(event, s3_service):
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
         today = datetime.date.today()
         sysdate = today.strftime("%m-%d-%Y")
-        S3.delete_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + myKey[0])
 
-        S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + myKey[0], CopySource=copy_source)
+        S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + key1, CopySource=copy_source)
 
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/loaded_date=' + str(sysdate) + '/' + key1, CopySource=copy_source)
 
-        S3.delete_object(Bucket=bucket, Key=key1)
+        # S3.delete_object(Bucket=bucket, Key=key1)
 
 
-def determine_target(key):
+def determine_target(key1):
     """Select a target bucket name string based on an object's key's prefix."""
-    if key.startswith('PII'):
+    if key1.startswith('PII_Customer'):
         return BUCKETS['pii']
-    elif key.startswith('HR'):
+    elif key1.startswith('HR_Employee'):
         return BUCKETS['hr']
     else:
         return BUCKETS['regular']

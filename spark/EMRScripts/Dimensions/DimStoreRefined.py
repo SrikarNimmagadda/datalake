@@ -242,7 +242,7 @@ class DimStoreRefined(object):
             ", a.Location as LocationName"
             ", a.Abbreviation as Abbreviation"
             ",  a.GLCode as GLCode"
-            ", case when a.Disabled = 1 then 0 else 1 as StoreStatus"
+            ", case when a.Disabled = 1 then 0 else 1 end as StoreStatus"
             ", a.ManagerEmployeeID as StoreManagerEmployeeId"
             ", case when lower(a.ManagerCommissionable) = 'true' then '1' when lower(a.ManagerCommissionable) = 'false'"
             " then '0' else ' ' end as ManagerCommisionableIndicator"

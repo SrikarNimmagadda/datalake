@@ -1,177 +1,167 @@
-#!/usr/bin/python
-#######################################################################################################################
-# Author           : Harikesh R
-# Date Created     : 02/07/2018
-# Purpose          : To transform and move data from Discovery to Refined layer for Store Recruiting Headcount
-# Version          : 1.0
-# Revision History :
-#
-########################################################################################################################
-
 from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
 import sys
 from datetime import datetime
 import boto3
 
-s3 = boto3.resource('s3')
-client = boto3.client('s3')
 
-Config = SparkConf().setAppName("StoreRecHeadcountRefinary")
-SparkCtx = SparkContext(conf=Config)
-spark = SparkSession.builder.config(conf=Config). \
-    getOrCreate()
+class StoreRecHeadcountDiscoveryToRefined(object):
 
-Log4jLogger = SparkCtx._jvm.org.apache.log4j
-logger = Log4jLogger.LogManager.getLogger('store_rec_hc_disc_to_refined')
+    def __init__(self):
 
-OutputPath = sys.argv[1]
-CdcBucketName = sys.argv[2]
-ErrorBucketName = sys.argv[3]
-StoreRecHCInputPath = sys.argv[4]
+        self.appName = self.__class__.__name__
+        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
+        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
+        self.log = self.log4jLogger.LogManager.getLogger(self.appName)
 
-todayyear = datetime.now().strftime('%Y')
-todaymonth = datetime.now().strftime('%m')
+        self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
 
-ErrorTimestamp = datetime.now().strftime('%Y-%m-%d')
-StoreHCErrorFile = 's3://' + ErrorBucketName + '/StoreRecHeadcount/' + ErrorTimestamp
+        self.outputPath = sys.argv[1]
+        self.cdcBucketName = sys.argv[2]
+        self.errorBucketName = sys.argv[3]
+        self.storeRecHCInputPath = sys.argv[4]
 
-#######################################################################################################
-# Finding last modified Store Dealer Code Association file in Refined layer to perform lookup
+        self.errorTimestamp = datetime.now().strftime('%Y-%m-%d')
+        self.storeHCErrorFile = 's3://' + self.errorBucketName + '/StoreRecHeadcount/' + self.errorTimestamp
 
-bkt = CdcBucketName
-my_bucket = s3.Bucket(name=bkt)
+        #######################################################################################################
+        # Finding last modified Store Dealer Code Association file in Refined layer to perform lookup
 
-all_values_dict = {}
-req_values_dict = {}
+    def loadRefined(self):
 
-pfx = "StoreDealerAssociation/year=" + todayyear
-partitionName = my_bucket.objects.filter(Prefix=pfx)
+        todayyear = datetime.now().strftime('%Y')
 
-for obj in partitionName:
-    all_values_dict[obj.key] = obj.last_modified
+        bkt = self.cdcBucketName
+        my_bucket = self.s3.Bucket(name=bkt)
 
-for k, v in all_values_dict.items():
-    if 'part-0000' in k:
-        req_values_dict[k] = v
+        all_values_dict = {}
+        req_values_dict = {}
+        numFiles = 0
 
-revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-logger.info("Files are : ")
-logger.info(revSortedFiles)
+        pfx = "StoreDealerAssociation/year=" + todayyear
+        partitionName = my_bucket.objects.filter(Prefix=pfx)
 
-numFiles = len(revSortedFiles)
-logger.info("Number of part files for Store Dealer Code Association is : ")
-logger.info(numFiles)
+        for obj in partitionName:
+            all_values_dict[obj.key] = obj.last_modified
 
-if numFiles > 0:
-    logger.info("Store Dealer Code Association Files found in Refined layer\n")
-    lastModifiedFileNameTmp = str(revSortedFiles[0])
-    StoreDlrCdAssoclastModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-    logger.info("Last Modified file is : ")
-    logger.info(StoreDlrCdAssoclastModifiedFileName)
-    logger.info("\n")
+        for k, v in all_values_dict.iteritems():
+            if 'part-0000' in k:
+                req_values_dict[k] = v
 
-    dfStoreDealerCodeAssocFile = spark.read.parquet(StoreDlrCdAssoclastModifiedFileName). \
-        registerTempTable("StoreDealerCodeAssocTempTable")
-else:
-    logger.info("No file found for Store Dealer Code Association in Refined layer, lookup will not succeed")
+        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
+        self.log.info("Files are : ")
+        self.log.info(revSortedFiles)
 
-#######################################################################################################
+        numFiles = len(revSortedFiles)
+        self.log.info("Number of part files for Store Dealer Code Association is : ")
+        self.log.info(numFiles)
 
-# Finding last modified Store file in Refined layer to perform lookup
+        if numFiles > 0:
+            self.log.info("Store Dealer Code Association Files found in Refined layer\n")
+            lastModifiedFileNameTmp = str(revSortedFiles[0])
+            StoreDlrCdAssoclastModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
+            self.log.info("Last Modified file is : ")
+            self.log.info(StoreDlrCdAssoclastModifiedFileName)
+            self.log.info("\n")
 
-bkt = CdcBucketName
-my_bucket = s3.Bucket(name=bkt)
+            self.sparkSession.read.parquet(StoreDlrCdAssoclastModifiedFileName).registerTempTable("StoreDealerCodeAssocTempTable")
+        else:
+            self.log.info("No file found for Store Dealer Code Association in Refined layer, lookup will not succeed")
 
-all_values_dict = {}
-req_values_dict = {}
+        #######################################################################################################
 
-pfx = "Store/year=" + todayyear
-partitionName = my_bucket.objects.filter(Prefix=pfx)
+        # Finding last modified Store file in Refined layer to perform lookup
 
-for obj in partitionName:
-    all_values_dict[obj.key] = obj.last_modified
+        bkt = self.cdcBucketName
+        my_bucket = self.s3.Bucket(name=bkt)
 
-for k, v in all_values_dict.items():
-    if 'part-0000' in k:
-        req_values_dict[k] = v
+        all_values_dict = {}
+        req_values_dict = {}
+        numFiles = 0
 
-revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-logger.info("Files are : ")
-logger.info(revSortedFiles)
+        pfx = "Store/year=" + todayyear
+        partitionName = my_bucket.objects.filter(Prefix=pfx)
 
-numFiles = len(revSortedFiles)
-logger.info("Number of part files for Store is : ")
-logger.info(numFiles)
+        for obj in partitionName:
+            all_values_dict[obj.key] = obj.last_modified
 
-if numFiles > 0:
-    logger.info("Store Files found in Refined layer\n")
-    lastModifiedFileNameTmp = str(revSortedFiles[0])
-    StoreModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-    logger.info("Last Modified Store file is : ")
-    logger.info(StoreModifiedFileName)
-    logger.info("\n")
+        for k, v in all_values_dict.iteritems():
+            if 'part-0000' in k:
+                req_values_dict[k] = v
 
-    dfStoreDealerCodeAssocFile = spark.read.parquet(StoreModifiedFileName). \
-        registerTempTable("StoreTempTable")
-else:
-    logger.info("No file found for Store in Refined layer, lookup will not succeed")
+        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
+        self.log.info("Files are : ")
+        self.log.info(revSortedFiles)
 
-#######################################################################################################
+        numFiles = len(revSortedFiles)
+        self.log.info("Number of part files for Store is : ")
+        self.log.info(numFiles)
 
-dfStoreRecHCFile = spark.read.parquet(StoreRecHCInputPath + '/StoreRecruitingHeadcount/Working').registerTempTable(
-    "StoreRecHCTempTable1")
+        if numFiles > 0:
+            self.log.info("Store Files found in Refined layer\n")
+            lastModifiedFileNameTmp = str(revSortedFiles[0])
+            StoreModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
+            self.log.info("Last Modified Store file is : ")
+            self.log.info(StoreModifiedFileName)
+            self.log.info("\n")
 
-storeBadRecsDF = spark.sql("select * from StoreRecHCTempTable1 "
-                           " where store_name is null"
-                           )
+            self.sparkSession.read.parquet(StoreModifiedFileName).registerTempTable("StoreTempTable")
+        else:
+            self.log.info("No file found for Store in Refined layer, lookup will not succeed")
 
-if storeBadRecsDF.count() > 0:
-    logger.info("There are Bad records, hence saving them to the error bucket")
-    storeBadRecsDF.coalesce(1).write.mode("append").csv(StoreHCErrorFile, header=True)
+        #######################################################################################################
 
-    dfRecHCExp1 = spark.sql("select split(store_name,' ')[0] as store_number,actual_headcount,"
-                            "store_manager as store_managers_count,business_assistant_manager_count,"
-                            "fulltime_equivalent_count,"
-                            "parttime_equivalent_count,fulltime_floater_count,district_lead_sales_consultant_count,"
-                            "mit_count,seasonal_count,"
-                            "'4' as companycd,FROM_UNIXTIME(UNIX_TIMESTAMP(),'MM/dd/yyyy') as report_date,"
-                            "approved_headcount,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                            "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month "
-                            " from StoreRecHCTempTable1"
-                            ).registerTempTable("StoreRecHCTempTable2")
+        self.sparkSession.read.parquet(self.storeRecHCInputPath + '/StoreRecruitingHeadcount/Working').registerTempTable("StoreRecHCTempTable1")
 
-    dfRecHCExpFinal = spark.sql("select report_date,cast(a.store_number as int) as store_number,a.companycd as "
-                                "companycd,"
-                                "c.DealerCode as dealer_code,store_managers_count,business_assistant_manager_count,"
-                                "fulltime_equivalent_count,parttime_equivalent_count,fulltime_floater_count,"
-                                "district_lead_sales_consultant_count,mit_count,seasonal_count,"
-                                "actual_headcount,b.LocationName as location_name,"
-                                "b.SpringMarket as spring_market,b.SpringRegion as spring_region,"
-                                "b.SpringDistrict as spring_district,approved_headcount,year,month"
-                                " from StoreRecHCTempTable2 a "
-                                " LEFT OUTER JOIN StoreTempTable b"
-                                " on a.store_number = b.StoreNumber"
-                                " LEFT OUTER JOIN StoreDealerCodeAssocTempTable c"
-                                " on a.store_number = c.StoreNumber"
-                                " where c.AssociationType = 'Retail' and c.AssociationStatus = 'Active'"
-                                " and a.store_number is not null"
-                                )
+        storeBadRecsDF = self.sparkSession.sql("select * from StoreRecHCTempTable1 where store_name is null")
 
-    dfRecHCExpFinal.coalesce(1). \
-        select('report_date', 'store_number', 'companycd', 'dealer_code', 'approved_headcount', 'store_managers_count',
-               'business_assistant_manager_count', 'fulltime_equivalent_count', 'parttime_equivalent_count',
-               'fulltime_floater_count', 'district_lead_sales_consultant_count', 'mit_count', 'seasonal_count',
-               'actual_headcount', 'location_name', 'spring_market', 'spring_region', 'spring_district'). \
-        write.mode("overwrite"). \
-        format('parquet'). \
-        save(OutputPath + '/' + 'StoreRecruitingHeadcount' + '/' + 'Working')
+        if (storeBadRecsDF.count() > 0):
+            self.log.info("There are Bad records, hence saving them to the error bucket")
+            storeBadRecsDF.coalesce(1).write.mode("append").csv(self.storeHCErrorFile, header=True)
 
-    dfRecHCExpFinal.coalesce(1). \
-        write.mode('append').partitionBy('year', 'month'). \
-        format('parquet'). \
-        save(OutputPath + '/' + 'StoreRecruitingHeadcount')
+            self.sparkSession.sql("select split(store_name,' ')[0] as store_number, actual_headcount,"
+                                  "store_manager as store_managers_count, business_assistant_manager_count,"
+                                  "fulltime_equivalent_count,"
+                                  "parttime_equivalent_count,fulltime_floater_count,district_lead_sales_consultant_count,"
+                                  "mit_count,seasonal_count,"
+                                  "'4' as companycd,FROM_UNIXTIME(UNIX_TIMESTAMP(),'MM/dd/yyyy') as report_date,approved_headcount,"
+                                  "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
+                                  "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month "
+                                  " from StoreRecHCTempTable1").registerTempTable("StoreRecHCTempTable2")
 
-########################################################################################################################
+            dfRecHCExpFinal = self.sparkSession.sql("select report_date,cast(a.store_number as int) as store_number,a.companycd as companycd,"
+                                                    "c.DealerCode as dealer_code,store_managers_count,business_assistant_manager_count,"
+                                                    "fulltime_equivalent_count,parttime_equivalent_count,fulltime_floater_count,"
+                                                    "district_lead_sales_consultant_count,mit_count,seasonal_count,"
+                                                    "actual_headcount,b.LocationName as location_name,"
+                                                    "b.SpringMarket as spring_market,b.SpringRegion as spring_region,"
+                                                    "b.SpringDistrict as spring_district,approved_headcount,year,month"
+                                                    " from StoreRecHCTempTable2 a "
+                                                    " LEFT OUTER JOIN StoreTempTable b"
+                                                    " on a.store_number = b.StoreNumber"
+                                                    " LEFT OUTER JOIN StoreDealerCodeAssocTempTable c"
+                                                    " on a.store_number = c.StoreNumber"
+                                                    " where c.AssociationType = 'Retail' and c.AssociationStatus = 'Active'"
+                                                    " and a.store_number is not null")
 
-spark.stop()
+            dfRecHCExpFinal.coalesce(1). \
+                select('report_date', 'store_number', 'companycd', 'dealer_code', 'approved_headcount', 'store_managers_count',
+                       'business_assistant_manager_count', 'fulltime_equivalent_count', 'parttime_equivalent_count',
+                       'fulltime_floater_count', 'district_lead_sales_consultant_count', 'mit_count', 'seasonal_count',
+                       'actual_headcount', 'location_name', 'spring_market', 'spring_region', 'spring_district'). \
+                write.mode("overwrite"). \
+                format('parquet'). \
+                save(self.outputPath + '/' + 'StoreRecruitingHeadcount' + '/' + 'Working')
+
+            dfRecHCExpFinal.coalesce(1). \
+                write.mode('append').partitionBy('year', 'month'). \
+                format('parquet'). \
+                save(self.outputPath + '/' + 'StoreRecruitingHeadcount')
+
+        ########################################################################################################################
+
+        self.sparkSession.stop()
+
+
+if __name__ == "__main__":
+    StoreRecHeadcountDiscoveryToRefined().loadRefined()

@@ -28,6 +28,9 @@ class StepBuilderSalesOthers(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
+            self._build_step_csv_to_parquet_storedailygoalforecast(),
+            self._build_step_storedailygoalforecast_refinery(),
+            self._build_step_storedailygoalforecast_delivery(),
             self._build_step_csv_to_parquet_salesleads(),
             self._build_step_salesleads_refinery(),
             self._build_step_salesleads_delivery(),
@@ -36,10 +39,7 @@ class StepBuilderSalesOthers(object):
             self._build_step_storetraffic_delivery(),
             self._build_step_csv_to_parquet_storetransactionadjustment(),
             self._build_step_storetransactionadjustment_refinery(),
-            self._build_step_storetransactionadjustment_delivery(),
-            self._build_step_csv_to_parquet_storedailygoalforecast(),
-            self._build_step_storedailygoalforecast_refinery(),
-            self._build_step_storedailygoalforecast_delivery()
+            self._build_step_storetransactionadjustment_delivery()
         ]
 
         return steps
@@ -47,6 +47,46 @@ class StepBuilderSalesOthers(object):
     # ============================================
     # Step Definitions
     # ============================================
+
+    def _build_step_csv_to_parquet_storedailygoalforecast(self):
+        step_name = 'CSVToParquetStoredailygoalforecast'
+        script_name = 'Facts/StoreDailyGoalsForecastCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/StoreDailyGoalForecast/Working',
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_storedailygoalforecast_refinery(self):
+        step_name = 'StoreDailyGoalsForecastRefinery'
+        script_name = 'Facts/StoreDailyGoalsForecastDiscoveryToRefine.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+
+            's3://' + input_bucket + '/StoreDailyGoalForecast/Working/',
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_storedailygoalforecast_delivery(self):
+        step_name = 'StoreDailyGoalForecastDelivery'
+        script_name = 'Facts/StoreDailyGoalsForecastRefineToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/StoreDailyGoalForecast/working',
+            's3://' + output_bucket + '/WT_STORE_DLY_GOAL_FCST/Current'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet_salesleads(self):
         step_name = 'CSVToParquetSalesLeads'
@@ -175,46 +215,6 @@ class StepBuilderSalesOthers(object):
         script_args = [
             's3://' + output_bucket + '/WT_STORE_TRANS_ADJMNTS',
             's3://' + input_bucket + '/StoreTransactionAdj/Working/'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_csv_to_parquet_storedailygoalforecast(self):
-        step_name = 'CSVToParquetStoredailygoalforecast'
-        script_name = 'Facts/StoreDailyGoalsForecastCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/StoreDailyGoalForecast/Working',
-            's3://' + output_bucket + '/StoreDailyGoalForecast/Working'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_storedailygoalforecast_refinery(self):
-        step_name = 'StoreDailyGoalsForecastRefinery'
-        script_name = 'Facts/StoreDailyGoalsForecastDiscoveryToRefine.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-
-        script_args = [
-
-            's3://' + input_bucket + '/StoreDailyGoalForecast/Working/',
-            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_storedailygoalforecast_delivery(self):
-        step_name = 'StoreDailyGoalForecastDelivery'
-        script_name = 'Facts/StoreDailyGoalsForecastRefineToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/StoreDailyGoalForecast/working',
-            's3://' + output_bucket + '/WT_STORE_DLY_GOAL_FCST/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
