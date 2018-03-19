@@ -1242,6 +1242,12 @@ resources:
                   - 'Fn::GetAtt':
                       - ExtractMetadataRole
                       - Arn
+                  - 'Fn::GetAtt':
+                      - AthenaaccessCustomerPiibucketsRole
+                      - Arn
+                  - 'Fn::GetAtt':
+                      - AthenaaccessHrPiibucketsRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1745,6 +1751,11 @@ resources:
                       - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
                       - arn:aws:s3:::${self:custom.buckets.discoveryCustomerPii}/*
                       - arn:aws:s3:::${self:custom.buckets.refinedCustomerPii}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     AthenaaccessHrPiibucketsRole:
       Type: AWS::IAM::Role
@@ -1770,6 +1781,11 @@ resources:
                       - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                       - arn:aws:s3:::${self:custom.buckets.discoveryHrPii}/*
                       - arn:aws:s3:::${self:custom.buckets.refinedHrPii}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     AthenaaccessRegularbucketsRole:
       Type: AWS::IAM::Role
