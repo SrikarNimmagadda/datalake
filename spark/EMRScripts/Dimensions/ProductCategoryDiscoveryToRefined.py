@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
-from pyspark.sql.functions import hash as hash_
+from pyspark.sql.functions import regexp_replace, col, hash as hash_
 import boto3
 
 
@@ -15,13 +15,16 @@ class ProductCategoryDiscoveryToRefined(object):
 
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
-        self.outputPath = sys.argv[1]
-        self.cdcBucketName = sys.argv[2]
-        self.prodCategoryInputPath = sys.argv[3]
+        self.prodCategoryInputPath = sys.argv[1]
+        self.outputPath = sys.argv[2]
+        self.dataProcessingErrorPath = sys.argv[3] + '/refined'
+        self.productCategoryName = self.outputPath[self.outputPath.index('tb'):].split("/")[1]
+        self.cdcBucketName = self.outputPath[self.outputPath.index('tb'):].split("/")[0]
+        self.productCategoryFilePartitionPath = 's3://' + self.cdcBucketName + '/' + self.productCategoryName
 
     def loadRefined(self):
-        self.sparkSession.read.parquet(self.prodCategoryInputPath).dropDuplicates(['id']).registerTempTable("ProdCategoryTempTable")
 
+        self.sparkSession.read.parquet(self.prodCategoryInputPath).dropDuplicates(['id']).withColumn("categorypath", regexp_replace(col('categorypath'), '([0-9]).', '')).registerTempTable("ProdCategoryTempTable")
         ####################################################################################################################
         #                                           Final Spark Transformaions                                             #
         ####################################################################################################################
@@ -170,7 +173,7 @@ class ProductCategoryDiscoveryToRefined(object):
                                                   'level_ten_id', 'level_ten_name', 'hash_key').\
                     write.mode("overwrite").\
                     format('parquet').\
-                    save(self.outputPath + '/' + 'ProductCategory' + '/' + 'Working')
+                    save(self.outputPath)
 
                 final_cdc_data.coalesce(1).select('category_Id', 'category_name', 'category_path', 'parent_category_id',
                                                   'active_indicator', 'company_cd', 'level_one_id', 'level_one_name',
@@ -179,7 +182,7 @@ class ProductCategoryDiscoveryToRefined(object):
                                                   'level_six_id', 'level_six_name', 'level_seven_id', 'level_seven_name',
                                                   'level_eight_id', 'level_eight_name', 'level_nine_id', 'level_nine_name',
                                                   'level_ten_id', 'level_ten_name', 'hash_key', 'year', 'month').write.\
-                    mode("append").partitionBy('year', 'month').format('parquet').save(self.outputPath + '/' + 'ProductCategory')
+                    mode("append").partitionBy('year', 'month').format('parquet').save(self.productCategoryFilePartitionPath)
             else:
                 print("No changes in the source file, not creating any files in the Refined layer")
 
@@ -194,7 +197,7 @@ class ProductCategoryDiscoveryToRefined(object):
                        'level_nine_name', 'level_ten_id', 'level_ten_name', 'hash_key').\
                 write.mode("overwrite").\
                 format('parquet').\
-                save(self.outputPath + '/' + 'ProductCategory' + '/' + 'Working')
+                save(self.outputPath)
 
             sourceDataDF.coalesce(1).select('category_Id', 'category_name', 'category_path', 'parent_category_id',
                                             'active_indicator', 'company_cd', 'level_one_id', 'level_one_name', 'level_two_id',
@@ -203,7 +206,7 @@ class ProductCategoryDiscoveryToRefined(object):
                                             'level_six_name', 'level_seven_id', 'level_seven_name', 'level_eight_id',
                                             'level_eight_name', 'level_nine_id', 'level_nine_name', 'level_ten_id',
                                             'level_ten_name', 'hash_key', 'year', 'month').write.mode('append').\
-                partitionBy('year', 'month').format('parquet').save(self.outputPath + '/' + 'ProductCategory')
+                partitionBy('year', 'month').format('parquet').save(self.productCategoryFilePartitionPath)
 
         ########################################################################################################################
 

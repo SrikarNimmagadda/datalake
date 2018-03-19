@@ -1,14 +1,33 @@
 import sys
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import year, from_unixtime, unix_timestamp, substring
 import boto3
+import os
+import csv
+from urlparse import urlparse
 
 
 class ProductCSVToParquet(object):
 
     def __init__(self):
 
-        self.outputPath = sys.argv[1]
-        self.inputFilePath = sys.argv[2]
+        self.productRQ4FilePath = sys.argv[1]
+        self.couponsFilePath = sys.argv[2]
+        self.productIdentifierFilePath = sys.argv[3]
+        self.discoveryProductWorkingPath = sys.argv[4]
+        self.dataProcessingErrorPath = sys.argv[5] + '/discovery'
+
+        self.discoveryBucket = self.discoveryProductWorkingPath[self.discoveryProductWorkingPath.index('tb'):].split("/")[0]
+        self.productRQ4Name = self.discoveryProductWorkingPath[self.discoveryProductWorkingPath.index('tb'):].split("/")[1]
+        self.couponsName = self.couponsFilePath[self.couponsFilePath.index('tb'):].split("/")[1]
+        self.productIdentifierName = self.productIdentifierFilePath[self.productIdentifierFilePath.index('tb'):].split("/")[1]
+        self.workingName = self.discoveryProductWorkingPath[self.discoveryProductWorkingPath.index('tb'):].split("/")[2]
+        self.productRQ4OutputWorkingPath = 's3://' + self.discoveryBucket + '/' + self.productRQ4Name + '/Working'
+        self.couponsOutputWorkingPath = 's3://' + self.discoveryBucket + '/' + self.couponsName + '/Working'
+        self.productIdentifierOutputPartitionPath = 's3://' + self.discoveryBucket + '/' + self.productIdentifierName
+        self.productRQ4OutputPartitionPath = 's3://' + self.discoveryBucket + '/' + self.productRQ4Name
+        self.couponsOutputPartitionPath = 's3://' + self.discoveryBucket + '/' + self.couponsName
+        self.productIdentifierOutputWorkingPath = 's3://' + self.discoveryBucket + '/' + self.productIdentifierName + '/Working'
 
         self.appName = self.__class__.__name__
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
@@ -16,165 +35,184 @@ class ProductCSVToParquet(object):
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
 
         self.s3 = boto3.resource('s3')
-        self.fileHasDataFlag = 0
-        self.bkt = self.inputFilePath
-        self.my_bucket = self.s3.Bucket(name=self.bkt)
+        self.client = boto3.client('s3')
+        self.fileFormat = ".csv"
 
-    def checkFileIsCsv(self, prefixPath):
-        fileValid = 0
-        ext = ''
-        pfx = prefixPath
-        partitionName = self.my_bucket.objects.filter(Prefix=pfx)
-        for obj in partitionName:
-            filepat = obj.key.split('/')[2]
-            if filepat != '':
-                ext = filepat.split('.')[1]
-                self.log.info("Extension of the file is : ")
-                self.log.info(ext)
-            if ext == 'csv':
-                fileValid = 1
-            else:
-                fileValid = 0
-        return fileValid
+        self.productRQ4FileColumnCount = 61
+        self.couponsFileColumnCount = 5
+        self.productIdentifierFileColumnCount = 4
+
+        self.productRQ4File, self.productRQ4Header = self.searchFile(self.productRQ4FilePath)
+        self.log.info(self.productRQ4File)
+        self.log.info("Product RQ4 Columns:" + ','.join(self.productRQ4Header))
+
+        self.couponsFile, self.couponsHeader = self.searchFile(self.couponsFilePath)
+        self.log.info(self.couponsFile)
+        self.log.info("Coupons Columns:" + ','.join(self.couponsHeader))
+
+        self.productIdentifierFile, self.productIdentifierHeader = self.searchFile(self.productIdentifierFilePath)
+        self.log.info(self.productIdentifierFile)
+        self.log.info("ProductIdentifier Columns:" + ','.join(self.productIdentifierHeader))
+
+    def isValidFormatInSource(self):
+
+        productRQ4FileName, productRQ4FileExtension = os.path.splitext(os.path.basename(self.productRQ4File))
+        couponsFileName, couponsFileExtension = os.path.splitext(os.path.basename(self.couponsFile))
+        productIdentifierFileName, productIdentifierFileExtension = os.path.splitext(os.path.basename(self.productIdentifierFile))
+
+        isValidProductRQ4Format = self.fileFormat in productRQ4FileExtension
+        isValidCouponsFormat = self.fileFormat in couponsFileExtension
+        isValidProductIdentifierFormat = self.fileFormat in productIdentifierFileExtension
+
+        if all([isValidProductRQ4Format, isValidCouponsFormat, isValidProductIdentifierFormat]):
+            return True
+        return False
+
+    def isValidSchemaInSource(self):
+
+        self.log.info("Product RQ4 column count " + str(self.productRQ4Header.__len__()))
+        self.log.info("Coupons column count " + str(self.couponsHeader.__len__()))
+        self.log.info("ProductIdentifier column count " + str(self.productIdentifierHeader.__len__()))
+
+        isValidProductRQ4Schema = False
+
+        if self.productRQ4Header.__len__() >= self.productRQ4FileColumnCount:
+            isValidProductRQ4Schema = True
+
+        isValidCouponsSchema = False
+
+        if self.couponsHeader.__len__() >= self.couponsFileColumnCount:
+            isValidCouponsSchema = True
+
+        isValidProductIdentifierSchema = False
+
+        if self.productIdentifierHeader.__len__() >= self.productIdentifierFileColumnCount:
+            isValidProductIdentifierSchema = True
+
+        self.log.info("isValidProductRQ4Schema " + isValidProductRQ4Schema.__str__() + "isValidCouponsSchema " +
+                      isValidCouponsSchema.__str__() + "isValidProductIdentifierSchema " + isValidProductIdentifierSchema.__str__())
+
+        if all([isValidProductRQ4Schema, isValidCouponsSchema, isValidProductIdentifierSchema]):
+            return True
+
+        return False
+
+    def copyFile(self, strS3url, newS3PathURL):
+
+        newBucketWithPath = urlparse(newS3PathURL)
+        newBucket = newBucketWithPath.netloc
+        newPath = newBucketWithPath.path.lstrip('/')
+
+        bucketWithPath = urlparse(strS3url)
+        bucket = bucketWithPath.netloc
+        originalName = bucketWithPath.path.lstrip('/')
+        self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
+        self.log.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
+
+    def searchFile(self, strS3url):
+
+        bucketWithPath = urlparse(strS3url)
+        bucket = bucketWithPath.netloc
+        path = bucketWithPath.path.lstrip('/')
+        mybucket = self.s3.Bucket(bucket)
+        objs = mybucket.objects.filter(Prefix=path)
+        filePath = ''
+        fileName = ''
+        file = ''
+        body = ''
+        header = ''
+        for s3Object in objs:
+            path, filename = os.path.split(s3Object.key)
+            filePath = path
+            fileName = filename
+            file = "s3://" + bucket + "/" + s3Object.key
+            body = s3Object.get()['Body'].read()
+        self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
+        for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
+            if i == 0:
+                header = line
+
+        return file, header
 
     def loadParquet(self):
-        prodFileCheck = self.checkFileIsCsv("Product/Working")
-        prodIdenFileCheck = self.checkFileIsCsv("ProductIdentifier/Working")
-        couponFileCheck = self.checkFileIsCsv("Coupons/Working")
 
-        if prodFileCheck == 1 and prodIdenFileCheck == 1 and couponFileCheck == 1:
-            self.log.info("All the 3 files are in csv format, proceeding with the transformation logic")
+        self.log.info('Exception Handling starts')
 
-            productColumns = ['SkuID', 'ProductSku', 'CategoryNumber', 'Enabled', 'Discountable', 'PricingType', 'DefaultMargin',
-                              'DefaultRetailPrice', 'GLAccountID1', 'GLAccountID2', 'GLAccountID3', 'GLAccountID4', 'ShowOnInvoice',
-                              'Refundable', 'FloorPrice', 'MaxPrice', 'SerialNumberLength', 'NoSale', 'ProductName', 'ProductLabel',
-                              'RefundPeriodLength', 'CarrierPrice', 'MultiLevelPriceDetailsLocked', 'DefaultSalePrice',
-                              'DefaultMinQty', 'LockMinMax', 'DefaultVendorID', 'NoAutoTaxes', 'DefaultVendorName',
-                              'PrimaryVendorSku', 'ManufacturerName', 'ManufacturerPartNumber', 'Serialized',
-                              'DaysUntilStockBalance', 'RMANumberRequired', 'WarehouseLocation', 'BarCode', 'MinimumValueRequired',
-                              'MinimumValue', 'AllowMultiple', 'Type', 'DefaultCost', 'AverageCOS', 'UnitCost', 'MostRecentCost',
-                              'ProductLibraryName', 'CategoryName', 'PAWFloorPrice', 'DefaultMaxQty', 'RMADays', 'InvoiceComments',
-                              'AutoGenerateSerialNumbers', 'AllowPriceIncrease', 'DefaultDiscontinuedDate', 'DateCreated',
-                              'EcommerceItem', 'CostofGoodsSoldAccount', 'SalesRevenueAccount', 'InventoryAccount',
-                              'InventoryCorrectionsAccount', 'WarrantyWebLink', 'WarrantyDescription', 'WarrantyLengthUnits',
-                              'WarrantyLengthValue', 'CommissionDetailsLocked', 'RefundToUsed', 'TriggerServiceRequestOnSale',
-                              'ServiceRequestType', 'BackOrderDate', 'StoreInStoreSKU', 'StoreInStorePrice', 'DefaultDoNotOrder',
-                              'DefaultSpecialOrder', 'DefaultDateEOL', 'DefaultWriteOff', 'TaxApplicationType',
-                              'SetCostToRefundPrice']
-            dfProduct = self.sparkSession.read.format("com.databricks.spark.csv"). \
-                option("header", "true"). \
-                option("treatEmptyValuesAsNulls", "true"). \
-                option("inferSchema", "true"). \
-                option("parserLib", "univocity"). \
-                option("multiLine", "true"). \
-                load('s3://' + self.inputFilePath + '/Product/Working').toDF(*productColumns)
-            dfProductIden = self.sparkSession.read.format("com.databricks.spark.csv"). \
-                option("header", "true"). \
-                option("treatEmptyValuesAsNulls", "true"). \
-                option("inferSchema", "true"). \
-                option("parserLib", "univocity"). \
-                option("multiLine", "true"). \
-                load('s3://' + self.inputFilePath + '/ProductIdentifier/Working')
+        validSourceFormat = self.isValidFormatInSource()
 
-            dfCoupons = self.sparkSession.read.format("com.databricks.spark.csv"). \
-                option("header", "true"). \
-                option("treatEmptyValuesAsNulls", "true"). \
-                option("inferSchema", "true"). \
-                load('s3://' + self.inputFilePath + '/Coupons/Working')
+        if not validSourceFormat:
+            self.log.error("Product Source files not in csv format.")
 
-            dfProductCnt = dfProduct.count()
-            dfProductIdenCnt = dfProductIden.count()
+        validSourceSchema = self.isValidSchemaInSource()
+        if not validSourceSchema:
+            self.log.error("Product Source schema does not have all the required columns.")
 
-            if dfProductCnt > 1 and dfProductIdenCnt > 1:
-                self.log.info("The product and product identifier files have data")
-                fileHasDataFlag = 1
-            else:
-                self.log.info("The product OR product identifier files do not have data")
-                fileHasDataFlag = 0
+        if not validSourceFormat or not validSourceSchema:
+            self.log.info("Copy the source files to data processing error path and return.")
+            self.copyFile(self.productRQ4File, self.dataProcessingErrorPath + '/' + self.productRQ4Name +
+                          self.fileFormat)
+            self.copyFile(self.couponsFile, self.dataProcessingErrorPath + '/' + self.couponsName + self.fileFormat)
+            self.copyFile(self.productIdentifierFile, self.dataProcessingErrorPath + '/' + self.productIdentifierName + self.fileFormat)
+            return
 
-            if fileHasDataFlag == 1:
-                self.log.info("Csv file loaded into dataframe properly")
+        self.log.info('Source format and schema validation successful.')
+        self.log.info('Reading the input parquet file')
 
-                dfProduct.dropDuplicates(['ProductSKU']).registerTempTable("ProdTempTable")
-                dfProductIden.dropDuplicates(['ID']).registerTempTable("ProdIdenTempTable")
-                dfCoupons.dropDuplicates(['CouponSKU']).registerTempTable("CouponsTempTable")
+        dfProduct = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            option("escape", '"'). \
+            option("quote", "\""). \
+            option("multiLine", "true"). \
+            load(self.productRQ4FilePath).toDF(*self.productRQ4Header)
+        dfProductIden = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            option("escape", '"'). \
+            option("quote", "\""). \
+            option("multiLine", "true"). \
+            load(self.productIdentifierFilePath).toDF(*self.productIdentifierHeader)
 
-                dfProductFinal = self.sparkSession.sql(
-                    "select ProductSKU,ProductName,ProductLabel,DefaultCost,AverageCOS,UnitCost,MostRecentCost,"
-                    "ProductLibraryName,ManufacturerName,ManufacturerPartNumber,CategoryName,PricingType,"
-                    "DefaultRetailPrice,DefaultMargin,FloorPrice,PAWFloorPrice,DefaultMinQty,DefaultMaxQty,"
-                    "LockMinMax,NoSale,RMADays,InvoiceComments,Serialized,AutoGenerateSerialNumbers,"
-                    "SerialNumberLength,Discountable,AllowPriceIncrease,DefaultDiscontinuedDate,DateCreated,"
-                    "Enabled,EcommerceItem,WarehouseLocation,DefaultVendorName,PrimaryVendorSKU,"
-                    "CostofGoodsSoldAccount,SalesRevenueAccount,InventoryAccount,InventoryCorrectionsAccount,"
-                    "WarrantyWebLink,WarrantyDescription,RMANumberRequired,WarrantyLengthUnits,"
-                    "WarrantyLengthValue,CommissionDetailsLocked,ShowOnInvoice,Refundable,RefundPeriodLength,"
-                    "RefundToUsed,TriggerServiceRequestOnSale,ServiceRequestType,MultiLevelPriceDetailsLocked,"
-                    "BackOrderDate,StoreInStoreSKU,StoreInStorePrice,DefaultDoNotOrder,DefaultSpecialOrder,"
-                    "DefaultDateEOL,DefaultWriteOff,NoAutoTaxes,TaxApplicationType,SetCostToRefundPrice,"
-                    "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month"
-                    " from ProdTempTable "
-                    " where ProductSKU != ''"
-                )
+        dfCoupons = self.sparkSession.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            option("escape", '"'). \
+            option("quote", "\""). \
+            option("multiLine", "true"). \
+            load(self.couponsFilePath).toDF(*self.couponsHeader)
 
-                dfProductIdenFinal = self.sparkSession.sql("select ID,Description,CategoryNumber,ProductEnabled, "
-                                                           "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                                                           "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from ProdIdenTempTable "
-                                                           "where ID is not null")
+        dfProduct.coalesce(1).write.mode('overwrite').format('parquet').save(self.productRQ4OutputWorkingPath)
 
-                dfCouponsFinal = self.sparkSession.sql("select CouponID,CouponSKU,CouponName,CouponLabel,EnabledStatus, "
-                                                       "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                                                       "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from CouponsTempTable where "
-                                                       "CouponSKU is not null")
+        dfCoupons.coalesce(1).write.mode('overwrite').format('parquet').save(self.couponsOutputWorkingPath)
 
-                dfProductFinal.coalesce(1).select('ProductSKU', 'ProductName', 'ProductLabel', 'DefaultCost', 'AverageCOS',
-                                                  'UnitCost', 'MostRecentCost', 'ProductLibraryName', 'ManufacturerName',
-                                                  'ManufacturerPartNumber', 'CategoryName', 'PricingType', 'DefaultRetailPrice',
-                                                  'DefaultMargin', 'FloorPrice', 'PAWFloorPrice', 'DefaultMinQty',
-                                                  'DefaultMaxQty',
-                                                  'LockMinMax', 'NoSale', 'RMADays', 'InvoiceComments', 'Serialized',
-                                                  'AutoGenerateSerialNumbers', 'SerialNumberLength', 'Discountable',
-                                                  'AllowPriceIncrease', 'DefaultDiscontinuedDate', 'DateCreated', 'Enabled',
-                                                  'EcommerceItem', 'WarehouseLocation', 'DefaultVendorName', 'PrimaryVendorSKU',
-                                                  'CostofGoodsSoldAccount', 'SalesRevenueAccount', 'InventoryAccount',
-                                                  'InventoryCorrectionsAccount', 'WarrantyWebLink', 'WarrantyDescription',
-                                                  'RMANumberRequired', 'WarrantyLengthUnits', 'WarrantyLengthValue',
-                                                  'CommissionDetailsLocked', 'ShowOnInvoice', 'Refundable',
-                                                  'RefundPeriodLength',
-                                                  'RefundToUsed', 'TriggerServiceRequestOnSale', 'ServiceRequestType',
-                                                  'MultiLevelPriceDetailsLocked', 'BackOrderDate', 'StoreInStoreSKU',
-                                                  'StoreInStorePrice', 'DefaultDoNotOrder', 'DefaultSpecialOrder',
-                                                  'DefaultDateEOL',
-                                                  'DefaultWriteOff', 'NoAutoTaxes', 'TaxApplicationType',
-                                                  'SetCostToRefundPrice'). \
-                    write.mode("overwrite"). \
-                    parquet(self.outputPath + '/' + 'Product' + '/' + 'Working')
+        dfProductIden.coalesce(1).write.mode('overwrite').format('parquet').save(self.productIdentifierOutputWorkingPath)
 
-                dfProductIdenFinal.coalesce(1).select('ID', 'Description', 'CategoryNumber', 'ProductEnabled'). \
-                    write.mode("overwrite"). \
-                    parquet(self.outputPath + '/' + 'ProductIdentifier' + '/' + 'Working')
+        dfProduct.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
+            write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.productRQ4OutputPartitionPath)
 
-                dfCouponsFinal.coalesce(1).select('CouponID', 'CouponSKU', 'CouponName', 'CouponLabel', 'EnabledStatus'). \
-                    write.mode("overwrite"). \
-                    parquet(self.outputPath + '/' + 'Coupons' + '/' + 'Working')
+        dfCoupons.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
+            write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.couponsOutputPartitionPath)
 
-                dfProductFinal.coalesce(1). \
-                    write.mode('append').partitionBy('year', 'month'). \
-                    format('parquet').save(self.outputPath + '/' + 'Product')
-
-                dfProductIdenFinal.coalesce(1). \
-                    write.mode('append').partitionBy('year', 'month'). \
-                    format('parquet').save(self.outputPath + '/' + 'ProductIdentifier')
-
-                dfCouponsFinal.coalesce(1). \
-                    write.mode('append').partitionBy('year', 'month'). \
-                    format('parquet').save(self.outputPath + '/' + 'Coupons')
-
-            else:
-                self.log.error("ERROR : Loading csv file into dataframe")
-
-        else:
-            self.log.error("Raw files are not in csv format, terminating the script")
+        dfProductIden.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
+            write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.productIdentifierOutputPartitionPath)
 
         self.sparkSession.stop()
 
