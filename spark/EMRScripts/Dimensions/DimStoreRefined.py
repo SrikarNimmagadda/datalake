@@ -1,11 +1,15 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import split, regexp_extract, regexp_replace, col, when, hash, from_unixtime, \
-    unix_timestamp, substring, year
-from pyspark.sql.types import DateType
+    unix_timestamp, substring, year, udf
+from pyspark.sql.types import StructField, StructType, DateType, StringType, DecimalType, BooleanType, IntegerType
 import boto3
 import sys
 from pyspark.sql.utils import AnalysisException
 from datetime import datetime
+
+
+def splitOnIndex(locationName):
+    return locationName.split(' ', 1)[1]
 
 
 class DimStoreRefined(object):
@@ -25,7 +29,7 @@ class DimStoreRefined(object):
         self.storeWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + self.workingName
         self.storePartitonPath = 's3://' + self.refinedBucket + '/' + self.storeName
         self.storeCSVPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + 'csv'
-        self.dataProcessingErrorPath = sys.argv[3] + '/Refined'
+        self.dataProcessingErrorPath = sys.argv[3] + '/refined'
 
         self.locationName = "Location"
         self.baeName = "BAE"
@@ -78,6 +82,44 @@ class DimStoreRefined(object):
                             + "CFixtures,TIOKioskIndicator,ApprovedforFlexBladeIndicator,CapIndexScore," \
                             + "SellingWallNotes,RemodelDate,SpringMarket,SpringRegion,SpringDistrict,DTVNowIndicator," \
                             + "BAEWorkDayId,BSISWorkDayId,SpringRegionVP,SpringMarketDirector,SpringDistrictManager"
+
+        self.splitOnIndexUDF = udf(lambda z: splitOnIndex(z), StringType())
+        self.storeRefineSchema = StructType([StructField("StoreNumber", IntegerType(), True), StructField("CompanyCd", IntegerType(), True),
+                                             StructField("SourceStoreIdentifier", IntegerType(), True), StructField("LocationName", StringType(), True),
+                                             StructField("Abbreviation", StringType(), True), StructField("GLCode", StringType(), True),
+                                             StructField("StoreStatus", IntegerType(), True), StructField("StoreManagerEmployeeId", IntegerType(), True),
+                                             StructField("ManagerComisionableIndicator", BooleanType(), True), StructField("Address", StringType(), True),
+                                             StructField("City", StringType(), True), StructField("StateProvince", StringType(), True), StructField("PostalCode", StringType(), True),
+                                             StructField("Country", StringType(), True), StructField("Phone", StringType(), True), StructField("Fax", StringType(), True),
+                                             StructField("StoreType", StringType(), True), StructField("StaffLevel", DecimalType(), True),
+                                             StructField("SquareFootRange", StringType(), True), StructField("SquareFoot", IntegerType(), True),
+                                             StructField("Lattitude", DecimalType(), True), StructField("Longitude", DecimalType(), True), StructField("Timezone", StringType(), True),
+                                             StructField("AdjustDST", BooleanType(), True), StructField("CashPolicy", StringType(), True), StructField("MaxCashDrawer", DecimalType(), True),
+                                             StructField("SerialOnOEIndicator", BooleanType(), True), StructField("PhoneOnOEIndicator", BooleanType(), True),
+                                             StructField("PAWOnOEIndicator", BooleanType(), True), StructField("CommntOnOEIndicator", BooleanType(), True),
+                                             StructField("HideCustomerAddressIndicator", BooleanType(), True), StructField("EmailAddress", StringType(), True),
+                                             StructField("ConsumerLicenseNumber", StringType(), True), StructField("SaleInvoiceComment", StringType(), True), StructField("Taxes", StringType(), True),
+                                             StructField("Rent", DecimalType(), True), StructField("PropertyTaxes", DecimalType(), True), StructField("InsuranceAmount", DecimalType(), True),
+                                             StructField("OtherCharges", DecimalType(), True), StructField("Deposit", DecimalType(), True), StructField("LandlordName", StringType(), True),
+                                             StructField("UseLocationEmailIndicator", BooleanType(), True), StructField("LocationType", StringType(), True), StructField("LandlordNote", StringType(), True),
+                                             StructField("LeaseStartDate", DateType(), True), StructField("LeaseEdDate", DateType(), True), StructField("LeaseNotes", StringType(), True),
+                                             StructField("StoreOpenDate", DateType(), True), StructField("StoreCloseDate", DateType(), True), StructField("RelocationDate", DateType(), True),
+                                             StructField("StoreTier", StringType(), True), StructField("MondayOpenTime", StringType(), True), StructField("MondayCloseTime", StringType(), True),
+                                             StructField("TuesdayOpenTime", StringType(), True), StructField("TuesdyCloseTime", StringType(), True), StructField("WednesdayOpenTime", StringType(), True),
+                                             StructField("WednesdayCloseTime", StringType(), True), StructField("ThursdayOpenTime", StringType(), True), StructField("ThursdayCloseTime", StringType(), True),
+                                             StructField("FridayOpenTime", StringType(), True), StructField("FridayCloseTime", StringType(), True), StructField("SaturdayOenTime", StringType(), True),
+                                             StructField("SaturdayCloseTime", StringType(), True), StructField("SundayOpenTime", StringType(), True), StructField("SundayCloseTime", StringType(), True),
+                                             StructField("AcquisitionName", StringType(), True), StructField("BaseStoreIndicator", BooleanType(), True), StructField("CompStoreIndicator", BooleanType(), True),
+                                             StructField("SameStoreIndiator", BooleanType(), True), StructField("FranchiseStoreIndicator", BooleanType(), True), StructField("LeaseExpiration", StringType(), True),
+                                             StructField("BuildTypeCode", StringType(), True), StructField("C_CDesignation", StringType(), True), StructField("AuthorizedRetailedTagLineStatusIndicator", BooleanType(), True),
+                                             StructField("PylonMonmentPanels", IntegerType(), True), StructField("SellingWalls", IntegerType(), True), StructField("MemorableAccessoryWall", IntegerType(), True),
+                                             StructField("CashWrapExpansion", StringType(), True), StructField("WindowWrapGraphics", StringType(), True), StructField("LiveDTV", StringType(), True),
+                                             StructField("LearningTables", IntegerType(), True), StructField("CommunityTableInicator", BooleanType(), True), StructField("DiamondDisplays", IntegerType(), True),
+                                             StructField("CFixtures", IntegerType(), True), StructField("TIOKioskIndicator", BooleanType(), True), StructField("ApprovedforFlexBladeIndicator", BooleanType(), True),
+                                             StructField("CapIndexScore", IntegerType(), True), StructField("SellingWallNotes", StringType(), True), StructField("RemodelDate", DateType(), True),
+                                             StructField("SpringMarket", StringType(), True), StructField("SpringRegion", StringType(), True), StructField("SpringDistrict", StringType(), True),
+                                             StructField("DTVNowIndicator", BooleanType(), True), StructField("BAEWorkDayId", StringType(), True), StructField("BSISWorkDayId", StringType(), True),
+                                             StructField("SpringRegionVP", StringType(), True), StructField("SpringMarketDirector", StringType(), True), StructField("SpringDistrictManager", StringType(), True)])
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
@@ -181,7 +223,7 @@ class DimStoreRefined(object):
 
         self.log.info("Exception Handling of Store Refine Ends")
 
-        dfLocationMaster = dfLocationMaster.filter("StoreNumber != ''").drop_duplicates(subset=['StoreNumber'])
+        dfLocationMaster = dfLocationMaster.filter("StoreNumber != ''")
         dfBAE.filter(dfBAE.StoreNumber > 0).registerTempTable("BAE")
         dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
         dfDealer.filter(dfDealer.StoreNo > 0).registerTempTable("Dealer")
@@ -189,7 +231,7 @@ class DimStoreRefined(object):
         dfSpringMobile.filter(dfSpringMobile.Store > 0).registerTempTable("SpringMobile")
         dfRealEstate.filter(dfRealEstate.Loc > 0).registerTempTable("RealEstate")
 
-        dfLocationMaster = dfLocationMaster.withColumn('Location', regexp_replace(col('StoreName'), '[0-9]', ''))
+        dfLocationMaster = dfLocationMaster.withColumn('Location', self.splitOnIndexUDF(col('StoreName')))
         dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe', regexp_replace(
             col('SaleInvoiceComment'), "[\\r\\n]", ' '))
         dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentText', split(col('SaleInvoiceCommentRe'),
@@ -306,7 +348,7 @@ class DimStoreRefined(object):
             ", a.SatCloseTm as SaturdayCloseTime"
             ", a.SunOpenTm as SundayOpenTime"
             ", a.SunCloseTm as SundayCloseTime"
-            ", e.AcquisitionType as AcquisitionName"
+            ", e.AcquisitionName as AcquisitionName"
             ", case when lower(e.Base) = 'x' or lower(e.Base) = 'yes' or lower(e.Base) = 'true' then '1' end as "
             "BaseStoreIndicator"
             ", case when lower(e.Comp) = 'x' or lower(e.Comp) = 'yes' or lower(e.Comp) = 'true' then '1' end as "
@@ -348,9 +390,69 @@ class DimStoreRefined(object):
             "left outer join Dealer c on a.StoreNumber = c.StoreNo "
             "left outer join RealEstate d on a.StoreNumber = d.Loc "
             "left outer join SpringMobile e on a.StoreNumber = e.Store "
-            "left outer join dtvLocation f on a.StoreName = f.Location").drop_duplicates().registerTempTable("store")
+            "left outer join dtvLocation f on a.StoreName = f.Location").drop_duplicates().registerTempTable("store2")
 
-        dfStoreSource = self.sparkSession.sql("select " + self.storeColumns + " from store")
+        newRow = self.sparkSession.createDataFrame([[0, 4, 0, 'General Location', None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None],
+                                                    [-2, 4, -2, 'Unknown', None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, None, None, None, None]
+                                                    ], schema=self.storeRefineSchema)
+
+        dfStoreSourceOld = self.sparkSession.sql("select a.StoreNumber,a.CompanyCd,a.SourceStoreIdentifier,a.LocationName,a.Abbreviation,a.GLCode,a.StoreStatus,a.StoreManagerEmployeeId,"
+                                                 "cast(a.ManagerCommisionableIndicator as boolean),a.Address,a.City,a.StateProvince,a.PostalCode,a.Country,a.Phone,a.Fax,a.StoreType,a.StaffLevel,a.SquareFootRange,a.SquareFoot,a.Lattitude,a.Longitude,a.Timezone,"
+                                                 "cast(a.AdjustDST as boolean),a.CashPolicy,a.MaxCashDrawer,cast(a.SerialOnOEIndicator as boolean),cast(a.PhoneOnOEIndicator as boolean),cast(a.PAWOnOEIndicator as boolean),cast(a.CommentOnOEIndicator as boolean),cast(a.HideCustomerAddressIndicator as boolean),a.EmailAddress,a.ConsumerLicenseNumber,a.SaleInvoiceComment,a.Taxes,a.Rent,a.PropertyTaxes,a.InsuranceAmount,a.OtherCharges,a.Deposit,a.LandlordName,"
+                                                 "cast(a.UseLocationEmailIndicator as boolean),a.LocationType,a.LandlordNote,a.LeaseStartDate,a.LeaseEndDate,a.LeaseNotes,a.StoreOpenDate,a.StoreCloseDate,a.RelocationDate,a.StoreTier,a.MondayOpenTime,a.MondayCloseTime,a.TuesdayOpenTime,a.TuesdayCloseTime,a.WednesdayOpenTime,a.WednesdayCloseTime,a.ThursdayOpenTime,a.ThursdayCloseTime,a.FridayOpenTime,a.FridayCloseTime,a.SaturdayOpenTime,a.SaturdayCloseTime,a.SundayOpenTime,a.SundayCloseTime,a.AcquisitionName,"
+                                                 "cast(a.BaseStoreIndicator as boolean),cast(a.CompStoreIndicator as boolean),cast(a.SameStoreIndicator as boolean),cast(a.FranchiseStoreIndicator as boolean),a.LeaseExpiration,a.BuildTypeCode,a.C_CDesignation,"
+                                                 "cast(a.AuthorizedRetailedTagLineStatusIndicator as boolean),a.PylonMonumentPanels,a.SellingWalls,a.MemorableAccessoryWall,a.CashWrapExpansion,a.WindowWrapGraphics,a.LiveDTV,a.LearningTables,"
+                                                 "cast(a.CommunityTableIndicator as boolean),a.DiamondDisplays,a.CFixtures,cast(a.TIOKioskIndicator as boolean),cast(a.ApprovedforFlexBladeIndicator as boolean),a.CapIndexScore,a.SellingWallNotes,a.RemodelDate,a.SpringMarket,a.SpringRegion,a.SpringDistrict,"
+                                                 "cast(a.DTVNowIndicator as boolean),a.BAEWorkDayId,a.BSISWorkDayId,a.SpringRegionVP,a.SpringMarketDirector,a.SpringDistrictManager from store2 a")
+
+        dfStoreSourceOld.union(newRow).registerTempTable("store1")
+
+        self.sparkSession.sql("select a.* from store1 a INNER JOIN (select StoreNumber, max(SourceStoreIdentifier) as value from store1 group by StoreNumber) as b on a.StoreNumber=b.StoreNumber and a.SourceStoreIdentifier=b.value").registerTempTable("store")
+
+        dfStoreSource = self.sparkSession.sql("select a.StoreNumber,a.CompanyCd,a.SourceStoreIdentifier,a.LocationName,a.Abbreviation,a.GLCode,a.StoreStatus,a.StoreManagerEmployeeId,"
+                                              "case when lower(a.ManagerCommisionableIndicator) = 'true' then '1' when lower(a.ManagerCommisionableIndicator) = 'false' then '0' else ' ' end as ManagerCommisionableIndicator,"
+                                              "a.Address,a.City,a.StateProvince,a.PostalCode,a.Country,a.Phone,a.Fax,a.StoreType,a.StaffLevel,a.SquareFootRange,a.SquareFoot,a.Lattitude,a.Longitude,a.Timezone,"
+                                              "case when lower(a.AdjustDST) = 'true' then '1' when lower(a.AdjustDST) = 'false' then '0' else ' ' end as AdjustDST,"
+                                              "a.CashPolicy,a.MaxCashDrawer,"
+                                              "case when lower(a.SerialOnOEIndicator) = 'true' then '1' when lower(a.SerialOnOEIndicator) = 'false' then '0' else ' ' end as SerialOnOEIndicator,"
+                                              "case when lower(a.PhoneOnOEIndicator) = 'true' then '1' when lower(a.PhoneOnOEIndicator) = 'false' then '0' else ' ' end as PhoneOnOEIndicator,"
+                                              "case when lower(a.PAWOnOEIndicator) = 'true' then '1' when lower(a.PAWOnOEIndicator) = 'false' then '0' else ' ' end as PAWOnOEIndicator,"
+                                              "case when lower(a.CommentOnOEIndicator) = 'true' then '1' when lower(a.CommentOnOEIndicator) = 'false' then '0' else ' ' end as CommentOnOEIndicator,"
+                                              "case when lower(a.HideCustomerAddressIndicator) = 'true' then '1' when lower(a.HideCustomerAddressIndicator) = 'false' then '0' else ' ' end as HideCustomerAddressIndicator,"
+                                              "a.EmailAddress,a.ConsumerLicenseNumber,a.SaleInvoiceComment,a.Taxes,a.Rent,a.PropertyTaxes,a.InsuranceAmount,a.OtherCharges,a.Deposit,a.LandlordName,"
+                                              "case when lower(a.UseLocationEmailIndicator) = 'true' then '1' when lower(a.UseLocationEmailIndicator) = 'false' then '0' else ' ' end as UseLocationEmailIndicator,"
+                                              "a.LocationType,a.LandlordNote,a.LeaseStartDate,a.LeaseEndDate,a.LeaseNotes,a.StoreOpenDate,a.StoreCloseDate,a.RelocationDate,a.StoreTier,a.MondayOpenTime,a.MondayCloseTime,a.TuesdayOpenTime,a.TuesdayCloseTime,a.WednesdayOpenTime,a.WednesdayCloseTime,a.ThursdayOpenTime,a.ThursdayCloseTime,a.FridayOpenTime,a.FridayCloseTime,a.SaturdayOpenTime,a.SaturdayCloseTime,a.SundayOpenTime,a.SundayCloseTime,a.AcquisitionName,"
+                                              "case when lower(a.BaseStoreIndicator) = 'x' or lower(a.BaseStoreIndicator) = 'yes' or lower(a.BaseStoreIndicator) = 'true' then '1' end as BaseStoreIndicator,"
+                                              "case when lower(a.CompStoreIndicator) = 'x' or lower(a.CompStoreIndicator) = 'yes' or lower(a.CompStoreIndicator) = 'true' then '1' end as CompStoreIndicator,"
+                                              "case when lower(a.SameStoreIndicator) = 'x' or lower(a.SameStoreIndicator) = 'yes' or lower(a.SameStoreIndicator) = 'true' then '1' end as SameStoreIndicator,"
+                                              "case when lower(a.FranchiseStoreIndicator) = 'true' then '1' when lower(a.FranchiseStoreIndicator) = 'false' then '0' else ' ' end as FranchiseStoreIndicator,"
+                                              "a.LeaseExpiration,a.BuildTypeCode,a.C_CDesignation,"
+                                              "case when lower(a.AuthorizedRetailedTagLineStatusIndicator) = 'true' then '1' when lower(a.AuthorizedRetailedTagLineStatusIndicator) = 'false' then '0' else ' ' end as AuthorizedRetailedTagLineStatusIndicator,"
+                                              "a.PylonMonumentPanels,a.SellingWalls,a.MemorableAccessoryWall,a.CashWrapExpansion,a.WindowWrapGraphics,a.LiveDTV,a.LearningTables,"
+                                              "case when lower(a.CommunityTableIndicator) = 'true' then '1' when lower(a.CommunityTableIndicator) = 'false' then '0' else ' ' end as CommunityTableIndicator,"
+                                              "a.DiamondDisplays,a.CFixtures,"
+                                              "case when lower(a.TIOKioskIndicator) = 'true' then '1' when lower(a.TIOKioskIndicator) = 'false' then '0' else ' ' end as TIOKioskIndicator,"
+                                              "case when lower(a.ApprovedforFlexBladeIndicator) = 'true' then '1' when lower(a.ApprovedforFlexBladeIndicator) = 'false' then '0' else ' ' end as ApprovedforFlexBladeIndicator,"
+                                              "a.CapIndexScore,a.SellingWallNotes,a.RemodelDate,a.SpringMarket,a.SpringRegion,a.SpringDistrict,"
+                                              "case when lower(a.DTVNowIndicator) = 'x' or lower(a.DTVNowIndicator) = 'yes' or lower(a.DTVNowIndicator) = 'true' then '1' end as DTVNowIndicator,"
+                                              "a.BAEWorkDayId,a.BSISWorkDayId,a.SpringRegionVP,a.SpringMarketDirector,a.SpringDistrictManager from store a")
+
         self.sparkSession.sql("select " + self.storeColumns + " from store ").\
             withColumn("Hash_Column", hash("StoreNumber", "CompanyCd", "SourceStoreIdentifier", "LocationName",
                                            "Abbreviation", "GLCode", "StoreStatus", "StoreManagerEmployeeId",

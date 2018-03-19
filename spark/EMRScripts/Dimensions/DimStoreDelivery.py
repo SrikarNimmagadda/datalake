@@ -31,6 +31,9 @@ class DimStoreDelivery(object):
 
         self.storePreviousPath = 's3://' + self.deliveryBucket + '/' + self.storeDeliveryName + '/Previous'
 
+        self.attDealerCodeCSVPath = 's3://' + self.deliveryBucket + '/' + self.storeDeliveryName + '/csv/att'
+        self.storeDealerAssocCSVPath = 's3://' + self.deliveryBucket + '/' + self.storeDeliveryName + '/csv/store_dealer_assoc'
+
         self.storeColumns = "StoreNumber,CompanyCd,SourceStoreIdentifier,LocationName,Abbreviation,GLCode," \
                             + "StoreStatus,StoreManagerEmployeeId,ManagerCommisionableIndicator,Address,City," \
                             + "StateProvince,PostalCode,Country,Phone,Fax,StoreType,StaffLevel,SquareFootRange," \
@@ -147,6 +150,7 @@ class DimStoreDelivery(object):
                                                                  self.refinedBucket)
 
         self.sparkSession.read.parquet(lastUpdatedAttDealerCodeFile).registerTempTable("att_dealer_code")
+        self.sparkSession.sql("select * from att_dealer_code").coalesce(1).write.mode("overwrite").csv(self.attDealerCodeCSVPath, header=True)
 
         lastUpdatedstoreDealerCodeAssocFile = self.findLastModifiedFile(refinedBucketNode,
                                                                         self.prefixStoreDealerAssocPartitionPath,
@@ -154,10 +158,9 @@ class DimStoreDelivery(object):
 
         self.sparkSession.read.parquet(lastUpdatedstoreDealerCodeAssocFile).registerTempTable("store_dealer_code_assoc")
 
-        StoreRefineCurrFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath,
-                                                        self.refinedBucket)
-        StoreRefinePrevFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath,
-                                                        self.refinedBucket, 0)
+        self.sparkSession.sql("select * from store_dealer_code_assoc").coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCSVPath, header=True)
+        StoreRefineCurrFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath, self.refinedBucket)
+        StoreRefinePrevFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath, self.refinedBucket, 0)
 
         if StoreRefinePrevFile != '':
 
@@ -181,10 +184,9 @@ class DimStoreDelivery(object):
                 self.sparkSession.sql("select " + storeColumnsWithAlias +
                                       ", concat(a.SpringMarket,a.SpringRegion,a.SpringDistrict) as store_hier_id, "
                                       "concat(c.ATTRegion,c.ATTMarket) as att_hier_id, a.cdc_ind_cd from store_delta"
-                                      " a inner join store_dealer_code_assoc b on a.storeNumber = b.StoreNumber and"
-                                      " b.AssociationType = 'Retail' and b.AssociationStatus = 'Active' inner join "
-                                      "att_dealer_code c on b.DealerCode = c.DealerCode").dropDuplicates(
-                    subset=['StoreNumber']).registerTempTable("store")
+                                      " a left join store_dealer_code_assoc b on a.storeNumber = b.StoreNumber and"
+                                      " b.AssociationType = 'Retail' and b.AssociationStatus = 'Active' left join att_dealer_code c on "
+                                      "b.DealerCode = c.DealerCode").dropDuplicates().registerTempTable("store")
                 dfStoreDelta = self.sparkSession.sql(self.storeDeliveryColumnSelect)
                 dfStoreDelta.coalesce(1).write.mode("overwrite").csv(self.storeCurrentPath, header=True)
                 dfStoreDelta.coalesce(1).write.mode("append").csv(self.storePreviousPath, header=True)
@@ -197,26 +199,13 @@ class DimStoreDelivery(object):
             self.sparkSession.sql(
                 "select " + storeColumnsWithAlias + ", concat(a.SpringMarket,a.SpringRegion,a.SpringDistrict) as"
                                                     " store_hier_id, concat(c.ATTRegion,c.ATTMarket) as att_hier_id,"
-                                                    "'I' as cdc_ind_cd from store_curr a inner join "
+                                                    "'I' as cdc_ind_cd from store_curr a left join "
                                                     "store_dealer_code_assoc b on a.storeNumber = b.StoreNumber and "
                                                     "b.AssociationType = 'Retail' and b.AssociationStatus = 'Active' "
-                                                    "inner join att_dealer_code c on b.DealerCode = c.DealerCode")\
-                .registerTempTable("store")
+                                                    "left join att_dealer_code c on b.DealerCode = c.DealerCode")\
+                .drop_duplicates().registerTempTable("store")
 
-            newRow = self.sparkSession.createDataFrame([[0, 4, 0, 'General Location', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', 'I'],
-                                                        [-2, 4, -2, 'Unknown', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-                                                         '', '', '', '', 'I']
-                                                        ])
-            dfStoreCurr = self.sparkSession.sql(self.storeDeliveryColumnSelect).union(newRow)
+            dfStoreCurr = self.sparkSession.sql(self.storeDeliveryColumnSelect)
             dfStoreCurr.coalesce(1).write.mode("overwrite").csv(self.storeCurrentPath, header=True)
             dfStoreCurr.coalesce(1).write.mode("append").csv(self.storePreviousPath, header=True)
             self.sparkSession.stop()
