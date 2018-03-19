@@ -46,8 +46,8 @@ class DimStoreManagementHierDelivery(object):
                                     "b.sourceemployeeid as lvl_1_src_mgr_id,c.sourceemployeeid as lvl_2_src_mgr_id," \
                                     "d.sourceemployeeid as lvl_3_src_mgr_id,'' as lvl_4_src_mgr_id,'' as " \
                                     "lvl_5_src_mgr_id,'' as lvl_6_src_mgr_id"
-        self.storeMgmtJoinWithCondition = "join employee_curr b on a.RVPID = b.workdayid join employee_curr" \
-                                          " c on a.MDIRID = c.workdayid join employee_curr d on " \
+        self.storeMgmtJoinWithCondition = "left join employee_curr b on a.RVPID = b.workdayid left join employee_curr" \
+                                          " c on a.MDIRID = c.workdayid left join employee_curr d on " \
                                           "a.DMID = d.workdayid"
 
     def makeZeroByteFile(self, destinationPath, fileName):
@@ -119,7 +119,7 @@ class DimStoreManagementHierDelivery(object):
         self.sparkSession.read.parquet(lastUpdatedEmployeeFile).registerTempTable("employee_refine_curr")
         dfEmployeeRefined = self.sparkSession.sql(
             "select workdayid,sourceemployeeid from employee_refine_curr where workdayid != ''")
-        # dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
+        dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
         dfEmployeeRefined.registerTempTable("employee_curr")
 
         dfSpringMobile = self.sparkSession.read.parquet(self.springMobileWorkingPath)
@@ -183,8 +183,8 @@ class DimStoreManagementHierDelivery(object):
                                   "a.StoreNumber from store_refine_curr a left join SpringMobile b "
                                   "on a.StoreNumber = b.Store").drop_duplicates().registerTempTable("store_curr")
 
-            # self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(
-            #     self.storeCSVPath, header=True)
+            self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(
+                self.storeCSVPath, header=True)
 
             dfStoreManagementHierWithName = self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from"
                                                                                               " store_curr a " +
