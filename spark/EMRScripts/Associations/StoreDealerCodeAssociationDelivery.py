@@ -3,6 +3,7 @@ import sys
 import boto3
 from datetime import datetime
 from pyspark.sql.functions import col, lit
+from urlparse import urlparse
 
 
 class StoreDealerCodeAssociationDelivery(object):
@@ -16,6 +17,9 @@ class StoreDealerCodeAssociationDelivery(object):
 
         self.refinedBucketWorking = sys.argv[1]
         self.storeDealerAssocCurrentPath = sys.argv[2]
+
+        self.client = boto3.client('s3')
+        self.s3 = boto3.resource('s3')
 
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
 
@@ -32,6 +36,20 @@ class StoreDealerCodeAssociationDelivery(object):
                                            + '/' + self.currentName
         self.storeDealerAssocPreviousPath = 's3://' + self.deliveryBucket + '/' + self.storeDealerAssocDeliveryName \
                                             + '/Previous'
+
+    def makeZeroByteFile(self, destinationPath, fileName):
+
+        newBucketWithPath = urlparse(destinationPath)
+        newBucket = newBucketWithPath.netloc
+        newBucketNode = self.s3.Bucket(name=newBucket)
+        newPath = newBucketWithPath.path.lstrip('/')
+        objs = newBucketNode.objects.filter(Prefix=newPath)
+        for s3Object in objs:
+            s3Object.delete()
+
+        newFile = open(fileName, 'w')
+        newFile.close()
+        self.client.upload_file(fileName, newBucket, newPath + '/' + fileName)
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket, currentOrPrev=1):
 
@@ -67,8 +85,7 @@ class StoreDealerCodeAssociationDelivery(object):
 
     def loadDelivery(self):
 
-        s3 = boto3.resource('s3')
-        refinedBucketNode = s3.Bucket(name=self.refinedBucket)
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
 
         storeAssocPrefixPath = self.prefixStoreDealerAssocRefineParttionPath
         lastUpdatedStoreAssocFile = self.findLastModifiedFile(refinedBucketNode, storeAssocPrefixPath,
@@ -117,10 +134,7 @@ class StoreDealerCodeAssociationDelivery(object):
                 dfStoreAssocDelta.coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCurrentPath, header=True)
                 dfStoreAssocDelta.coalesce(1).write.mode("append").csv(self.storeDealerAssocPreviousPath, header=True)
             else:
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
-                    .csv(self.storeDealerAssocCurrentPath)
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("append")\
-                    .csv(self.storeDealerAssocPreviousPath)
+                self.makeZeroByteFile(self.storeDealerAssocCurrentPath, 'wt_store_delr_cd_assoc.csv')
                 self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in delivery bucket.")

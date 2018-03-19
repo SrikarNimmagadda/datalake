@@ -97,7 +97,7 @@ class DimStoreGoalsRefined(object):
         splitGoalValues = split(dfFlatTableExplodedFrame['Goal_ValueTemp'], '&')
 
         dfFlatTableExplodedFrame.withColumn('KPIName', splitGoalValues.getItem(0)).\
-            withColumn('GoalValue', regexp_replace(splitGoalValues.getItem(1), '.00%', '')).\
+            withColumn('GoalValue', splitGoalValues.getItem(1)).\
             withColumn('CompanyCode', lit('4')).drop("Goal_ValueTemp").registerTempTable("StoreGoalsTransposed_TT")
 
         self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("StoreRefined_TT")
@@ -107,13 +107,17 @@ class DimStoreGoalsRefined(object):
             sqlKPINameQuery = sqlKPINameQuery + "when a.KPIName = '" + name + "' then '" + newName + "' "
         sqlKPINameQuery = sqlKPINameQuery + " else a.KPIName end as KPIName"
 
-        dfStoreGoals = self.sparkSession.sql("select distinct a.ReportDate as ReportDate, " +
-                                             sqlKPINameQuery +
-                                             ", a.StoreNumber, '4' as CompanyCd, a.GoalValue as GoalValue, "
-                                             "b.LocationName as LocationName, b.SpringMarket as SpringMarket, "
-                                             "b.SpringRegion as SpringRegion, b.SpringDistrict as SpringDistrict "
-                                             "from StoreGoalsTransposed_TT a inner join StoreRefined_TT b on "
-                                             "a.StoreNumber = b.StoreNumber")
+        self.sparkSession.sql("select distinct a.ReportDate as ReportDate, " + sqlKPINameQuery +
+                              ", a.StoreNumber, '4' as CompanyCd, a.GoalValue as GoalValue, "
+                              "b.LocationName as LocationName, b.SpringMarket as SpringMarket, "
+                              "b.SpringRegion as SpringRegion, b.SpringDistrict as SpringDistrict "
+                              "from StoreGoalsTransposed_TT a inner join StoreRefined_TT b on "
+                              "a.StoreNumber = b.StoreNumber").registerTempTable("StoreRefined_SP")
+
+        dfStoreGoals = self.sparkSession.sql("select a.ReportDate, a.KPIName, a.StoreNumber, a.CompanyCd, "
+                                             "case when a.GoalValue rlike '%' then cast(cast(regexp_replace(a.GoalValue,'%','') as float)/100 as decimal(8,4)) else a.GoalValue end as GoalValue, "
+                                             "a.LocationName, a.SpringMarket, a.SpringRegion, a.SpringDistrict "
+                                             "from StoreRefined_SP a ")
 
         dfStoreGoals.coalesce(1).write.mode("overwrite").parquet(self.storeGoalsWorkingPath)
         dfStoreGoals.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp())))\

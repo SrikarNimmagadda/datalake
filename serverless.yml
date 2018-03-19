@@ -1236,6 +1236,18 @@ resources:
                   - 'Fn::GetAtt':
                       - RouteRawRole
                       - Arn
+                  - 'Fn::GetAtt':
+                      - AddJobFlowStepsRole
+                      - Arn
+                  - 'Fn::GetAtt':
+                      - ExtractMetadataRole
+                      - Arn
+                  - 'Fn::GetAtt':
+                      - AthenaaccessCustomerPiibucketsRole
+                      - Arn
+                  - 'Fn::GetAtt':
+                      - AthenaaccessHrPiibucketsRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1657,6 +1669,11 @@ resources:
                     - Fn::GetAtt:
                       - FileMetadataDynamoTable
                       - Arn
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     # This role will be used by all AddJobFlowSteps lambdas
     AddJobFlowStepsRole:
@@ -1703,6 +1720,11 @@ resources:
                   Action:
                     - elasticmapreduce:AddJobFlowSteps
                   Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     # This role will be used to query CustomerPii and HrPii and regular buckets via Athena
     AthenaaccessCustomerPiibucketsRole:
@@ -1729,6 +1751,11 @@ resources:
                       - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
                       - arn:aws:s3:::${self:custom.buckets.discoveryCustomerPii}/*
                       - arn:aws:s3:::${self:custom.buckets.refinedCustomerPii}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     AthenaaccessHrPiibucketsRole:
       Type: AWS::IAM::Role
@@ -1754,6 +1781,11 @@ resources:
                       - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
                       - arn:aws:s3:::${self:custom.buckets.discoveryHrPii}/*
                       - arn:aws:s3:::${self:custom.buckets.refinedHrPii}/*
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     AthenaaccessRegularbucketsRole:
       Type: AWS::IAM::Role

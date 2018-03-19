@@ -52,8 +52,8 @@ class StepBuilderProduct(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/ProductCategory/Working'
-            's3://' + output_bucket + '/ProductCategory/Working'
+            's3://' + input_bucket + '/ProductCategory/Working',
+            's3://' + output_bucket + '/ProductCategory/Working',
             's3://' + error_bucket + '/ProductCategory'
 
         ]
@@ -68,8 +68,8 @@ class StepBuilderProduct(object):
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/ProductCategory/Working'
-            's3://' + output_bucket + '/ProductCategory/Working'
+            's3://' + input_bucket + '/ProductCategory/Working',
+            's3://' + output_bucket + '/ProductCategory/Working',
             's3://' + error_bucket + '/ProductCategory'
         ]
 
@@ -82,7 +82,7 @@ class StepBuilderProduct(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/ProductCategory/Working'
+            's3://' + input_bucket + '/ProductCategory/Working',
             's3://' + output_bucket + '/WT_PROD_CAT/Current'
         ]
 
@@ -96,10 +96,10 @@ class StepBuilderProduct(object):
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/Product/Working'
-            's3://' + input_bucket + '/Coupons/Working'
-            's3://' + input_bucket + '/ProductIdentifier/Working'
-            's3://' + output_bucket + '/Product/Working'
+            's3://' + input_bucket + '/Product/Working',
+            's3://' + input_bucket + '/Coupons/Working',
+            's3://' + input_bucket + '/ProductIdentifier/Working',
+            's3://' + output_bucket + '/Product/Working',
             's3://' + error_bucket + '/Product'
         ]
 
@@ -113,8 +113,8 @@ class StepBuilderProduct(object):
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/Product/Working'
-            's3://' + output_bucket + '/Product/Working'
+            's3://' + input_bucket + '/Product/Working',
+            's3://' + output_bucket + '/Product/Working',
             's3://' + error_bucket + '/Product'
         ]
 
@@ -127,7 +127,7 @@ class StepBuilderProduct(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Product/Working'
+            's3://' + input_bucket + '/Product/Working',
             's3://' + output_bucket + '/WT_PROD/Current'
         ]
 

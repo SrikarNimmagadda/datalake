@@ -1,10 +1,8 @@
 from datetime import datetime
-from pyspark.sql.types import StructType, StringType, IntegerType, StructField, DoubleType
+from pyspark.sql.types import StructType, StringType, IntegerType, StructField, DoubleType, DateType
 from pyspark.sql.functions import lit
 import sys
-import DateType
-import SparkSession
-
+from pyspark.sql import SparkSession
 SalesDetailsInp = sys.argv[1]
 SalesDetailsOP = sys.argv[2]
 
