@@ -25,7 +25,7 @@ class StoreDealerCodeAssociationRefine(object):
         self.storeAssociationWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeDealerAssociationName + '/' \
                                            + self.workingName
         self.storeAssociationPartitonPath = 's3://' + self.refinedBucket + '/' + self.storeDealerAssociationName
-        self.prefixDealerDiscoveryPath = 'Store/Dealer'
+        self.prefixDealerDiscoveryPath = 'Store/DealerCodes'
         self.prefixStoreAssocPath = self.storeDealerAssociationName
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
