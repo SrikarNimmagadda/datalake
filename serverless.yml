@@ -1236,6 +1236,12 @@ resources:
                   - 'Fn::GetAtt':
                       - RouteRawRole
                       - Arn
+                  - 'Fn::GetAtt':
+                      - AddJobFlowStepsRole
+                      - Arn
+                  - 'Fn::GetAtt':
+                      - ExtractMetadataRole
+                      - Arn
               Action:
                 - kms:*
               Resource: '*'
@@ -1657,6 +1663,11 @@ resources:
                     - Fn::GetAtt:
                       - FileMetadataDynamoTable
                       - Arn
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
+                  Resource: '*'
 
     # This role will be used by all AddJobFlowSteps lambdas
     AddJobFlowStepsRole:
@@ -1702,6 +1713,11 @@ resources:
                 - Effect: Allow
                   Action:
                     - elasticmapreduce:AddJobFlowSteps
+                  Resource: '*'
+                - Effect: Allow
+                  Action:
+                    - kms:Decrypt
+                    - kms:Encrypt
                   Resource: '*'
 
     # This role will be used to query CustomerPii and HrPii and regular buckets via Athena
