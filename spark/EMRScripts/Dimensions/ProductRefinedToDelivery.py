@@ -1,21 +1,28 @@
 from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
-from pyspark import SparkConf, SparkContext
 import boto3
+from urlparse import urlparse
 
 
 class ProductRefinedToDelivery:
     def __init__(self):
 
-        self.refinedBucketWithS3 = sys.argv[1]
-        self.deliveryBucketWithS3 = sys.argv[2]
+        self.refinedProductWorkingPath = sys.argv[1]
+        self.deliveryProductCurrentPath = sys.argv[2]
+        self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
+        self.refinedBucket = self.refinedProductWorkingPath[self.refinedProductWorkingPath.index('tb'):].split("/")[0]
+        self.prefixProductPath = self.refinedProductWorkingPath[self.refinedProductWorkingPath.index('tb'):].split("/")[1]
+        self.deliveryBucket = self.deliveryProductCurrentPath[self.deliveryProductCurrentPath.index('tb'):].split("/")[0]
+        self.deliveryName = self.deliveryProductCurrentPath[self.deliveryProductCurrentPath.index('tb'):].split("/")[1]
 
-        self.refinedBucket = self.refinedBucketWithS3[self.refinedBucketWithS3.index('tb-us'):]
-        self.deliveryBucket = self.deliveryBucketWithS3[self.deliveryBucketWithS3.index('tb-us'):]
+        self.deliveryProductPreviousPath = 's3://' + self.deliveryBucket + '/' + self.deliveryName + '/Previous'
 
-        self.prodCurrentPath = 's3://' + self.deliveryBucket + '/Current'
-        self.prodPreviousPath = 's3://' + self.deliveryBucket + '/Previous'
+        self.appName = self.__class__.__name__
+        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
+        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
+        self.log = self.log4jLogger.LogManager.getLogger(self.appName)
 
         self.prodColumns = "PROD_SKU,CO_CD,PROD_NME,PROD_LBL,CAT_ID,DFLT_COST,AVERAGE_CST,UNT_CST,MST_RCNT_CST," \
                            "MFR,MFR_PRT_NBR,PRC_TYP,DFLT_RTL_PRC,DFLT_MRGN,FLOOR_PRC,DFLT_MIN_QTY,DFLT_MAX_QTY," \
@@ -27,33 +34,46 @@ class ProductRefinedToDelivery:
                            "DFLT_DO_NOT_ORD_IND,DFLT_SPCL_ORD_IND,DFLT_DT_EOL,DFLT_WRT_OFF_IND,NO_AUTO_TAXES_IND," \
                            "CDC_IND_CD"
 
-    def findLastModifiedFile(self, bucketNode, prefixPath, bucket, currentOrPrev=1):
+    def makeZeroByteFile(self, destinationPath, fileName):
 
+        newBucketWithPath = urlparse(destinationPath)
+        newBucket = newBucketWithPath.netloc
+        newBucketNode = self.s3.Bucket(name=newBucket)
+        newPath = newBucketWithPath.path.lstrip('/')
+        objs = newBucketNode.objects.filter(Prefix=newPath)
+        for s3Object in objs:
+            s3Object.delete()
+
+        newFile = open(fileName, 'w')
+        newFile.close()
+        self.client.upload_file(fileName, newBucket, newPath + '/' + fileName)
+
+    def findLastModifiedFile(self, bucketNode, prefixType, bucket, currentOrPrev=1):
+
+        prefixPath = prefixType + '/year=' + datetime.now().strftime('%Y')
         partitionName = bucketNode.objects.filter(Prefix=prefixPath)
-
-        all_values_dict = {}
-        req_values_dict = {}
-
+        allValuesDict = {}
+        reqValuesDict = {}
         for obj in partitionName:
-            all_values_dict[obj.key] = obj.last_modified
-
-        for k, v in all_values_dict.items():
+            allValuesDict[obj.key] = obj.last_modified
+        for k, v in allValuesDict.items():
             if 'part-0000' in k:
-                req_values_dict[k] = v
-
-        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
+                reqValuesDict[k] = v
+        revSortedFiles = sorted(reqValuesDict, key=reqValuesDict.get, reverse=True)
 
         numFiles = len(revSortedFiles)
+        self.log.info("Number of part files is : " + str(numFiles))
         lastUpdatedFilePath = ''
         lastPreviousRefinedPath = ''
-
         if numFiles > 0:
             lastModifiedFileName = str(revSortedFiles[0])
             lastUpdatedFilePath = "s3://" + bucket + "/" + lastModifiedFileName
+            self.log.info("Last Modified file in s3 format is : " + lastUpdatedFilePath)
 
         if numFiles > 1:
             secondLastModifiedFileName = str(revSortedFiles[1])
             lastPreviousRefinedPath = "s3://" + bucket + "/" + secondLastModifiedFileName
+            self.log.info("Last Modified file in s3 format is : " + lastPreviousRefinedPath)
 
         if currentOrPrev == 0:
             return lastPreviousRefinedPath
@@ -62,35 +82,20 @@ class ProductRefinedToDelivery:
 
     def loadDelivery(self):
 
-        Config = SparkConf().setAppName("ProductDelivery")
-        SparkCtx = SparkContext(conf=Config)
-        spark = SparkSession.builder.config(conf=Config).getOrCreate()
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
 
-        Log4jLogger = SparkCtx._jvm.org.apache.log4j
+        lastUpdatedProdFile = self.findLastModifiedFile(refinedBucketNode, self.prefixProductPath, self.refinedBucket)
 
-        logger = Log4jLogger.LogManager.getLogger('prod_loadDelivery')
-
-        s3 = boto3.resource('s3')
-
-        refinedBucketNode = s3.Bucket(name=self.refinedBucket)
-        todayyear = datetime.now().strftime('%Y')
-        datetime.now().strftime('%m')
-
-        prodPrefixPath = "Product/year=" + todayyear
-        lastUpdatedProdFile = self.findLastModifiedFile(
-            refinedBucketNode, prodPrefixPath, self.refinedBucket)
-
-        lastPrevUpdatedProdFile = self.findLastModifiedFile(
-            refinedBucketNode, prodPrefixPath, self.refinedBucket, 0)
+        lastPrevUpdatedProdFile = self.findLastModifiedFile(refinedBucketNode, self.prefixProductPath, self.refinedBucket, 0)
 
         if lastUpdatedProdFile != '':
-            logger.info("Last modified file name is : ")
-            logger.info(lastUpdatedProdFile)
+            self.log.info("Last modified file name is : ")
+            self.log.info(lastUpdatedProdFile)
 
-            spark.read.parquet(lastUpdatedProdFile). \
+            self.sparkSession.read.parquet(lastUpdatedProdFile). \
                 registerTempTable("CurrentProdTableTmp")
 
-            spark.sql(
+            self.sparkSession.sql(
                 "select a.productsku AS PROD_SKU,a.companycd AS CO_CD,"
                 "a.productname AS PROD_NME,a.productlabel AS PROD_LBL,a.categoryid AS CAT_ID,"
                 "a.defaultcost AS DFLT_COST,"
@@ -125,7 +130,7 @@ class ProductRefinedToDelivery:
                 " from CurrentProdTableTmp a"
             ).registerTempTable("CurrentProdTableTmpRenamed")
 
-            spark.sql(
+            self.sparkSession.sql(
                 "select PROD_SKU,CO_CD,PROD_NME,PROD_LBL,CAT_ID,DFLT_COST,AVERAGE_CST,UNT_CST,MST_RCNT_CST,"
                 "MFR,MFR_PRT_NBR,PRC_TYP,DFLT_RTL_PRC,DFLT_MRGN,FLOOR_PRC,DFLT_MIN_QTY,DFLT_MAX_QTY,NO_SALE_IND,"
                 "RMA_DAY,DFLT_INV_CMNT,DSCNT_IND,DFLT_DSCNT_DT,DT_CRT_AT_SRC,PROD_ACT_IND,ECOM_ITM_IND,"
@@ -145,16 +150,16 @@ class ProductRefinedToDelivery:
                 "from CurrentProdTableTmpRenamed a"
             ).registerTempTable("CurrentProdTable")
 
-        currTableCount = spark.sql("select count(*) from CurrentProdTable").show()
-        logger.info("Current Table count is : ")
-        logger.info(currTableCount)
+        currTableCount = self.sparkSession.sql("select count(*) from CurrentProdTable").show()
+        self.log.info("Current Table count is : ")
+        self.log.info(currTableCount)
 
         if lastPrevUpdatedProdFile != '':
-            logger.info("Second Last modified file name is : " + lastPrevUpdatedProdFile)
+            self.log.info("Second Last modified file name is : " + lastPrevUpdatedProdFile)
 
-            spark.read.parquet(lastPrevUpdatedProdFile).registerTempTable("PrevProdTableTmp")
+            self.sparkSession.read.parquet(lastPrevUpdatedProdFile).registerTempTable("PrevProdTableTmp")
 
-            spark.sql(
+            self.sparkSession.sql(
                 "select a.productsku AS PROD_SKU,a.companycd AS CO_CD,"
                 "a.productname AS PROD_NME,a.productlabel AS PROD_LBL,a.categoryid AS CAT_ID,"
                 "a.defaultcost AS DFLT_COST,"
@@ -189,7 +194,7 @@ class ProductRefinedToDelivery:
                 " from PrevProdTableTmp a"
             ).registerTempTable("PrevProdTableTmpRenamed")
 
-            spark.sql(
+            self.sparkSession.sql(
                 "select PROD_SKU,CO_CD,PROD_NME,PROD_LBL,CAT_ID,DFLT_COST,AVERAGE_CST,UNT_CST,MST_RCNT_CST,"
                 "MFR,MFR_PRT_NBR,PRC_TYP,DFLT_RTL_PRC,DFLT_MRGN,FLOOR_PRC,DFLT_MIN_QTY,DFLT_MAX_QTY,NO_SALE_IND,"
                 "RMA_DAY,DFLT_INV_CMNT,DSCNT_IND,DFLT_DSCNT_DT,DT_CRT_AT_SRC,PROD_ACT_IND,ECOM_ITM_IND,"
@@ -209,16 +214,16 @@ class ProductRefinedToDelivery:
                 "from PrevProdTableTmpRenamed a"
             ).registerTempTable("PrevProdTable")
 
-            prevTableCount = spark.sql("select count(*) from PrevProdTable").show()
-            logger.info("Previous Table count is : ")
-            logger.info(prevTableCount)
+            prevTableCount = self.sparkSession.sql("select count(*) from PrevProdTable").show()
+            self.log.info("Previous Table count is : ")
+            self.log.info(prevTableCount)
         else:
-            logger.info("There is only 1 file, hence not computing the second latest file name")
+            self.log.info("There is only 1 file, hence not computing the second latest file name")
 
         if lastUpdatedProdFile != '' and lastPrevUpdatedProdFile != '':
-            logger.info('Current and Previous refined data files are found. So processing for delivery layer starts')
+            self.log.info('Current and Previous refined data files are found. So processing for delivery layer starts')
 
-            dfProdUpdated = spark.sql(
+            dfProdUpdated = self.sparkSession.sql(
                 "select a.PROD_SKU,a.CO_CD,a.PROD_NME,a.PROD_LBL,a.CAT_ID,a.DFLT_COST,a.AVERAGE_CST,a.UNT_CST,"
                 "a.MST_RCNT_CST,a.MFR,a.MFR_PRT_NBR,a.PRC_TYP,a.DFLT_RTL_PRC,a.DFLT_MRGN,a.FLOOR_PRC,"
                 "a.DFLT_MIN_QTY,a.DFLT_MAX_QTY,a.NO_SALE_IND,a.RMA_DAY,a.DFLT_INV_CMNT,a.DSCNT_IND,"
@@ -233,11 +238,11 @@ class ProductRefinedToDelivery:
 
             rowCountUpdateRecords = dfProdUpdated.count()
 
-            logger.info("Number of update records are :" + str(rowCountUpdateRecords))
+            self.log.info("Number of update records are :" + str(rowCountUpdateRecords))
 
             dfProdUpdated.registerTempTable("prod_updated_data")
 
-            dfProdNew = spark.sql(
+            dfProdNew = self.sparkSession.sql(
                 "select a.PROD_SKU,a.CO_CD,a.PROD_NME,a.PROD_LBL,a.CAT_ID,a.DFLT_COST,a.AVERAGE_CST,a.UNT_CST,"
                 "a.MST_RCNT_CST,a.MFR,a.MFR_PRT_NBR,a.PRC_TYP,a.DFLT_RTL_PRC,a.DFLT_MRGN,a.FLOOR_PRC,"
                 "a.DFLT_MIN_QTY,a.DFLT_MAX_QTY,a.NO_SALE_IND,a.RMA_DAY,a.DFLT_INV_CMNT,a.DSCNT_IND,"
@@ -252,34 +257,35 @@ class ProductRefinedToDelivery:
 
             rowCountNewRecords = dfProdNew.count()
 
-            logger.info("Number of insert records are : ")
-            logger.info(rowCountNewRecords)
+            self.log.info("Number of insert records are : ")
+            self.log.info(rowCountNewRecords)
 
             dfProdNew.registerTempTable("prod_new_data")
 
-            dfProdCatDelta = spark.sql(
+            dfProdCatDelta = self.sparkSession.sql(
                 "select " + self.prodColumns + " from prod_updated_data union all select " + self.prodColumns +
                 " from prod_new_data")
 
-            logger.info('Updated prod skus are')
-            dfProdUpdatedPrint = spark.sql("select PROD_SKU from prod_updated_data")
-            logger.info(dfProdUpdatedPrint.show(100, truncate=False))
+            self.log.info('Updated prod skus are')
+            dfProdUpdatedPrint = self.sparkSession.sql("select PROD_SKU from prod_updated_data")
+            self.log.info(dfProdUpdatedPrint.show(100, truncate=False))
 
-            logger.info('New added prod skus are')
-            dfProdNewPrint = spark.sql("select PROD_SKU from prod_new_data")
-            logger.info(dfProdNewPrint.show(100, truncate=False))
+            self.log.info('New added prod skus are')
+            dfProdNewPrint = self.sparkSession.sql("select PROD_SKU from prod_new_data")
+            self.log.info(dfProdNewPrint.show(100, truncate=False))
 
             if rowCountUpdateRecords > 0 or rowCountNewRecords > 0:
-                logger.info("Updated file has arrived..")
-                dfProdCatDelta.coalesce(1).write.mode("overwrite").csv(self.prodCurrentPath, header=True)
-                dfProdCatDelta.coalesce(1).write.mode("append").csv(self.prodPreviousPath, header=True)
+                self.log.info("Updated file has arrived..")
+                dfProdCatDelta.coalesce(1).write.mode("overwrite").csv(self.deliveryProductCurrentPath, header=True)
+                dfProdCatDelta.coalesce(1).write.mode("append").csv(self.deliveryProductPreviousPath, header=True)
             else:
-                logger.info("The prev and current files are same. No delta file will be generated in delivery bucket.")
+                self.makeZeroByteFile(self.deliveryProductCurrentPath, 'wt_prod.csv')
+                self.log.info("The prev and current files are same. No delta file will be generated in delivery bucket.")
 
         elif lastUpdatedProdFile != '' and lastPrevUpdatedProdFile == '':
-            logger.info("This is the first transformation call, So keeping the refined file in delivery bucket.")
+            self.log.info("This is the first transformation call, So keeping the refined file in delivery bucket.")
 
-            dfProdCurr = spark.sql(
+            dfProdCurr = self.sparkSession.sql(
                 "select PROD_SKU,CO_CD,PROD_NME,PROD_LBL,CAT_ID,DFLT_COST,AVERAGE_CST,UNT_CST,MST_RCNT_CST,MFR,"
                 "MFR_PRT_NBR,PRC_TYP,DFLT_RTL_PRC,DFLT_MRGN,FLOOR_PRC,DFLT_MIN_QTY,DFLT_MAX_QTY,NO_SALE_IND,RMA_DAY,"
                 "DFLT_INV_CMNT,DSCNT_IND,DFLT_DSCNT_DT,DT_CRT_AT_SRC,PROD_ACT_IND,ECOM_ITM_IND,WHSE_LOC,DFLT_VNDR_NME,"
@@ -289,16 +295,16 @@ class ProductRefinedToDelivery:
                 "DFLT_DO_NOT_ORD_IND,DFLT_SPCL_ORD_IND,DFLT_DT_EOL,DFLT_WRT_OFF_IND,NO_AUTO_TAXES_IND,'I' as CDC_IND_CD"
                 " from CurrentProdTable")
 
-            logger.info("Current Path is : " + self.prodCurrentPath)
-            logger.info("Previous Path is : " + self.prodPreviousPath)
+            self.log.info("Current Path is : " + self.deliveryProductCurrentPath)
+            self.log.info("Previous Path is : " + self.deliveryProductPreviousPath)
 
-            dfProdCurr.coalesce(1).write.mode("overwrite").csv(self.prodCurrentPath, header=True)
-            dfProdCurr.coalesce(1).write.mode("append").csv(self.prodPreviousPath, header=True)
+            dfProdCurr.coalesce(1).write.mode("overwrite").csv(self.deliveryProductCurrentPath, header=True)
+            dfProdCurr.coalesce(1).write.mode("append").csv(self.deliveryProductPreviousPath, header=True)
 
         else:
-            logger.error("ERROR : This should not be printed, Please check the logs")
+            self.log.error("ERROR : This should not be printed, Please check the logs")
 
-        spark.stop()
+        self.sparkSession.stop()
 
 
 if __name__ == "__main__":

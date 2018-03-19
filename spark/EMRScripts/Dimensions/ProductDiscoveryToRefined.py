@@ -12,37 +12,61 @@ class ProductDiscoveryToRefined(object):
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
 
-        self.outputPath = sys.argv[1]
-        self.cdcBucketName = sys.argv[2]
-        self.errorBucketName = sys.argv[3]
-        self.inputPath = sys.argv[4]
+        self.discoveryWorkingPath = sys.argv[1]
+        self.refinedWorkingPath = sys.argv[2]
+        self.dataProcessingErrorPath = sys.argv[3] + '/refined'
+
+        self.productRQ4Name = self.discoveryWorkingPath[self.discoveryWorkingPath.index('tb'):].split("/")[1]
+        self.workingName = self.discoveryWorkingPath[self.discoveryWorkingPath.index('tb'):].split("/")[2]
+        self.couponsName = 'Coupons'
+        self.productIdentifierName = 'ProductIdentifier'
+
+        self.discoveryBucket = self.discoveryWorkingPath[self.discoveryWorkingPath.index('tb'):].split("/")[0]
+        self.refinedBucket = self.refinedWorkingPath[self.refinedWorkingPath.index('tb'):].split("/")[0]
+
+        self.discoveryProductWorkingPath = self.discoveryWorkingPath
+        self.discoveryCouponsWorkingPath = 's3://' + self.discoveryBucket + '/' + self.couponsName + '/' + self.workingName
+        self.discoveryProductIdentifierWorkingPath = 's3://' + self.discoveryBucket + '/' + self.productIdentifierName + '/' + self.workingName
+
+        self.productRefinedWorkingPath = 's3://' + self.refinedBucket + '/' + self.productRQ4Name + '/' + self.workingName
+        self.productRefinedPartitonPath = 's3://' + self.refinedBucket + '/' + self.productRQ4Name
 
         self.appName = self.__class__.__name__
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
 
+    def findLastModifiedFile(self, bucketNode, prefixType, bucket):
+
+        prefixPath = prefixType + '/year=' + datetime.now().strftime('%Y')
+        self.log.info("prefixPath is " + prefixPath)
+        partitionName = bucketNode.objects.filter(Prefix=prefixPath)
+        allValuesDict = {}
+        reqValuesDict = {}
+        for obj in partitionName:
+            allValuesDict[obj.key] = obj.last_modified
+        for k, v in allValuesDict.items():
+            if 'part-0000' in k:
+                reqValuesDict[k] = v
+        revSortedFiles = sorted(reqValuesDict, key=reqValuesDict.get, reverse=True)
+
+        numFiles = len(revSortedFiles)
+        self.log.info("Number of part files is : " + str(numFiles))
+        lastUpdatedFilePath = ''
+
+        if numFiles > 0:
+            lastModifiedFileName = str(revSortedFiles[0])
+            lastUpdatedFilePath = "s3://" + bucket + "/" + lastModifiedFileName
+            self.log.info("Last Modified " + prefixType + " file in s3 format is : " + lastUpdatedFilePath)
+        return lastUpdatedFilePath
+
     def loadRefined(self):
 
-        todayyear = datetime.now().strftime('%Y')
-        ErrorTimestamp = datetime.now().strftime('%Y-%m-%d')
-        ProdErrorFile = 's3://' + self.errorBucketName + '/ProductCategory/' + ErrorTimestamp
-        ProdIdenErrorFile = 's3://' + self.errorBucketName + '/ProductIdentifier/' + ErrorTimestamp
-        CouponsErrorFile = 's3://' + self.errorBucketName + '/Coupons/' + ErrorTimestamp
+        dfProduct = self.sparkSession.read.parquet(self.discoveryProductWorkingPath).drop_duplicates()
+        self.sparkSession.read.parquet(self.discoveryProductIdentifierWorkingPath).drop_duplicates().registerTempTable("productIdentifier")
+        self.sparkSession.read.parquet(self.discoveryCouponsWorkingPath).drop_duplicates().registerTempTable("coupons")
 
-        ProductIntputPath = self.inputPath + '/Product/Working'
-        ProductIdenInputPath = self.inputPath + '/ProductIdentifier/Working'
-        CouponsIntputPath = self.inputPath + '/Coupons/Working'
-
-        #########################################################################################################
-        #                                 Read the source files                                                 #
-        #########################################################################################################
-
-        dfProduct = self.sparkSession.read.parquet(ProductIntputPath)
-        dfProductIden = self.sparkSession.read.parquet(ProductIdenInputPath)
-        dfCoupons = self.sparkSession.read.parquet(CouponsIntputPath)
-
-        dfProductRenamed = dfProduct.withColumnRenamed("ProductSKU", "productsku"). \
+        dfProduct.withColumnRenamed("ProductSKU", "productsku"). \
             withColumnRenamed("ProductName", "productname"). \
             withColumnRenamed("ProductLabel", "productlabel"). \
             withColumnRenamed("DefaultCost", "defaultcost"). \
@@ -50,7 +74,7 @@ class ProductDiscoveryToRefined(object):
             withColumnRenamed("UnitCost", "unitcost"). \
             withColumnRenamed("MostRecentCost", "mostrecentcost"). \
             withColumnRenamed("ProductLibraryName", "productlibraryname"). \
-            withColumnRenamed("ManufacturerName", "manufacturername"). \
+            withColumnRenamed("Manufacturer", "manufacturer"). \
             withColumnRenamed("ManufacturerPartNumber", "manufacturerpartnumber"). \
             withColumnRenamed("PricingType", "pricingtype"). \
             withColumnRenamed("DefaultRetailPrice", "defaultretailprice"). \
@@ -98,11 +122,7 @@ class ProductDiscoveryToRefined(object):
             withColumnRenamed("DefaultDateEOL", "defaultdateeol"). \
             withColumnRenamed("DefaultWriteOff", "defaultwriteoff"). \
             withColumnRenamed("NoAutoTaxes", "noautotaxes"). \
-            withColumnRenamed("TaxApplicationType", "taxapplicationtype")
-
-        dfProductRenamed.registerTempTable("product")
-        dfProductIden.registerTempTable("productIdentifier")
-        dfCoupons.registerTempTable("coupons")
+            withColumnRenamed("TaxApplicationType", "taxapplicationtype").registerTempTable("product")
 
         ###########################################################################################################
         #                                Exception Handling
@@ -116,17 +136,17 @@ class ProductDiscoveryToRefined(object):
         if prodBadRecsDF.count() > 0:
             prodBadRecsDF.coalesce(1). \
                 write.format("com.databricks.spark.csv"). \
-                option("header", "true").mode("append").save(ProdErrorFile)
+                option("header", "true").mode("append").save(self.dataProcessingErrorPath + '/' + self.productRQ4Name)
 
         if prodIdenBadRecsDF.count() > 0:
             prodIdenBadRecsDF.coalesce(1). \
                 write.format("com.databricks.spark.csv"). \
-                option("header", "true").mode("append").save(ProdIdenErrorFile)
+                option("header", "true").mode("append").save(self.dataProcessingErrorPath + '/' + self.productIdentifierName)
 
         if couponsBadRecsDF.count() > 0:
             couponsBadRecsDF.coalesce(1). \
                 write.format("com.databricks.spark.csv"). \
-                option("header", "true").mode("append").save(CouponsErrorFile)
+                option("header", "true").mode("append").save(self.dataProcessingErrorPath + '/' + self.couponsName)
 
         #########################################################################################################
         #                                 Spark Transformation begins here                                      #
@@ -178,7 +198,7 @@ class ProductDiscoveryToRefined(object):
                                                 "    UNION ALL "
                                                 "select c.CouponSKU as productsku,'4' as companycd ,c.CouponName as productname,"
                                                 "c.CouponLabel as productlabel,"
-                                                "NULL,"
+                                                "20,"
                                                 "NULL,NULL,NULL,NULL,NULL,NULL,"
                                                 "NULL,NULL,NULL,NULL,NULL,NULL,"
                                                 "NULL,"
@@ -215,48 +235,8 @@ class ProductDiscoveryToRefined(object):
 
         # CDC Logic for PROD
 
-        bkt = self.cdcBucketName
-        my_bucket = self.s3.Bucket(name=bkt)
-
-        req_values_dict = {}
-
-        pfx = "Product/year=" + todayyear
-
-        partitionName = my_bucket.objects.filter(Prefix=pfx)
-
-        for obj in partitionName:
-            req_values_dict[obj.key] = obj.last_modified
-
-        for k, v in req_values_dict.items():
-            if 'part-0000' in k:
-                req_values_dict[k] = v
-
-        self.log.info("Required values dictionary contents are : ")
-        self.log.info(req_values_dict)
-
-        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-        self.log.info("Files are : ")
-        self.log.info(revSortedFiles)
-
-        numFiles = len(revSortedFiles)
-        self.log.info("Number of part files is : ")
-        self.log.info(numFiles)
-
-        # cols_list = ("productsku", "companycd", "productname", "productlabel", "categoryid", "defaultcost", "averagecost",
-        #              "unitcost", "mostrecentcost", "manufacturername", "manufacturerpartnumber", "pricingtype",
-        #              "defaultretailprice",
-        #              "defaultmargin", "floorprice", "pawfloorprice", "defaultminimumquantity", "defaultmaximumquantity",
-        #              "lockminmax",
-        #              "nosaleflag", "rmadays", "defaultinvoicecomments", "serializedproductindicator", "serialnumberlength",
-        #              "discountable", "defaultdiscontinueddate", "datecreatedatsource", "productactiveindicator",
-        #              "ecommerceitem",
-        #              "warehouselocation", "defaultvendorname", "primaryvendorsku", "costaccount", "revenueaccount",
-        #              "inventoryaccount", "inventorycorrectionsaccount", "warrantydescription", "rmanumberrequired",
-        #              "warrantylengthunits", "warrantylengthvalue", "commissiondetailslocked", "showoninvoice", "refundable",
-        #              "refundperiodlength", "refundtoused", "triggerservicerequestonsale", "servicerequesttype",
-        #              "multilevelpricedetailslocked", "backorderdate", "storeinstoresku", "storeinstoreprice",
-        #              "defaultdonotorder", "defaultspecialorder", "defaultdateeol", "defaultwriteoff", "noautotaxes")
-
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
+        productPrevRefinedPath = self.findLastModifiedFile(refinedBucketNode, self.productRQ4Name, self.refinedBucket)
         SourceDataDF = SourceDataDFTmp.withColumn("hash_key",
                                                   hash_("productsku", "companycd", "productname", "productlabel", "categoryid",
                                                         "defaultcost", "averagecost",
@@ -283,14 +263,9 @@ class ProductDiscoveryToRefined(object):
 
         SourceDataDF.registerTempTable("CurrentSourceTempTable")
 
-        if numFiles > 0:
-            self.log.info("Files found in Refined layer, CDC can be performed\n")
-            lastModifiedFileNameTmp = str(revSortedFiles[0])
-            lastModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-            self.log.info("Last Modified file is : " + lastModifiedFileName)
-            self.log.info("\n")
+        if productPrevRefinedPath != '':
 
-            self.sparkSession.read.parquet(lastModifiedFileName).registerTempTable("PreviousDataRefinedTable")
+            self.sparkSession.read.parquet(productPrevRefinedPath).registerTempTable("PreviousDataRefinedTable")
 
             # selects target data with no change
             self.sparkSession.sql("SELECT a.productsku,a.companycd,a.productname,a.productlabel,a.categoryid,a.defaultcost,"
@@ -439,7 +414,7 @@ class ProductDiscoveryToRefined(object):
                                                   'hash_key'). \
                     write.mode("overwrite"). \
                     format('parquet'). \
-                    save(self.outputPath + '/' + 'Product' + '/' + 'Working')
+                    save(self.refinedWorkingPath)
 
                 final_cdc_data.coalesce(1).select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid',
                                                   'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturername',
@@ -460,7 +435,7 @@ class ProductDiscoveryToRefined(object):
                                                   'hash_key', 'year', 'month').write.mode("append"). \
                     partitionBy('year', 'month'). \
                     format('parquet'). \
-                    save(self.outputPath + '/' + 'Product')
+                    save(self.productRefinedPartitonPath)
             else:
                 self.log.info("No changes in the source file, not creating any files in the Refined layer")
 
@@ -482,7 +457,7 @@ class ProductDiscoveryToRefined(object):
                        'defaultdateeol', 'defaultwriteoff', 'noautotaxes', 'hash_key'). \
                 write.mode("overwrite"). \
                 format('parquet'). \
-                save(self.outputPath + '/' + 'Product' + '/' + 'Working')
+                save(self.refinedWorkingPath)
 
             SourceDataDF.coalesce(1).select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid',
                                             'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturername',
@@ -501,7 +476,7 @@ class ProductDiscoveryToRefined(object):
                                             'defaultdateeol', 'defaultwriteoff', 'noautotaxes', 'hash_key', 'year',
                                             'month').write.mode('append').partitionBy('year', 'month'). \
                 format('parquet'). \
-                save(self.outputPath + '/' + 'Product')
+                save(self.productRefinedPartitonPath)
 
         self.sparkSession.stop()
 
