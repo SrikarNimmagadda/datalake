@@ -1207,7 +1207,8 @@ resources:
             - Sid: Allow use of the key
               Effect: Allow
               Principal:
-                AWS: 'AWS::AccountId'
+                AWS:
+                  Ref: AWS::AccountId
               Action:
                 - kms:*
               Resource: '*'
