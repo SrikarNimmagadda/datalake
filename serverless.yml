@@ -1207,18 +1207,10 @@ resources:
             - Sid: Allow use of the key
               Effect: Allow
               Principal:
-                AWS:
-                  Ref: AWS::AccountId
+                AWS: '*'
               Action:
                 - kms:*
               Resource: '*'
-            - Sid: Allow everyone to encrypt
-              Effect: Allow
-              Principal:
-                AWS: '*'
-              Action: kms:Encrypt
-              Resource: '*'
-
             - Sid: Allow attachment of persistent resources
               Effect: Allow
               Principal:
