@@ -3,7 +3,10 @@ import sys
 import os
 import csv
 import boto3
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 from pyspark.sql.functions import unix_timestamp, year, substring, from_unixtime
 
 

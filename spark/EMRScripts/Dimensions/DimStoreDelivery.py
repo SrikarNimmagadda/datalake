@@ -2,7 +2,10 @@ from pyspark.sql import SparkSession
 import sys
 import boto3
 from datetime import datetime
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class DimStoreDelivery(object):

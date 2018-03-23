@@ -4,7 +4,10 @@ from pyspark.sql.functions import year, from_unixtime, unix_timestamp, substring
 import boto3
 import os
 import csv
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ProductCSVToParquet(object):
