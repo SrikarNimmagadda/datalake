@@ -54,7 +54,8 @@ class StoreDailyGoalsForecastDiscoveryToRefine(object):
         lastUpdatedStoreDailyGoalsForecastFile = self.findLastModifiedFile(discoveryBucketNode,
                                                                            self.tableName,
                                                                            self.discoveryBucket)
-        dfStoreDailyGoalForecast = self.sparkSession.read.parquet(lastUpdatedStoreDailyGoalsForecastFile)
+        self.sparkSession.read.parquet(lastUpdatedStoreDailyGoalsForecastFile).registerTempTable("StoreDailyGoalForecast")
+        dfStoreDailyGoalForecast = self.sparkSession.sql("select date, case when daypercenttoforecast rlike '%' then cast(cast(regexp_replace(daypercenttoforecast,'%','') as float)/100 as decimal(8,4)) else daypercenttoforecast end as daypercenttoforecast from StoreDailyGoalForecast")
 
         dfStoreDailyGoalForecast.coalesce(1).write.mode("overwrite").parquet(
             self.refineWorkingPath)
