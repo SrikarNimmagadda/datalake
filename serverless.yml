@@ -1585,7 +1585,7 @@ resources:
                   Action:
                     - s3:PutObject
                     - s3:DeleteObject
-                    - S3:List*
+                    - s3:List*
                   Resource:
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
