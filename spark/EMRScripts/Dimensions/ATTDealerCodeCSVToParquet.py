@@ -33,8 +33,8 @@ schema = StructType([StructField('Dealer Code', StringType(), False),
                      StructField('Footprint Level', StringType(), True),
                      StructField('Business Expert', StringType(), True),
                      StructField('DF Code', StringType(), True),
-                     StructField('Old', StringType(), True),
-                     StructField('Old2', StringType(), True),
+                     StructField('Old Code', StringType(), True),
+                     StructField('Old Code 2', StringType(), True),
                      StructField('ATT Location Name', StringType(), True),
                      StructField('ATT Location ID', IntegerType(), True),
                      StructField('ATT Region', StringType(), True),
@@ -80,8 +80,8 @@ dfAttDealerCode2 = dfAttDealerCode2.withColumnRenamed("Dealer Code", "dealercode
     withColumnRenamed("Footprint Level", "footprintlevel").\
     withColumnRenamed("Business Expert", "businessexpert").\
     withColumnRenamed("DF Code", "dfcode").\
-    withColumnRenamed("Old", "old").\
-    withColumnRenamed("Old 2", "old2").\
+    withColumnRenamed("Old Code", "oldcode").\
+    withColumnRenamed("Old Code 2", "oldcode2").\
     withColumnRenamed("ATT Location Name", "attlocationname").\
     withColumnRenamed("ATT Location ID", "attlocationid").\
     withColumnRenamed("ATT Region", "attregion").\
@@ -105,7 +105,7 @@ dfAttDealerCode3 = dfAttDealerCode2.filter(~(dfAttDealerCode2.rankdescription.li
 
 dfAttDealerCode3 = dfAttDealerCode3.registerTempTable("AttDealerCode")
 
-FinalDF = spark.sql("select dealercode,loc,location,retailiq,district,attmktabbrev," + "attmarketname,region,market,disputemkt,df,candc,ws,wsexpires," + "footprintlevel,businessexpert,dfcode,old,old2,attlocationname," + "attlocationid,attregion,state,notes,notes2,opendate,closedate," +
+FinalDF = spark.sql("select dealercode,loc,location,retailiq,district,attmktabbrev," + "attmarketname,region,market,disputemkt,df,candc,ws,wsexpires," + "footprintlevel,businessexpert,dfcode,oldcode,oldcode2,attlocationname," + "attlocationid,attregion,state,notes,notes2,opendate,closedate," +
                     "dcorigin,storeorigin,acquisitionorigin,tbloc,smfmapping,smfmarket," + "dcstatus,sortingrank,rankdescription,company," + "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from AttDealerCode")
 
 FinalDF.coalesce(1).select("*").write.mode("append").partitionBy('year',
