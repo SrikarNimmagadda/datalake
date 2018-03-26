@@ -2,7 +2,10 @@ from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
 import boto3
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ProductCategoryRefinedToDelivery:
