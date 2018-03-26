@@ -85,11 +85,10 @@ def handle_event(event, s3_service):
         WorkingPath = myKey[0] + '/Working/'
         objs = TargetBucketNode.objects.filter(Prefix=WorkingPath)
         for s3Object in objs:
-            s3Object.delete()        
-        
-        
+            s3Object.delete()
+
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/loaded_date=' + str(sysdate) + '/' + key1, CopySource=copy_source)
-        
+
         S3.copy_object(Bucket=target_bucket, Key=myKey[0] + '/Working/' + key1, CopySource=copy_source)
 
         # S3.delete_object(Bucket=bucket, Key=key1)
