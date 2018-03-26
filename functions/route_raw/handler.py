@@ -42,13 +42,13 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target(key1)
 
-        myDict = {'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
+        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
                   'AT_T_MyResults_RPT',
                   'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
                   'C&C': 'C&C Training Report', 'CategoryNumber':
                   'ProductCategory',
-                  'SalesTransactions': 'Sales', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'SalesTransactions': 'SalesTransactions', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
                   'StoreTraffic': 'StoreTraffic',
                   'HR_Employee': 'Employee', 'Inventory': 'Inventory',
                   'Location': 'Location',
@@ -58,8 +58,8 @@ def handle_event(event, s3_service):
                   'OperationalEFC_TotalLoss': 'EmpOperationalEfficiency',
                   'ScoreCardGoals_GoalsforSQL': 'StoreGoals',
                   'DealerCodes': 'ATTDealerCodes',
-                  'SpringMobileStoreList': 'SpringMobileStore',
-                  'Report202020': 'SalesLeads',
+                  'StoreList': 'SpringMobileStore',
+                  'PII_Report202020': 'SalesLeads',
                   'ProductIdentifier': 'ProductIdentifier',
                   'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
                   'TransAdjStore': 'StoreTransAdjustments/StoreTrans',
@@ -71,7 +71,7 @@ def handle_event(event, s3_service):
                   'ReportingDefinations':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
-                  'CustExp': 'StoreCustomerExperience',
+                  'OurPromise': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
                   'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
