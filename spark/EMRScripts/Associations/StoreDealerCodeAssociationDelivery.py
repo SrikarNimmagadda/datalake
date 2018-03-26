@@ -3,7 +3,10 @@ import sys
 import boto3
 from datetime import datetime
 from pyspark.sql.functions import col, lit
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class StoreDealerCodeAssociationDelivery(object):
