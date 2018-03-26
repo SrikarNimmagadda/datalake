@@ -67,7 +67,7 @@ class StepBuilderGoalskpi(object):
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_goalskpi_refinery(self):
-        step_name = 'GoalKpiRefinery'
+        step_name = 'TbGoalPointRefinery'
         script_name = 'Facts/TBGoalPointsRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
@@ -82,7 +82,7 @@ class StepBuilderGoalskpi(object):
         return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_goalskpi_delivery(self):
-        step_name = 'GoalsKPIDelivery'
+        step_name = 'TbGoalPointDelivery'
         script_name = 'Facts/TBGoalPointsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
@@ -96,7 +96,7 @@ class StepBuilderGoalskpi(object):
 
     def _build_step_csv_to_parquet_storegoals(self):
         step_name = 'CSVToParquetStoreGoals'
-        script_name = 'Facts/DimStoreGoalsParquet.py'
+        script_name = 'Facts/DimStoreGoalsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
         error_bucket = self.buckets['data_processing_errors']
@@ -142,15 +142,13 @@ class StepBuilderGoalskpi(object):
     def _build_step_empgoals_refinery(self):
         step_name = 'EmployeeGoalsRefinery'
         script_name = 'Facts/EmpGoalsDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        input_bucket = self.buckets['raw_regular']
 
         script_args = [
             's3://' + output_bucket + '/StoreGoals/Working/',
             's3://' + output_bucket + '/EmpStoreAssociation/Working/',
             's3://' + output_bucket + '/Employee/Working/',
-            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
+            's3://' + output_bucket + '/StoreRecruitingHeadcount/Working',
             's3://' + output_bucket + '/EmployeeGoal/'
         ]
 

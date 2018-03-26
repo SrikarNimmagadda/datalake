@@ -158,7 +158,7 @@ class StepBuilderSalesOthers(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreTraffic/Working',
+            's3://' + input_bucket + '/StoreTraffic/Working/',
             's3://' + output_bucket + '/Store/Working',
             's3://' + output_bucket + '/StoreTraffic'
         ]
