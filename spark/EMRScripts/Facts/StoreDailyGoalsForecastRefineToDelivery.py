@@ -58,7 +58,7 @@ class StoreDailyGoalsForecastRefineToDelivery(object):
         self.sparkSession.read.parquet(lastUpdatedStoreDailyGoalForecastFile).\
             registerTempTable("StoreDailyGoalForecast")
 
-        dfStoreDailyGoalForecast = self.sparkSession.sql("select date as RPT_DT, daypercentforecast as DAY_PCT_FCST "
+        dfStoreDailyGoalForecast = self.sparkSession.sql("select date as RPT_DT, daypercenttoforecast as DAY_PCT_FCST "
                                                          "from StoreDailyGoalForecast")
 
         dfStoreDailyGoalForecast.coalesce(1).write.mode("overwrite").csv(self.deliveryCurrentPath, header=True)
