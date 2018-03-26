@@ -3,8 +3,11 @@ from pyspark.sql.functions import substring, year, from_unixtime, unix_timestamp
 import sys
 import os
 import csv
-from urlparse import urlparse
 import boto3
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ProductCategoryCSVToParquet(object):
@@ -49,7 +52,7 @@ class ProductCategoryCSVToParquet(object):
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
-            body = s3Object.get()['Body'].read()
+            body = s3Object.get()['Body'].read().decode('utf-8')
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 0:
                 header = line
