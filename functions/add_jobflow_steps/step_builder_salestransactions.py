@@ -97,7 +97,7 @@ class StepBuilderSalesTransactions(object):
 
         script_args = [
             's3://' + output_bucket + '/EmployeeTransactionAdjustment',
-            's3://' + input_bucket + '/EmpTransAdjustment/Working'
+            's3://' + input_bucket + '/EmpTransAdjustment/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -111,7 +111,7 @@ class StepBuilderSalesTransactions(object):
         script_args = [
             's3://' + output_bucket + '/EmployeeTransactionAdjustment',
             's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/',
-            's3://' + output_bucket + '/Employee/Working/'
+            's3://' + output_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -134,10 +134,14 @@ class StepBuilderSalesTransactions(object):
         script_name = 'Facts/EmployeeOperationalEfficiencyCSVToParquet.py '
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/EmpOperationalEfficiency/Working/',
-            's3://' + output_bucket + '/EmployeeOperationalEfficiency'
+            's3://' + input_bucket + '/EmpOperationalEfficiency/Working',
+            's3://' + output_bucket + '/EmployeeOperationalEfficiency',
+            's3://' + output_bucket + '/EmployeeOperationalEfficiency/Working',
+            's3://' + error_bucket + '/EmployeeOperationalEfficiency'
+
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -147,13 +151,15 @@ class StepBuilderSalesTransactions(object):
         script_name = 'Facts/EmployeeOperationalEfficiencyRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket + '/EmployeeOperationalEfficiency/Working/',
             's3://' + output_bucket + '/EmpStoreAssociation/Working/',
             's3://' + output_bucket + '/Store/Working/',
             's3://' + output_bucket + '/Employee/Working/',
-            's3://' + output_bucket + '/EmployeeOperationalEfficiency'
+            's3://' + output_bucket + '/EmployeeOperationalEfficiency',
+            's3://' + error_bucket + '/EmployeeOperationalEfficiency/refine'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

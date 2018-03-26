@@ -53,10 +53,13 @@ class StepBuilderSalesKPIandDetails(object):
         script_name = 'Facts/SalesDetailsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/Sales/Working',
-            's3://' + output_bucket + '/SalesDetails'
+            's3://' + input_bucket + '/SalesTransactions/Working',
+            's3://' + output_bucket + '/SalesDetails',
+            's3://' + output_bucket + '/SalesDetails/Working',
+            's3://' + error_bucket + '/SalesDetails'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -66,14 +69,14 @@ class StepBuilderSalesKPIandDetails(object):
         script_name = 'Facts/SalesDetailsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        raw_bucket = self.buckets['raw_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + output_bucket + '/Employee/Working',
             's3://' + output_bucket + '/Store/Working',
-            's3://' + input_bucket + '/SalesDetails/Working',
-            's3://' + raw_bucket + '/Company',
-            's3://' + output_bucket + '/SalesDetails'
+            's3://' + input_bucket + '/SalesDetails/Working/',
+            's3://' + output_bucket + '/SalesDetails',
+            's3://' + error_bucket + '/SalesDetails/refine'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,7 +88,7 @@ class StepBuilderSalesKPIandDetails(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + 'SalesDetails/Working',
+            's3://' + input_bucket + '/SalesDetails/Working/',
             's3://' + output_bucket + '/WT_SALES_DTLS'
         ]
 
@@ -118,7 +121,6 @@ class StepBuilderSalesKPIandDetails(object):
             's3://' + input_bucket + '/Store/Working/',
             's3://' + input_bucket + '/ATTSalesActual/Working/',
             's3://' + input_bucket + '/StoreTraffic/Working/',
-            's3://' + input_bucket + '/StoreCNCTraining/',
             's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
             's3://' + input_bucket + '/EmployeeGoal/Working/',
             's3://' + input_bucket + '/Employee/Working/',
@@ -126,7 +128,7 @@ class StepBuilderSalesKPIandDetails(object):
             's3://' + input_bucket + '/SalesLeads/Working/',
             's3://' + input_bucket + '/StoreCustomerExperience/Working/',
             's3://' + input_bucket + KPI_FILE,
-            's3://' + input_bucket + '/SalesKPI'
+            's3://' + input_bucket + '/SalesKPI/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -139,7 +141,7 @@ class StepBuilderSalesKPIandDetails(object):
 
         script_args = [
             's3://' + output_bucket + '/WT_TB_SALES_KPIS',
-            's3://' + input_bucket + '/SalesKPI/Working/'
+            's3://' + input_bucket + '/SalesKPI/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
