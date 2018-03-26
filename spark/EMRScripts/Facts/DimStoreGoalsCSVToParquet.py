@@ -1,11 +1,13 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit, year, unix_timestamp, from_unixtime, substring
+from pyspark.sql.functions import year, unix_timestamp, from_unixtime, substring
 import sys
 import os
 import csv
 import boto3
-from datetime import datetime
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class DimStoreGoalsCSVToParquet(object):
@@ -22,6 +24,7 @@ class DimStoreGoalsCSVToParquet(object):
         self.dataProcessingErrorPath = sys.argv[3] + '/discovery'
 
         self.storeGoalsFileColumnCount = 23
+        self.storeGoalsExpectedColumns = ['Store', 'Date', 'Gross Profit', 'Premium Video', 'Digital Life', 'Acc GP/Opp', 'CRU Opps', 'Tablets', 'Integrated Products', 'WTR', 'Go Phone', 'Overtime', 'DTV Now', 'Accessory Attach Rate', 'Broadband', 'Traffic', 'Broadband', 'Approved FTE', 'Approved HC', 'GoPhone Auto Enrollment %', 'Opps', 'SM Traffic', 'Entertainment']
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
         self.fileFormat = ".csv"
@@ -72,7 +75,7 @@ class DimStoreGoalsCSVToParquet(object):
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
-            body = s3Object.get()['Body'].read()
+            body = s3Object.get()['Body'].read().decode('utf-8')
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 1:
                 header = line
@@ -95,7 +98,8 @@ class DimStoreGoalsCSVToParquet(object):
 
         isValidStoreGoalsSchema = False
 
-        if self.storeGoalsHeader.__len__() >= self.storeGoalsFileColumnCount:
+        storeGoalsColumnsMissing = [item for item in self.storeGoalsExpectedColumns if item not in self.storeGoalsHeader]
+        if storeGoalsColumnsMissing.__len__() <= 0:
             isValidStoreGoalsSchema = True
 
         self.log.info("isValidStoreGoalsSchema " + isValidStoreGoalsSchema.__str__())
@@ -130,11 +134,6 @@ class DimStoreGoalsCSVToParquet(object):
             mapPartitions(lambda partition: csv.
                           reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: line[1] != 'Column1' and line[1] != 'Store').toDF(self.storeGoalsCols)
-
-        newformat = datetime.now().strftime('%m/%d/%Y')
-        self.log.info(newformat)
-
-        dfStoreGoals = dfStoreGoals.withColumn('ReportDate', lit(newformat))
 
         dfStoreGoals.coalesce(1).write.mode('overwrite').format('parquet').\
             save(self.storeGoalsFileWorkingPath)

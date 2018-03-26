@@ -37,10 +37,6 @@ class ProductCategoryDiscoveryToRefined(object):
 
     def loadRefined(self):
 
-        dfProdCatIdList = self.sparkSession.read.parquet(self.prodCategoryInputPath).dropDuplicates(['id']).\
-            withColumn("categorypath", regexp_replace(col('categorypath'), '([0-9]).', '')).\
-            withColumn('cat_id_list', self.getCategoryIdsUDF(col('id'))).cache()
-
         dfProdCatIdList.registerTempTable("ProdCategoryTempTable")
 
         SourceDataDFTmp = self.sparkSession.sql("select cast(a.id as string) as category_Id, a.description as category_name, a.categorypath"
