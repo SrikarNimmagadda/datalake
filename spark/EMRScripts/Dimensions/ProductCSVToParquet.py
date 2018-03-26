@@ -4,7 +4,10 @@ from pyspark.sql.functions import year, from_unixtime, unix_timestamp, substring
 import boto3
 import os
 import csv
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ProductCSVToParquet(object):
@@ -126,7 +129,7 @@ class ProductCSVToParquet(object):
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
-            body = s3Object.get()['Body'].read()
+            body = s3Object.get()['Body'].read().decode('utf-8')
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 0:

@@ -70,7 +70,7 @@ class StepBuilderEmployee(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Employee/Working',
+            's3://' + input_bucket + '/Employee/Working/',
             's3://' + output_bucket + '/WT_EMP/'
         ]
 
