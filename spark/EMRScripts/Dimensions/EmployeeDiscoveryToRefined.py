@@ -51,9 +51,9 @@ dfEmployee = spark.sql("select a.employeeid as sourceemployeeid, " +
                        "a.rowinserted as datecreatedatsource, " +
                        "a.rowupdated as employeelastmodifieddate," +
                        " YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
-                       "as YEAR," +
+                       "as year," +
                        "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) " +
-                       "as MONTH " +
+                       "as month " +
                        "from emp a")
 
 
@@ -71,7 +71,7 @@ dfEmployee.coalesce(1).select("*"). \
 
 
 dfEmployee.coalesce(1).write.mode('append').partitionBy(
-    'YEAR', 'MONTH').format('parquet').save(EmployeeOutputArg)
+    'year', 'month').format('parquet').save(EmployeeOutputArg)
 
 
 spark.stop()
