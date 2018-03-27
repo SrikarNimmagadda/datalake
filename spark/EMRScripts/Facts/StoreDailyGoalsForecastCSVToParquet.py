@@ -65,7 +65,7 @@ class StoreDailyGoalsForecastCSVToParquet(object):
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
-
+            body = s3Object.get()['Body'].read()
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 0:
