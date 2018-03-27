@@ -18,122 +18,45 @@ class StoreCustExpDiscoveryToRefined(object):
         self.OutputPath = sys.argv[1]
         self.CdcBucketName = sys.argv[2]
         self.StoreCustExpInputPath = sys.argv[3]
+        self.attDealerCodeName = 'ATTDealerCode'
+        self.storeDealerAssoc = 'StoreDealerAssociation'
+        self.storeName = 'Store'
+
+    def findLastModifiedFile(self, bucketNode, prefixType, bucket):
+
+        prefixPath = prefixType + '/year=' + datetime.now().strftime('%Y')
+        self.logger.info("prefixPath is " + prefixPath)
+        partitionName = bucketNode.objects.filter(Prefix=prefixPath)
+        all_values_dict = {}
+        req_values_dict = {}
+        for obj in partitionName:
+            all_values_dict[obj.key] = obj.last_modified
+        for k, v in all_values_dict.items():
+            if 'part-0000' in k:
+                req_values_dict[k] = v
+        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
+
+        numFiles = len(revSortedFiles)
+        self.logger.info("Number of part files is : " + str(numFiles))
+        lastUpdatedFilePath = ''
+
+        if numFiles > 0:
+            lastModifiedFileName = str(revSortedFiles[0])
+            lastUpdatedFilePath = "s3://" + bucket + "/" + lastModifiedFileName
+            self.logger.info("Last Modified " + prefixType + " file in s3 format is : " + lastUpdatedFilePath)
+        return lastUpdatedFilePath
 
     def loadRefined(self):
-        todayyear = datetime.now().strftime('%Y')
 
-        bkt = self.CdcBucketName
-        my_bucket = self.s3.Bucket(name=bkt)
+        refinedBucketNode = self.s3.Bucket(name=self.CdcBucketName)
 
-        all_values_dict = {}
-        req_values_dict = {}
+        lastUpdatedAttDealerFile = self.findLastModifiedFile(refinedBucketNode, self.attDealerCodeName, self.CdcBucketName)
+        self.spark.read.parquet(lastUpdatedAttDealerFile).registerTempTable("ATTDealerCodeTempTable")
+        StoreDlrCdAssoclastModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeDealerAssoc, self.CdcBucketName)
+        self.spark.read.parquet(StoreDlrCdAssoclastModifiedFileName).registerTempTable("StoreDealerCodeAssocTempTable")
+        StoreModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeName, self.CdcBucketName)
+        self.spark.read.parquet(StoreModifiedFileName).registerTempTable("StoreTempTable")
 
-        pfx = "ATTDealerCode/year=" + todayyear
-        partitionName = my_bucket.objects.filter(Prefix=pfx)
-
-        for obj in partitionName:
-            all_values_dict[obj.key] = obj.last_modified
-
-        for k, v in all_values_dict.iteritems():
-            if 'part-0000' in k:
-                req_values_dict[k] = v
-
-        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-        self.logger.info("Files are : ")
-        self.logger.info(revSortedFiles)
-
-        numFiles = len(revSortedFiles)
-        self.logger.info("Number of part files for ATT Dealer code is : ")
-        self.logger.info(numFiles)
-
-        if numFiles > 0:
-            self.logger.info("ATT Dealer code Files found in Refined layer\n")
-            lastModifiedFileNameTmp = str(revSortedFiles[0])
-            ATTlastModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-            self.logger.info("Last Modified file is : ")
-            self.logger.info(ATTlastModifiedFileName)
-            self.logger.info("\n")
-
-            self.spark.read.parquet(ATTlastModifiedFileName).registerTempTable("ATTDealerCodeTempTable")
-        else:
-            self.logger.info("No file found for ATT Dealer Codes in Refined layer, lookup will not succeed")
-
-        #######################################################################################################
-        # Finding last modified Store Dealer Code Association file in Refined layer to perform lookup
-
-        bkt = self.CdcBucketName
-        my_bucket = self.s3.Bucket(name=bkt)
-
-        all_values_dict = {}
-        req_values_dict = {}
-
-        pfx = "StoreDealerAssociation/year=" + todayyear
-        partitionName = my_bucket.objects.filter(Prefix=pfx)
-
-        for obj in partitionName:
-            all_values_dict[obj.key] = obj.last_modified
-
-        for k, v in all_values_dict.iteritems():
-            if 'part-0000' in k:
-                req_values_dict[k] = v
-
-        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-        self.logger.info("Files are : ")
-        self.logger.info(revSortedFiles)
-
-        numFiles = len(revSortedFiles)
-        self.logger.info("Number of part files for Store Dealer Code Association is : ")
-        self.logger.info(numFiles)
-
-        if numFiles > 0:
-            self.logger.info("Store Dealer Code Association Files found in Refined layer\n")
-            lastModifiedFileNameTmp = str(revSortedFiles[0])
-            StoreDlrCdAssoclastModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-            self.logger.info("Last Modified file is : ")
-            self.logger.info(StoreDlrCdAssoclastModifiedFileName)
-            self.logger.info("\n")
-
-            self.spark.read.parquet(StoreDlrCdAssoclastModifiedFileName).registerTempTable("StoreDealerCodeAssocTempTable")
-        else:
-            self.logger.info("No file found for Store Dealer Code Association in Refined layer, lookup will not succeed")
-
-        # Finding last modified Store file in Refined layer to perform lookup
-
-        bkt = self.CdcBucketName
-        my_bucket = self.s3.Bucket(name=bkt)
-
-        all_values_dict = {}
-        req_values_dict = {}
-
-        pfx = "Store/year=" + todayyear
-        partitionName = my_bucket.objects.filter(Prefix=pfx)
-
-        for obj in partitionName:
-            all_values_dict[obj.key] = obj.last_modified
-
-        for k, v in all_values_dict.iteritems():
-            if 'part-0000' in k:
-                req_values_dict[k] = v
-
-        revSortedFiles = sorted(req_values_dict, key=req_values_dict.get, reverse=True)
-        self.logger.info("Files are : ")
-        self.logger.info(revSortedFiles)
-
-        numFiles = len(revSortedFiles)
-        self.logger.info("Number of part files for Store is : ")
-        self.logger.info(numFiles)
-
-        if numFiles > 0:
-            self.logger.info("Store Files found in Refined layer\n")
-            lastModifiedFileNameTmp = str(revSortedFiles[0])
-            StoreModifiedFileName = 's3://' + bkt + '/' + lastModifiedFileNameTmp
-            self.logger.info("Last Modified Store file is : ")
-            self.logger.info(StoreModifiedFileName)
-            self.logger.info("\n")
-
-            self.spark.read.parquet(StoreModifiedFileName).registerTempTable("StoreTempTable")
-        else:
-            self.logger.info("No file found for Store in Refined layer, lookup will not succeed")
         self.spark.read.parquet(self.StoreCustExpInputPath).registerTempTable("StoreCustExpTempTable1")
 
         self.spark.sql("select location,reverse(split(reverse(location),' ')[0]) as dealer_code,"
@@ -161,7 +84,7 @@ class StoreCustExpDiscoveryToRefined(object):
                                              "five_key_behaviours,effective_solutioning,integrated_experience,year,month"
                                              " from StoreCustExpTempTable3 a"
                                              " LEFT OUTER JOIN StoreTempTable b"
-                                             " on a.store_number = b.StoreNumber")
+                                             " on a.store_number = b.StoreNumber").drop_duplicates()
 
         dfStoreCustExpFinal.coalesce(1).\
             select('report_date', 'store_number', 'companycd', 'location_name', 'spring_district', 'spring_region', 'spring_market', 'dealer_code', 'att_location_name', 'att_region', 'att_market', 'five_key_behaviours', 'effective_solutioning', 'integrated_experience').\
