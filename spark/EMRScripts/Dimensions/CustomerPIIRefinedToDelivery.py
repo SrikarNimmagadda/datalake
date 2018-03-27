@@ -42,7 +42,7 @@ dfSpringComm = dfSpringComm.where(col("SRC_CUST_ID").isNotNull())
 dfSpringComm = dfSpringComm.where(col("CO_CD").isNotNull())
 dfSpringComm = dfSpringComm.where(col("SRC_SYS_NM").isNotNull())
 dfSpringComm = dfSpringComm.withColumn("CO_CD",
-                                       dfSpringComm["companycd"].
+                                       dfSpringComm["CO_CD"].
                                        cast(IntegerType()))
 
 

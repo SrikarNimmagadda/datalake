@@ -1,8 +1,20 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StringType
 import sys
 from datetime import datetime
-from pyspark.sql.functions import regexp_replace, col, hash as hash_
+from pyspark.sql.functions import udf, regexp_replace, col, hash as hash_
 import boto3
+
+
+def getCategoryIds(categoryIdInt):
+    categoryId = str(categoryIdInt)
+    categoryList = list()
+    count = 2
+    for i in range(2, len(categoryId) + 2, 2):
+        if count % 2 == 0:
+            categoryList.append(categoryId[0:count])
+            count = count + 2
+    return '>>'.join(categoryList)
 
 
 class ProductCategoryDiscoveryToRefined(object):
@@ -21,27 +33,25 @@ class ProductCategoryDiscoveryToRefined(object):
         self.productCategoryName = self.outputPath[self.outputPath.index('tb'):].split("/")[1]
         self.cdcBucketName = self.outputPath[self.outputPath.index('tb'):].split("/")[0]
         self.productCategoryFilePartitionPath = 's3://' + self.cdcBucketName + '/' + self.productCategoryName
+        self.getCategoryIdsUDF = udf(lambda z: getCategoryIds(z), StringType())
 
     def loadRefined(self):
 
-        self.sparkSession.read.parquet(self.prodCategoryInputPath).dropDuplicates(['id']).withColumn("categorypath", regexp_replace(col('categorypath'), '([0-9]).', '')).registerTempTable("ProdCategoryTempTable")
-        ####################################################################################################################
-        #                                           Final Spark Transformaions                                             #
-        ####################################################################################################################
+        dfProdCatIdList.registerTempTable("ProdCategoryTempTable")
 
         SourceDataDFTmp = self.sparkSession.sql("select cast(a.id as string) as category_Id, a.description as category_name, a.categorypath"
                                                 " as category_path, cast(a.Parentid as string) as parent_category_id, CASE WHEN a.enabled "
-                                                "= TRUE THEN 1 ELSE 0 END as active_indicator,'4' as company_cd, cast(a.id as string) as "
-                                                "level_one_id,'Inventory Tree' as level_one_name, cast(a.id as string) as level_two_id, "
-                                                "'Products' as level_two_name,cast(a.id as string) as level_three_id, "
-                                                "trim(split(trim(a.categorypath),'>>')[1]) as level_three_name,cast(a.id as string) as "
+                                                "= TRUE THEN 1 ELSE 0 END as active_indicator,'4' as company_cd, split(a.cat_id_list,'>>')[0] as "
+                                                "level_one_id,'Inventory Tree' as level_one_name, split(a.cat_id_list,'>>')[1] as level_two_id, "
+                                                "case when a.Parentid is null then '' else 'Products' end as level_two_name,split(a.cat_id_list,'>>')[2] as level_three_id, "
+                                                "trim(split(trim(a.categorypath),'>>')[1]) as level_three_name,split(a.cat_id_list,'>>')[3] as "
                                                 "level_four_id, trim(split(trim(a.categorypath),'>>')[2]) as level_four_name, "
-                                                "cast(a.id as string) as level_five_id, trim(split(trim(a.categorypath),'>>')[3]) as "
-                                                "level_five_name, cast(a.id as string) as level_six_id, "
-                                                "trim(split(trim(a.categorypath),'>>')[4]) as level_six_name, cast(a.id as string) as "
+                                                "split(a.cat_id_list,'>>')[4] as level_five_id, trim(split(trim(a.categorypath),'>>')[3]) as "
+                                                "level_five_name, split(a.cat_id_list,'>>')[5] as level_six_id, "
+                                                "trim(split(trim(a.categorypath),'>>')[4]) as level_six_name, split(a.cat_id_list,'>>')[6] as "
                                                 "level_seven_id, trim(split(trim(a.categorypath),'>>')[5]) as level_seven_name, "
-                                                "cast(a.id as string) as level_eight_id, trim(split(trim(a.categorypath),'>>')[6]) as "
-                                                "level_eight_name, ' ' as level_nine_id, ' ' as level_nine_name, ' ' as level_ten_id, "
+                                                "split(a.cat_id_list,'>>')[7] as level_eight_id, trim(split(trim(a.categorypath),'>>')[6]) as "
+                                                "level_eight_name, '' as level_nine_id, ' ' as level_nine_name, '' as level_ten_id, "
                                                 "' ' as level_ten_name, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, "
                                                 "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from ProdCategoryTempTable a")
 

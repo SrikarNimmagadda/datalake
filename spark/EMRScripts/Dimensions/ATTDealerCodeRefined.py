@@ -27,8 +27,8 @@ dfDealerCode = spark.sql("select a.dealercode,'4' as companycode,a.dcorigin as d
                          "a.acquisitionorigin as origin,a.businessexpert,a.footprintlevel,"
                          "a.location as attlocationextendedname,a.attlocationid,a.attlocationname,a.disputemkt as attdisputemarket,"
                          "a.attmktabbrev as attmarketcode, a.attmarketname as attmarket,"
-                         "a.old as olddealercode, "
-                         "a.old2 as olddealercode2,"
+                         "a.oldcode as olddealercode, "
+                         "a.oldcode2 as olddealercode2,"
                          "a.attregion, a.notes, a.notes2,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from AttDealerCode a")
 # to change company code to -1 ##
 
