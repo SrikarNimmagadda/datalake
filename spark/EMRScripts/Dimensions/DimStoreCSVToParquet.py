@@ -152,7 +152,7 @@ class DimStoreCSVToParquet(object):
             filePath = path
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
-            body = s3Object.get()['Body'].read().decode('utf-8')
+            body = s3Object.get()['Body'].read()
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
         if name == self.multiTrackerName:
             for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
