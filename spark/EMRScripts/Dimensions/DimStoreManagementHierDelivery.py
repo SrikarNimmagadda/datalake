@@ -168,9 +168,9 @@ class DimStoreManagementHierDelivery(object):
             if rowCountUpdateRecords > 0 or rowCountNewRecords > 0:
                 self.log.info("Updated file has arrived..")
                 dfStoreMgmtHierDelta = self.sparkSession.sql("select " + self.storeMgmtHierColumns +
-                                                             ",cdc_ind_cd from store_mgmt_hier_updated_data union all "
+                                                             ",cdc_ind_cd from store_mgmt_hier_updated_data where hier_id is not null union all "
                                                              "select " + self.storeMgmtHierColumns +
-                                                             ",cdc_ind_cd from store_mgmt_hier_new_data").\
+                                                             ",cdc_ind_cd from store_mgmt_hier_new_data where hier_id is not null").\
                     drop_duplicates()
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("overwrite").csv(self.storeMgmtHierCurrentPath, header=True)
                 dfStoreMgmtHierDelta.coalesce(1).write.mode("append").csv(self.storeMgmtHierPrevPath, header=True)
@@ -189,13 +189,10 @@ class DimStoreManagementHierDelivery(object):
             self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(
                 self.storeCSVPath, header=True)
 
-            dfStoreManagementHierWithName = self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from"
-                                                                                              " store_curr a " +
-                                                                  self.storeMgmtJoinWithCondition).drop_duplicates()
+            self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from store_curr a " + self.storeMgmtJoinWithCondition).drop_duplicates().registerTempTable("store_mgmt_curr_final")
 
-            dfStoreManagementHierWithName.coalesce(1).write.mode("overwrite").csv(self.storeMgmtHierCurrentPath,
-                                                                                  header=True)
-            dfStoreManagementHierWithName.coalesce(1).write.mode("append").csv(self.storeMgmtHierPrevPath, header=True)
+            self.sparkSession.sql("select * from store_mgmt_curr_final where hier_id is not null").coalesce(1).write.mode("overwrite").csv(self.storeMgmtHierCurrentPath, header=True)
+            self.sparkSession.sql("select * from store_mgmt_curr_final where hier_id is not null").coalesce(1).write.mode("append").csv(self.storeMgmtHierPrevPath, header=True)
 
         self.sparkSession.stop()
 

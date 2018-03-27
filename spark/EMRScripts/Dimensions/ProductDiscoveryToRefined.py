@@ -154,7 +154,7 @@ class ProductDiscoveryToRefined(object):
 
         SourceDataDFTmp = self.sparkSession.sql("select a.productsku,'4' as companycd ,a.productname,a.productlabel,"
                                                 "cast(b.CategoryNumber as string) as categoryid,"
-                                                "a.defaultcost,a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturername,"
+                                                "a.defaultcost,a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturer,"
                                                 "a.manufacturerpartnumber,"
                                                 "a.pricingtype,a.defaultretailprice,a.defaultmargin,a.floorprice,a.pawfloorprice,"
                                                 "a.defaultminimumquantity,"
@@ -240,7 +240,7 @@ class ProductDiscoveryToRefined(object):
         SourceDataDF = SourceDataDFTmp.withColumn("hash_key",
                                                   hash_("productsku", "companycd", "productname", "productlabel", "categoryid",
                                                         "defaultcost", "averagecost",
-                                                        "unitcost", "mostrecentcost", "manufacturername", "manufacturerpartnumber",
+                                                        "unitcost", "mostrecentcost", "manufacturer", "manufacturerpartnumber",
                                                         "pricingtype", "defaultretailprice",
                                                         "defaultmargin", "floorprice", "pawfloorprice",
                                                         "defaultminimumquantity", "defaultmaximumquantity", "lockminmax",
@@ -269,7 +269,7 @@ class ProductDiscoveryToRefined(object):
 
             # selects target data with no change
             self.sparkSession.sql("SELECT a.productsku,a.companycd,a.productname,a.productlabel,a.categoryid,a.defaultcost,"
-                                  "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturername,a.manufacturerpartnumber,a.pricingtype,"
+                                  "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturer,a.manufacturerpartnumber,a.pricingtype,"
                                   "a.defaultretailprice,a.defaultmargin,a.floorprice,a.pawfloorprice,a.defaultminimumquantity,"
                                   "a.defaultmaximumquantity,a.lockminmax,a.nosaleflag,a.rmadays,a.defaultinvoicecomments,"
                                   "a.serializedproductindicator,a.serialnumberlength,a.discountable,a.defaultdiscontinueddate,"
@@ -288,7 +288,7 @@ class ProductDiscoveryToRefined(object):
             # selects source data which got updated
             dfProdUpdated = self.sparkSession.sql("SELECT a.productsku,a.companycd,a.productname,a.productlabel,a.categoryid,"
                                                   "a.defaultcost,"
-                                                  "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturername,a.manufacturerpartnumber,"
+                                                  "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturer,a.manufacturerpartnumber,"
                                                   "a.pricingtype,"
                                                   "a.defaultretailprice,a.defaultmargin,a.floorprice,a.pawfloorprice,"
                                                   "a.defaultminimumquantity,"
@@ -317,7 +317,7 @@ class ProductDiscoveryToRefined(object):
 
             # selects new records from source
             dfProdNew = self.sparkSession.sql("SELECT a.productsku,a.companycd,a.productname,a.productlabel,a.categoryid,a.defaultcost,"
-                                              "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturername,a.manufacturerpartnumber,"
+                                              "a.averagecost,a.unitcost,a.mostrecentcost,a.manufacturer,a.manufacturerpartnumber,"
                                               "a.pricingtype,"
                                               "a.defaultretailprice,a.defaultmargin,a.floorprice,a.pawfloorprice,"
                                               "a.defaultminimumquantity,"
@@ -352,7 +352,7 @@ class ProductDiscoveryToRefined(object):
 
             # union all extracted records
             final_cdc_data = self.sparkSession.sql(" SELECT productsku,companycd,productname,productlabel,categoryid,defaultcost,"
-                                                   "averagecost,unitcost,mostrecentcost,manufacturername,manufacturerpartnumber,pricingtype,"
+                                                   "averagecost,unitcost,mostrecentcost,manufacturer,manufacturerpartnumber,pricingtype,"
                                                    "defaultretailprice,defaultmargin,floorprice,pawfloorprice,defaultminimumquantity,"
                                                    "defaultmaximumquantity,lockminmax,nosaleflag,rmadays,defaultinvoicecomments,"
                                                    "serializedproductindicator,serialnumberlength,discountable,defaultdiscontinueddate,"
@@ -365,7 +365,7 @@ class ProductDiscoveryToRefined(object):
                                                    "defaultdonotorder,defaultspecialorder,defaultdateeol,defaultwriteoff,noautotaxes,"
                                                    "hash_key,year,month FROM target_no_change_data UNION ALL SELECT productsku,companycd,"
                                                    "productname,productlabel,categoryid,defaultcost,averagecost,unitcost,mostrecentcost,"
-                                                   "manufacturername,manufacturerpartnumber,pricingtype,defaultretailprice,defaultmargin,"
+                                                   "manufacturer,manufacturerpartnumber,pricingtype,defaultretailprice,defaultmargin,"
                                                    "floorprice,pawfloorprice,defaultminimumquantity,defaultmaximumquantity,lockminmax,"
                                                    "nosaleflag,rmadays,defaultinvoicecomments,serializedproductindicator,"
                                                    "serialnumberlength,discountable,defaultdiscontinueddate,datecreatedatsource,"
@@ -378,7 +378,7 @@ class ProductDiscoveryToRefined(object):
                                                    "defaultdonotorder,defaultspecialorder,defaultdateeol,defaultwriteoff,noautotaxes,"
                                                    "hash_key,year,month FROM src_updated_data UNION ALL SELECT productsku,companycd,"
                                                    "productname,productlabel,categoryid,defaultcost,averagecost,unitcost,mostrecentcost,"
-                                                   "manufacturername,manufacturerpartnumber,pricingtype,defaultretailprice,defaultmargin,"
+                                                   "manufacturer,manufacturerpartnumber,pricingtype,defaultretailprice,defaultmargin,"
                                                    "floorprice,pawfloorprice,defaultminimumquantity,defaultmaximumquantity,lockminmax,"
                                                    "nosaleflag,rmadays,defaultinvoicecomments,serializedproductindicator,"
                                                    "serialnumberlength,discountable,defaultdiscontinueddate,datecreatedatsource,"
@@ -396,7 +396,7 @@ class ProductDiscoveryToRefined(object):
                 self.log.info("Changes noticed in the source file, creating a new file in the Refined layer partition")
 
                 final_cdc_data.coalesce(1).select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid',
-                                                  'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturername',
+                                                  'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturer',
                                                   'manufacturerpartnumber', 'pricingtype', 'defaultretailprice',
                                                   'defaultmargin', 'floorprice', 'pawfloorprice', 'defaultminimumquantity',
                                                   'defaultmaximumquantity', 'lockminmax', 'nosaleflag', 'rmadays',
@@ -417,7 +417,7 @@ class ProductDiscoveryToRefined(object):
                     save(self.refinedWorkingPath)
 
                 final_cdc_data.coalesce(1).select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid',
-                                                  'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturername',
+                                                  'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturer',
                                                   'manufacturerpartnumber', 'pricingtype', 'defaultretailprice',
                                                   'defaultmargin', 'floorprice', 'pawfloorprice', 'defaultminimumquantity',
                                                   'defaultmaximumquantity', 'lockminmax', 'nosaleflag', 'rmadays',
@@ -444,7 +444,7 @@ class ProductDiscoveryToRefined(object):
 
             SourceDataDF.coalesce(1). \
                 select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid', 'defaultcost', 'averagecost',
-                       'unitcost', 'mostrecentcost', 'manufacturername', 'manufacturerpartnumber', 'pricingtype',
+                       'unitcost', 'mostrecentcost', 'manufacturer', 'manufacturerpartnumber', 'pricingtype',
                        'defaultretailprice', 'defaultmargin', 'floorprice', 'pawfloorprice', 'defaultminimumquantity',
                        'defaultmaximumquantity', 'lockminmax', 'nosaleflag', 'rmadays', 'defaultinvoicecomments',
                        'serializedproductindicator', 'serialnumberlength', 'discountable', 'defaultdiscontinueddate',
@@ -460,7 +460,7 @@ class ProductDiscoveryToRefined(object):
                 save(self.refinedWorkingPath)
 
             SourceDataDF.coalesce(1).select('productsku', 'companycd', 'productname', 'productlabel', 'categoryid',
-                                            'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturername',
+                                            'defaultcost', 'averagecost', 'unitcost', 'mostrecentcost', 'manufacturer',
                                             'manufacturerpartnumber', 'pricingtype', 'defaultretailprice', 'defaultmargin',
                                             'floorprice', 'pawfloorprice', 'defaultminimumquantity', 'defaultmaximumquantity',
                                             'lockminmax', 'nosaleflag', 'rmadays', 'defaultinvoicecomments',

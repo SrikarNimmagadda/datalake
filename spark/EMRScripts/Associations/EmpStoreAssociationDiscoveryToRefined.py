@@ -17,7 +17,7 @@ dfEmployeeMasterList = spark.read.parquet(EmployeeMasterListInp)
 
 dfEmployeeMasterList.registerTempTable("employee")
 
-# Spark Transformation begins here
+#   Spark Transformation begins here
 
 dfEmpStoreAssociation = spark.sql("select a.assignedlocations as storenumber," +
                                   " a.primarylocation, 4 as companycd," +

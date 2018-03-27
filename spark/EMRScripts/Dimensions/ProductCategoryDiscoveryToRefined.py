@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 import sys
 from datetime import datetime
-from pyspark.sql.functions import udf, regexp_replace, col, hash as hash_
+from pyspark.sql.functions import udf, col, hash as hash_
 import boto3
 
 
@@ -36,6 +36,8 @@ class ProductCategoryDiscoveryToRefined(object):
         self.getCategoryIdsUDF = udf(lambda z: getCategoryIds(z), StringType())
 
     def loadRefined(self):
+
+        dfProdCatIdList = self.sparkSession.read.parquet(self.prodCategoryInputPath).dropDuplicates(['id']).withColumn('cat_id_list', self.getCategoryIdsUDF(col('id'))).cache()
 
         dfProdCatIdList.registerTempTable("ProdCategoryTempTable")
 
