@@ -58,7 +58,7 @@ def handle_event(event, s3_service):
                   'OperationalEFC_TotalLoss': 'EmpOperationalEfficiency',
                   'ScoreCardGoals_GoalsforSQL': 'StoreGoals',
                   'DealerCodes': 'ATTDealerCodes',
-                  'StoreList': 'SpringMobileStore',
+                  'SpringMobileStoreList': 'SpringMobileStore',
                   'PII_Report202020': 'SalesLeads',
                   'ProductIdentifier': 'ProductIdentifier',
                   'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
