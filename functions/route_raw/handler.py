@@ -72,8 +72,8 @@ def handle_event(event, s3_service):
                   'CustExp': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
-                  'CompanyCode' : 'Company',
-                  'TB_KPI_List' : 'TB_KPI_List'
+                  'CompanyCode': 'Company',
+                  'TB_KPI_List': 'TB_KPI_List'
                   }
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
@@ -96,7 +96,7 @@ def handle_event(event, s3_service):
 
 def determine_target(key1):
     """Select a target bucket name string based on an object's key's prefix."""
-    if key1.startswith('PII_Customer'):
+    if key1.startswith('PII_'):
         return BUCKETS['pii']
     elif key1.startswith('HR_Employee'):
         return BUCKETS['hr']
