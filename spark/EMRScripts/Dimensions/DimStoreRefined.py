@@ -36,7 +36,7 @@ class DimStoreRefined(object):
         self.multiTrackerName = "MultiTracker"
         self.springMobileName = "SpringMobileStore"
         self.dtvLocationName = "DTV"
-        self.dealerName = "DealerCodes"
+        self.dealerName = "ATTDealerCodes"
         self.storeRefinedName = "StoreRefined"
 
         self.prefixLocationDiscoveryPath = self.storeName + '/' + self.locationName
