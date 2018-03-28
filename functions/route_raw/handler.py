@@ -46,20 +46,18 @@ def handle_event(event, s3_service):
                   'AT_T_MyResults_RPT',
                   'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
-                  'C&C': 'C&C Training Report', 'CategoryNumber':
-                  'ProductCategory',
-                  'SalesTransactions': 'SalesTransactions', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'CategoryNumber': 'ProductCategory',
+                  'SalesTransactions': 'SalesTransactions',
                   'StoreTraffic': 'StoreTraffic',
                   'HR_Employee': 'Employee', 'Inventory': 'Inventory',
                   'Location': 'Location',
-                  'Operational': 'Operational Efficiency',
-                  'PII_Customer': 'Customer', 'BAE': 'BAE', 'DTVNow': 'DTV',
-                  'MultiTracker_SpringMobileMultiTracker': 'MultiTracker',
+                  'PII_Customer': 'Customer', 'BAELocation': 'BAE', 'DTVNow': 'DTV',
+                  'MultiTracker': 'MultiTracker',
                   'OperationalEFC_TotalLoss': 'EmpOperationalEfficiency',
                   'ScoreCardGoals_GoalsforSQL': 'StoreGoals',
                   'DealerCodes': 'ATTDealerCodes',
                   'SpringMobileStoreList': 'SpringMobileStore',
-                  'PII_Report202020': 'SalesLeads',
+                  'PII_Report202020_202020Details': 'SalesLeads',
                   'ProductIdentifier': 'ProductIdentifier',
                   'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
                   'TransAdjStore': 'StoreTransAdjustments/StoreTrans',
@@ -71,10 +69,12 @@ def handle_event(event, s3_service):
                   'ReportingDefinations':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
-                  'OurPromise': 'StoreCustomerExperience',
+                  'CustExp': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
-                  'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
+                  'CompanyCode' : 'Company'
+                  'TB_KPI_List' : 'TB_KPI_List'
+                  }
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
         today = datetime.date.today()
