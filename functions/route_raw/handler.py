@@ -66,7 +66,7 @@ def handle_event(event, s3_service):
                   'GoalPoints_EmployeeScorecard': 'TBGoalPointEmployee',
                   'GoalPoints_StoreScorecard': 'TBGoalPointStore',
                   'Coupons': 'Coupons',
-                  'ReportingDefinations':
+                  'ReportingDefinitions':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
                   'CustExp': 'StoreCustomerExperience',
