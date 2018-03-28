@@ -42,9 +42,9 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target(key1)
 
-        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
+        myDict = {'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis.RPT':
                   'AT_T_MyResults_RPT',
-                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
+                  'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
                   'CategoryNumber': 'ProductCategory',
                   'SalesTransactions': 'SalesTransactions',
