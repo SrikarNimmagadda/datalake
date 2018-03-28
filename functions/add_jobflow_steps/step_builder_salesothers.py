@@ -172,7 +172,7 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreTraffic/working',
+            's3://' + input_bucket + '/StoreTraffic/Working',
             's3://' + output_bucket + '/WT_STORE_TRAFFIC'
         ]
 
