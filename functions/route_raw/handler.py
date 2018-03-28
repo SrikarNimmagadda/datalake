@@ -72,7 +72,7 @@ def handle_event(event, s3_service):
                   'CustExp': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
-                  'CompanyCode' : 'Company'
+                  'CompanyCode' : 'Company',
                   'TB_KPI_List' : 'TB_KPI_List'
                   }
 
