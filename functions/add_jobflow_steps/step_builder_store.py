@@ -62,7 +62,7 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Location/Working',
             's3://' + input_bucket + '/BAE/Working',
-            's3://' + input_bucket + '/DealerCodes/Working',
+            's3://' + input_bucket + '/ATTDealerCodes/Working',
             's3://' + input_bucket + '/MultiTracker/Working',
             's3://' + input_bucket + '/SpringMobileStore/Working',
             's3://' + input_bucket + '/DTV/Working',

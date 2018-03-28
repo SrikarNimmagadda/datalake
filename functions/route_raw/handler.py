@@ -42,24 +42,22 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target(key1)
 
-        myDict = {'ATTHistorical_AT_TMyResultsHistoricalAnalysis.RptKPI_Grid_SFTP':
+        myDict = {'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis.RPT':
                   'AT_T_MyResults_RPT',
-                  'ATTHistorical_AT_TMyResultsHistoricalAnalysis':
+                  'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
-                  'C&C': 'C&C Training Report', 'CategoryNumber':
-                  'ProductCategory',
-                  'SalesTransactions': 'SalesTransactions', 'SpringScorecardGoals_GoalsforSQL': 'StoreGoals',
+                  'CategoryNumber': 'ProductCategory',
+                  'SalesTransactions': 'SalesTransactions',
                   'StoreTraffic': 'StoreTraffic',
                   'HR_Employee': 'Employee', 'Inventory': 'Inventory',
                   'Location': 'Location',
-                  'Operational': 'Operational Efficiency',
-                  'PII_Customer': 'Customer', 'BAE': 'BAE', 'DTVNow': 'DTV',
-                  'MultiTracker_SpringMobileMultiTracker': 'MultiTracker',
+                  'PII_Customer': 'Customer', 'BAELocation': 'BAE', 'DTVNow': 'DTV',
+                  'MultiTracker': 'MultiTracker',
                   'OperationalEFC_TotalLoss': 'EmpOperationalEfficiency',
                   'ScoreCardGoals_GoalsforSQL': 'StoreGoals',
                   'DealerCodes': 'ATTDealerCodes',
                   'SpringMobileStoreList': 'SpringMobileStore',
-                  'PII_Report202020': 'SalesLeads',
+                  'PII_Report202020_202020Details': 'SalesLeads',
                   'ProductIdentifier': 'ProductIdentifier',
                   'Product': 'Product', 'PurchaseOrder': 'PurchaseOrder',
                   'TransAdjStore': 'StoreTransAdjustments/StoreTrans',
@@ -68,13 +66,15 @@ def handle_event(event, s3_service):
                   'GoalPoints_EmployeeScorecard': 'TBGoalPointEmployee',
                   'GoalPoints_StoreScorecard': 'TBGoalPointStore',
                   'Coupons': 'Coupons',
-                  'ReportingDefinations':
+                  'ReportingDefinitions':
                   'StoreDailyGoalForecast',
                   'EmpGpGoal': 'Employee_GP_Goal_SFTP', 'TransAdjEMP': 'EmpTransAdjustment',
-                  'OurPromise': 'StoreCustomerExperience',
+                  'CustExp': 'StoreCustomerExperience',
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
-                  'CCTrainingReport_CCAuditReport': 'EmpCNCTraining'}
+                  'CompanyCode': 'Company',
+                  'TB_KPI_List': 'TB_KPI_List'
+                  }
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
         today = datetime.date.today()
@@ -96,7 +96,7 @@ def handle_event(event, s3_service):
 
 def determine_target(key1):
     """Select a target bucket name string based on an object's key's prefix."""
-    if key1.startswith('PII_Customer'):
+    if key1.startswith('PII_'):
         return BUCKETS['pii']
     elif key1.startswith('HR_Employee'):
         return BUCKETS['hr']

@@ -91,12 +91,12 @@ class StepBuilderSalesOthers(object):
     def _build_step_csv_to_parquet_salesleads(self):
         step_name = 'CSVToParquetSalesLeads'
         script_name = 'Facts/SalesLeadCSVToParquet_Latest.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
+        input_bucket = self.buckets['raw_customer_pii']
+        output_bucket = self.buckets['discovery_customer_pii']
 
         script_args = [
 
-            's3://' + input_bucket + '/SalesLeads/Working',
+            's3://' + input_bucket + '/SalesLeads/Working/',
             's3://' + output_bucket + '/SalesLeads'
         ]
 
@@ -105,18 +105,16 @@ class StepBuilderSalesOthers(object):
     def _build_step_salesleads_refinery(self):
         step_name = 'SalesLeadsRefinery'
         script_name = 'Facts/SalesLeadsRefined_Latest.py'
-        input_bucket = self.buckets['discovery_regular']
+        input_bucket = self.buckets['discovery_customer_pii']
         output_bucket = self.buckets['refined_regular']
-        raw_bucket = self.buckets['raw_regular']
 
         script_args = [
 
             's3://' + output_bucket + '/Employee/Working',
             's3://' + output_bucket + '/Store/Working',
             's3://' + output_bucket + '/StoreDealerAssociation/Working',
-            's3://' + input_bucket + '/ATTDealerCode/Working',
+            's3://' + output_bucket + '/ATTDealerCode/Working/',
             's3://' + input_bucket + '/SalesLeads/Working',
-            's3://' + raw_bucket + '/Company',
             's3://' + output_bucket + '/SalesLeads'
 
         ]
@@ -130,7 +128,7 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + 'SalesLeads/Working',
+            's3://' + input_bucket + '/SalesLeads/Working/',
             's3://' + output_bucket + '/WT_SALES_LEADS'
         ]
 
@@ -172,7 +170,7 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreTraffic/working',
+            's3://' + input_bucket + '/StoreTraffic/Working',
             's3://' + output_bucket + '/WT_STORE_TRAFFIC'
         ]
 
