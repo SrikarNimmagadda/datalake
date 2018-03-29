@@ -227,7 +227,7 @@ class DimStoreRefined(object):
         dfBAE.filter(dfBAE.StoreNumber > 0).registerTempTable("BAE")
         dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
         dfDealer.filter(dfDealer.StoreNo > 0).registerTempTable("Dealer")
-        dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
+        # dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
         dfSpringMobile.filter(dfSpringMobile.Store > 0).registerTempTable("SpringMobile")
         dfRealEstate.filter(dfRealEstate.Loc > 0).registerTempTable("RealEstate")
 

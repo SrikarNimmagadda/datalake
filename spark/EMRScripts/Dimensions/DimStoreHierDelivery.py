@@ -110,7 +110,7 @@ class DimStoreHierDelivery(object):
 
             dfStoreHierCurr = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
                                                     " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
-                                                    "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
+                                                    "a.ATTMarket as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
                                                     "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
                                                     "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
                                                     "'I' as cdc_ind_cd from att_dealer_code_curr a where"
@@ -130,7 +130,7 @@ class DimStoreHierDelivery(object):
 
             dfStoreHierPrev = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
                                                     " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm, "
-                                                    "a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
+                                                    "a.ATTMarket as lvl_2_cd, a.ATTMarket as lvl_2_nm, '' as "
                                                     "lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
                                                     "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
                                                     "'I' as cdc_ind_cd from att_dealer_code_prev a where "
@@ -181,7 +181,7 @@ class DimStoreHierDelivery(object):
 
             dfStoreHierCurr = self.sparkSession.sql("select concat(a.ATTRegion,a.ATTMarket) as hier_id,'ATT Hierarchy'"
                                                     " as hier_nm,a.ATTRegion as lvl_1_cd,a.ATTRegion as lvl_1_nm,"
-                                                    " a.ATTMarketCode as lvl_2_cd, a.ATTMarket as lvl_2_nm, "
+                                                    " a.ATTMarket as lvl_2_cd, a.ATTMarket as lvl_2_nm, "
                                                     "'' as lvl_3_cd, '' as lvl_3_nm,'' as lvl_4_cd, '' as lvl_4_nm, "
                                                     "'' as lvl_5_cd,'' as lvl_5_nm,'' as lvl_6_cd,'' as lvl_6_nm, "
                                                     "'I' as cdc_ind_cd from att_dealer_code_curr a where "

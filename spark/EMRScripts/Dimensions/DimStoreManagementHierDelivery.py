@@ -122,7 +122,7 @@ class DimStoreManagementHierDelivery(object):
         self.sparkSession.read.parquet(lastUpdatedEmployeeFile).registerTempTable("employee_refine_curr")
         dfEmployeeRefined = self.sparkSession.sql(
             "select workdayid,sourceemployeeid from employee_refine_curr where workdayid != ''")
-        dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
+        # dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
         dfEmployeeRefined.registerTempTable("employee_curr")
 
         dfSpringMobile = self.sparkSession.read.parquet(self.springMobileWorkingPath)
@@ -186,8 +186,7 @@ class DimStoreManagementHierDelivery(object):
                                   "a.StoreNumber from store_refine_curr a left join SpringMobile b "
                                   "on a.StoreNumber = b.Store").drop_duplicates().registerTempTable("store_curr")
 
-            self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(
-                self.storeCSVPath, header=True)
+            # self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
 
             self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from store_curr a " + self.storeMgmtJoinWithCondition).drop_duplicates().registerTempTable("store_mgmt_curr_final")
 
