@@ -5,14 +5,11 @@ import sys
 class EmpStoreAssociationDelivery(object):
     def __init__(self):
         self.appName = self.__class__.__name__
-        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
-        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
+        self.spark = SparkSession.builder.appName(self.appName).getOrCreate()
+        self.log4jLogger = self.spark.sparkContext._jvm.org.apache.log4j
 
         self.empStoreAssociationRefineInp = sys.argv[1]
         self.empStoreAssociationdeliveryOP = sys.argv[2]
-
-        self.spark = self.sparkSession.builder.\
-            appName("employeeRefine").getOrCreate()
 
     def loadDelivery(self):
         dfEmpStoreAssociation = self.spark.read.parquet(self.empStoreAssociationRefineInp)
