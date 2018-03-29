@@ -4,45 +4,69 @@ from datetime import datetime
 from pyspark.sql.types import StructType, StringType, IntegerType, StructField
 from pyspark.sql.functions import lit
 
-TBGoalPointsInpStore = sys.argv[1]
-TBGoalPointsInpEmployee = sys.argv[2]
-TBGoalPointsOpStore = sys.argv[3]
-TBGoalPointsOpEmployee = sys.argv[4]
 
-spark = SparkSession.builder.appName("ParquetTBGoalPoints").getOrCreate()
+class TBGoalPointsCSVToParquet(object):
 
-schema = StructType([StructField('Category', StringType(), True), StructField('Points', IntegerType(), False), StructField('Bonus', IntegerType(), False), StructField('Decelerator', IntegerType(), False)])
+    def __init__(self):
+        self.appName = self.__class__.__name__
+        self.spark = SparkSession.builder.appName(self.appName).getOrCreate()
 
-dfTBGoalPoints = spark.createDataFrame(spark.sparkContext.emptyRDD(), schema)
+        self.TBGoalPointsInpStore = sys.argv[1]
+        self.TBGoalPointsInpEmployee = sys.argv[2]
+        self.TBGoalPointsOpStore = sys.argv[3]
+        self.TBGoalPointsOpEmployee = sys.argv[4]
 
-dfTBGoalPoints = spark.read.format("com.databricks.spark.csv").option("header", "true").option("treatEmptyValuesAsNulls", "true").load(TBGoalPointsInpStore)
+    def loadParquet(self):
+        schema = StructType([StructField('Category', StringType(), True), StructField('Points', IntegerType(), False),
+                             StructField('Bonus', IntegerType(), False),
+                             StructField('Decelerator', IntegerType(), False)])
 
-dfTBGoalPoints = dfTBGoalPoints.withColumnRenamed("Category", "kpiname").withColumnRenamed("Points", "goalpoints").withColumnRenamed("Bonus", "bonuspoints").withColumnRenamed("Decelerator", "decelerator")
+        dfTBGoalPoints = self.spark.createDataFrame(self.spark.sparkContext.emptyRDD(), schema)
 
-today = datetime.now().strftime('%m/%d/%Y')
-dfTBGoalPoints = dfTBGoalPoints.withColumn('reportdate', lit(today))
+        dfTBGoalPoints = self.spark.read.format("com.databricks.spark.csv").option("header", "true").\
+            option("treatEmptyValuesAsNulls", "true").load(self.TBGoalPointsInpStore)
 
-dfTBGoalPoints.registerTempTable("TBGP")
-dfTBGoalPointsFinalStore = spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
+        dfTBGoalPoints = dfTBGoalPoints.\
+            withColumnRenamed("Category", "kpiname").\
+            withColumnRenamed("Points", "goalpoints").\
+            withColumnRenamed("Bonus", "bonuspoints").\
+            withColumnRenamed("Decelerator", "decelerator")
 
-dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(TBGoalPointsOpStore)
+        today = datetime.now().strftime('%m/%d/%Y')
+        dfTBGoalPoints = dfTBGoalPoints.withColumn('reportdate', lit(today))
 
-dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").parquet(TBGoalPointsOpStore + '/' + 'Working')
+        dfTBGoalPoints.registerTempTable("TBGP")
+        dfTBGoalPointsFinalStore = self.spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
 
-dfTBGoalPoints = spark.createDataFrame(spark.sparkContext.emptyRDD(), schema)
+        dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").\
+            partitionBy('year', 'month').parquet(self.TBGoalPointsOpStore)
 
-dfTBGoalPoints = spark.read.format("com.databricks.spark.csv").option("header", "true").option("treatEmptyValuesAsNulls", "true").load(TBGoalPointsInpEmployee)
+        dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").\
+            parquet(self.TBGoalPointsOpStore + '/' + 'Working')
 
-dfTBGoalPoints = dfTBGoalPoints.withColumnRenamed("Category", "kpiname").withColumnRenamed("Points", "goalpoints").withColumnRenamed("Bonus", "bonuspoints").withColumnRenamed("Decelerator", "decelerator")
+        dfTBGoalPoints = self.spark.createDataFrame(self.spark.sparkContext.emptyRDD(), schema)
+        dfTBGoalPoints = self.spark.read.format("com.databricks.spark.csv").option("header", "true").option(
+            "treatEmptyValuesAsNulls", "true").load(self.TBGoalPointsInpEmployee)
 
-today = datetime.now().strftime('%m/%d/%Y')
-dfTBGoalPoints = dfTBGoalPoints.withColumn('reportdate', lit(today))
+        dfTBGoalPoints = dfTBGoalPoints.withColumnRenamed("Category", "kpiname").\
+            withColumnRenamed("Points", "goalpoints").\
+            withColumnRenamed("Bonus", "bonuspoints").\
+            withColumnRenamed("Decelerator", "decelerator")
 
-dfTBGoalPoints.registerTempTable("TBGP")
-dfTBGoalPointsFinalEmployee = spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
+        today = datetime.now().strftime('%m/%d/%Y')
+        dfTBGoalPoints = dfTBGoalPoints.withColumn('reportdate', lit(today))
 
-dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(TBGoalPointsOpEmployee)
+        dfTBGoalPoints.registerTempTable("TBGP")
+        dfTBGoalPointsFinalEmployee = self.spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
 
-dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").parquet(TBGoalPointsOpEmployee + '/' + 'Working')
+        dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").\
+            partitionBy('year', 'month').parquet(self.TBGoalPointsOpEmployee)
 
-spark.stop()
+        dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").\
+            parquet(self.TBGoalPointsOpEmployee + '/' + 'Working')
+
+        self.spark.stop()
+
+
+if __name__ == "__main__":
+    TBGoalPointsCSVToParquet().loadParquet()

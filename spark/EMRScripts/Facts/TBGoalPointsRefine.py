@@ -1,24 +1,42 @@
 from pyspark.sql import SparkSession
 import sys
 
-TBGoalPointDiscoveryStore = sys.argv[1]
-TBGoalPointDiscoveryEmployee = sys.argv[2]
-GoalPointOp = sys.argv[3]
 
-spark = SparkSession.builder.appName("TBGoalPointsRefine").getOrCreate()
+class TBGoalPointsRefine(object):
 
-dfSpringMobileDiscoveryStore = spark.read.parquet(TBGoalPointDiscoveryStore).registerTempTable("goalpointStore")
-dfSpringMobileDiscoveryEmployee = spark.read.parquet(TBGoalPointDiscoveryEmployee).registerTempTable("goalpointEmployee")
-dfSpringMobileDiscoveryStore = spark.sql("select a.kpiname as kpiname, a.goalpoints as goalpoints, a.bonuspoints as bonuspoints, a.decelerator as deceleratorpoints, a.reportdate,'Store' as classification, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from goalpointStore a")
+    def __init__(self):
 
-dfSpringMobileDiscoveryEmployee = spark.sql("select a.kpiname as kpiname, a.goalpoints as goalpoints, a.bonuspoints as bonuspoints, a.decelerator as deceleratorpoints, a.reportdate, 'Employee' as classification, '4' as companycd , YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from goalpointEmployee a")
+        self.appName = self.__class__.__name__
+        self.spark = SparkSession.builder.appName(self.appName).getOrCreate()
 
-df1SpringMobileDiscoveryStore = dfSpringMobileDiscoveryStore.dropDuplicates(['reportdate', 'classification', 'kpiname', 'companycd'])
-df1SpringMobileDiscoveryEmployee = dfSpringMobileDiscoveryEmployee.dropDuplicates(['reportdate', 'classification', 'kpiname', 'companycd'])
+        self.TBGoalPointDiscoveryStore = sys.argv[1]
+        self.TBGoalPointDiscoveryEmployee = sys.argv[2]
+        self.GoalPointOp = sys.argv[3]
 
-FinaldfSpringMobileDiscovery = df1SpringMobileDiscoveryEmployee.union(df1SpringMobileDiscoveryStore)
+    def loadRefined(self):
 
-FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(GoalPointOp)
-FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").parquet(GoalPointOp + '/' + 'Working')
+        dfSpringMobileDiscoveryStore = self.spark.read.parquet(self.TBGoalPointDiscoveryStore).\
+            registerTempTable("goalpointStore")
+        dfSpringMobileDiscoveryEmployee = self.spark.read.parquet(self.TBGoalPointDiscoveryEmployee).\
+            registerTempTable("goalpointEmployee")
+        dfSpringMobileDiscoveryStore = self.spark.sql("select a.kpiname as kpiname, a.goalpoints as goalpoints, a.bonuspoints as bonuspoints, a.decelerator as deceleratorpoints, a.reportdate,'Store' as classification, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from goalpointStore a")
 
-spark.stop()
+        dfSpringMobileDiscoveryEmployee = self.spark.sql("select a.kpiname as kpiname, a.goalpoints as goalpoints, a.bonuspoints as bonuspoints, a.decelerator as deceleratorpoints, a.reportdate, 'Employee' as classification, '4' as companycd , YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from goalpointEmployee a")
+
+        df1SpringMobileDiscoveryStore = dfSpringMobileDiscoveryStore.\
+            dropDuplicates(['reportdate', 'classification', 'kpiname', 'companycd'])
+        df1SpringMobileDiscoveryEmployee = dfSpringMobileDiscoveryEmployee.\
+            dropDuplicates(['reportdate', 'classification', 'kpiname', 'companycd'])
+
+        FinaldfSpringMobileDiscovery = df1SpringMobileDiscoveryEmployee.union(df1SpringMobileDiscoveryStore)
+
+        FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').\
+            parquet(self.GoalPointOp)
+        FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").\
+            parquet(self.GoalPointOp + '/' + 'Working')
+
+        self.spark.stop()
+
+
+if __name__ == "__main__":
+    TBGoalPointsRefine().loadRefined()
