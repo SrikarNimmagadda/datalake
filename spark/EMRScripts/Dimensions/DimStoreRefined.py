@@ -541,7 +541,7 @@ class DimStoreRefined(object):
                                                        self.storeColumns + " from store_new_data")
                 self.log.info("Updated file has arrived..")
                 dfStoreWithCDC.coalesce(1).write.mode("overwrite").parquet(self.storeWorkingPath)
-                dfStoreWithCDC.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
+                # dfStoreWithCDC.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
                 dfStoreWithCDC.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
                     withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
                     write.mode("append").partitionBy('year', 'month').format('parquet').\
@@ -551,7 +551,7 @@ class DimStoreRefined(object):
         else:
             self.log.info(" This is the first transaformation call, So keeping the file in refined bucket.")
             dfStoreSource.coalesce(1).write.mode("overwrite").parquet(self.storeWorkingPath)
-            dfStoreSource.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
+            # dfStoreSource.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
             dfStoreSource.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
                 withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
                 write.mode('append').partitionBy('year', 'month').format('parquet').\
