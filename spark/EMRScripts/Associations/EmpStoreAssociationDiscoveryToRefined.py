@@ -9,15 +9,10 @@ class EmpStoreAssociationRefine(object):
 
     def __init__(self):
         self.appName = self.__class__.__name__
-        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
-        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
-        self.log = self.log4jLogger.LogManager.getLogger(self.appName)
+        self.spark = SparkSession.builder.appName(self.appName).getOrCreate()
 
         self.employeeMasterListInp = sys.argv[1]  # employee source parquet
         self.employeeMasterListOp = sys.argv[2]
-
-        self.spark = self.sparkSession.builder. \
-            appName("employeeRefine").getOrCreate()
 
     def loadRefine(self):
         dfEmployeeMasterList = self.spark.read.parquet(self.employeeMasterListInp)
