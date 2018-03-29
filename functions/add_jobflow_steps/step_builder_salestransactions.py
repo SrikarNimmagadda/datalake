@@ -131,7 +131,7 @@ class StepBuilderSalesTransactions(object):
 
     def _build_step_csv_to_parquet_employeeopperationalefficiency(self):
         step_name = 'CSVToParquetOpperationalEfficiency'
-        script_name = 'Facts/EmployeeOperationalEfficiencyCSVToParquet.py '
+        script_name = 'Facts/EmployeeOperationalEfficiencyCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
         error_bucket = self.buckets['data_processing_errors']
