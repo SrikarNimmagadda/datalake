@@ -5,129 +5,138 @@ from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import col
 
 
-EmployeeMasterListInp = sys.argv[1]  # employee source parquet
-EmployeeMasterListOp = sys.argv[2]
+class EmpStoreAssociationRefine(object):
+
+    def __init__(self):
+        self.appName = self.__class__.__name__
+        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
+        self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
+        self.log = self.log4jLogger.LogManager.getLogger(self.appName)
+
+        self.employeeMasterListInp = sys.argv[1]  # employee source parquet
+        self.employeeMasterListOp = sys.argv[2]
+
+        self.spark = self.sparkSession.builder. \
+            appName("employeeRefine").getOrCreate()
+
+    def loadRefine(self):
+        dfEmployeeMasterList = self.spark.read.parquet(self.employeeMasterListInp)
+        dfEmployeeMasterList.registerTempTable("employee")
+
+        # Spark Transformation begins here
+
+        dfEmpStoreAssociationInd = self.spark.sql("select a.assignedlocations " +
+                                                  "as storenumber," +
+                                                  " a.primarylocation, 4 as companycd," +
+                                                  " a.employeeid as sourceemployeeid, " +
+                                                  "'RQ4' as sourcesystenname," +
+                                                  "a.rowevent as CDC_IND_CD, " +
+                                                  "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
+                                                  "as year," +
+                                                  "SUBSTR(FROM_UNIXTIME" +
+                                                  "(UNIX_TIMESTAMP())," +
+                                                  "6,2) " +
+                                                  "as month from employee a")
+
+        dfEmpStoreAssociationInd.registerTempTable("empstore1")
+
+        dfEmpStoreAssociationInd = self.spark.sql("select CASE when storenumber " +
+                                                  "is null then primarylocation else " +
+                                                  "storenumber end as storenumber, " +
+                                                  "primarylocation, companycd, " +
+                                                  "sourceemployeeid, sourcesystenname, " +
+                                                  "CDC_IND_CD, year," +
+                                                  " month  from empstore1 ")
+
+        dfEmpStoreAssociationInd.registerTempTable("empstore2")
+
+        dfEmpStoreAssociationInd = self.spark.sql("select case when " +
+                                                  "primarylocation is null " +
+                                                  "then storenumber" +
+                                                  " else concat(storenumber,', " +
+                                                  "',primarylocation) " +
+                                                  "end as storenumber, primarylocation, " +
+                                                  "companycd, sourceemployeeid, " +
+                                                  "sourcesystenname, CDC_IND_CD, " +
+                                                  "year, month  from empstore2")
+
+        dfEmpStoreAssociationInd = dfEmpStoreAssociationInd. \
+            withColumn('storenumber', explode(split('storenumber', ',')))
+
+        dfEmpStoreAssociationInd.registerTempTable("empstore3")
+
+        dfEmpStoreAssociationInd = self.spark.sql("select CASE when " +
+                                                  "primarylocation is null then ' -2' " +
+                                                  "else storenumber end as storenumber, " +
+                                                  "primarylocation, companycd, " +
+                                                  "sourceemployeeid, sourcesystenname, " +
+                                                  "CDC_IND_CD, year, month " +
+                                                  "from empstore3 ")
+
+        # dfEmpStoreAssociationInd2.show()
+
+        split_col1 = split(dfEmpStoreAssociationInd['storenumber'], ' ')
+
+        dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd. \
+            withColumn('storenumber', split_col1.getItem(1))
+
+        split_col2 = split(dfEmpStoreAssociationInd2['primarylocation'], ' ')
+
+        dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2. \
+            withColumn('primarylocation1', split_col2.getItem(0))
+
+        dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2.withColumn(
+            'storenumber', regexp_extract('storenumber', '(.*?)(-?\d+)', 2))
+
+        dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2.withColumn(
+            'primarylocation1', regexp_extract('primarylocation1', '(.*?)(-?\d+)', 2))
+
+        dfEmpStoreAssociationInd2.registerTempTable("empstore4")
+
+        dfEmpStoreAssociationInd2 = self.spark.sql("select *, case when " +
+                                                   "storenumber==primarylocation1 " +
+                                                   "then 1 else 0 end as " +
+                                                   "primarylocationindicator " +
+                                                   "from empstore4")
+
+        dfEmpStoreAssociationInd2.show()
+
+        dfEmpStoreAssociationInd2.registerTempTable("empstore5")
+
+        dfEmpStoreAssociationInd3 = self.spark.sql("select  storenumber, " +
+                                                   "primarylocation, " +
+                                                   "companycd, sourceemployeeid, " +
+                                                   "sourcesystenname, CDC_IND_CD, " +
+                                                   "year, month,CASE WHEN storenumber " +
+                                                   "like '%-2%' THEN '1' else " +
+                                                   "primarylocationindicator " +
+                                                   " END as primarylocationindicator " +
+                                                   "from empstore5 ")
+
+        dfEmpStoreAssociationInd4 = dfEmpStoreAssociationInd3. \
+            withColumn("storenumber", dfEmpStoreAssociationInd3["storenumber"].
+                       cast(IntegerType()))
+
+        dfEmpStoreAssociationInd5 = dfEmpStoreAssociationInd4. \
+            where(col("storenumber").isNotNull())
+        dfEmpStoreAssociationInd6 = dfEmpStoreAssociationInd5. \
+            where(col("sourceemployeeid").isNotNull())
+        dfEmpStoreAssociationInd7 = dfEmpStoreAssociationInd6. \
+            where(col("companycd").isNotNull())
+        dfEmpStoreAssociationInd8 = dfEmpStoreAssociationInd7. \
+            where(col("sourcesystenname").isNotNull())
+
+        dfEmpStoreAssociationInd9 = dfEmpStoreAssociationInd8.dropDuplicates(
+            ['storenumber', 'sourceemployeeid', 'companycd', 'sourcesystenname'])
+
+        dfEmpStoreAssociationInd9.coalesce(1).select("*"). \
+            write.mode("overwrite").parquet(self.employeeMasterListOp + '/' + 'Working')
+
+        dfEmpStoreAssociationInd9.coalesce(1).write.mode('append').partitionBy(
+            'year', 'month').format('parquet').save(self.employeeMasterListOp)
+
+        self.spark.stop()
 
 
-spark = SparkSession.builder.\
-    appName("employeeRefine").getOrCreate()
-
-dfEmployeeMasterList = spark.read.parquet(EmployeeMasterListInp)
-
-dfEmployeeMasterList.registerTempTable("employee")
-
-# Spark Transformation begins here
-
-dfEmpStoreAssociationInd = spark.sql("select a.assignedlocations " +
-                                     "as storenumber," +
-                                     " a.primarylocation, 4 as companycd," +
-                                     " a.employeeid as sourceemployeeid, " +
-                                     "'RQ4' as sourcesystenname," +
-                                     "a.rowevent as CDC_IND_CD, " +
-                                     "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
-                                     "as year," +
-                                     "SUBSTR(FROM_UNIXTIME" +
-                                     "(UNIX_TIMESTAMP())," +
-                                     "6,2) " +
-                                     "as month from employee a")
-
-
-dfEmpStoreAssociationInd.registerTempTable("empstore1")
-
-dfEmpStoreAssociationInd = spark.sql("select CASE when storenumber " +
-                                     "is null then primarylocation else " +
-                                     "storenumber end as storenumber, " +
-                                     "primarylocation, companycd, " +
-                                     "sourceemployeeid, sourcesystenname, " +
-                                     "CDC_IND_CD, year," +
-                                     " month  from empstore1 ")
-
-dfEmpStoreAssociationInd.registerTempTable("empstore2")
-
-dfEmpStoreAssociationInd = spark.sql("select case when " +
-                                     "primarylocation is null " +
-                                     "then storenumber" +
-                                     " else concat(storenumber,', " +
-                                     "',primarylocation) " +
-                                     "end as storenumber, primarylocation, " +
-                                     "companycd, sourceemployeeid, " +
-                                     "sourcesystenname, CDC_IND_CD, " +
-                                     "year, month  from empstore2")
-
-dfEmpStoreAssociationInd = dfEmpStoreAssociationInd.\
-    withColumn('storenumber', explode(split('storenumber', ',')))
-
-dfEmpStoreAssociationInd.registerTempTable("empstore3")
-
-
-dfEmpStoreAssociationInd = spark.sql("select CASE when " +
-                                     "primarylocation is null then ' -2' " +
-                                     "else storenumber end as storenumber, " +
-                                     "primarylocation, companycd, " +
-                                     "sourceemployeeid, sourcesystenname, " +
-                                     "CDC_IND_CD, year, month " +
-                                     "from empstore3 ")
-
-# dfEmpStoreAssociationInd2.show()
-
-split_col1 = split(dfEmpStoreAssociationInd['storenumber'], ' ')
-
-dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd.\
-    withColumn('storenumber', split_col1.getItem(1))
-
-split_col2 = split(dfEmpStoreAssociationInd2['primarylocation'], ' ')
-
-dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2.\
-    withColumn('primarylocation1', split_col2.getItem(0))
-
-dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2.withColumn(
-    'storenumber', regexp_extract('storenumber', '(.*?)(-?\d+)', 2))
-
-dfEmpStoreAssociationInd2 = dfEmpStoreAssociationInd2.withColumn(
-    'primarylocation1', regexp_extract('primarylocation1', '(.*?)(-?\d+)', 2))
-
-dfEmpStoreAssociationInd2.registerTempTable("empstore4")
-
-dfEmpStoreAssociationInd2 = spark.sql("select *, case when " +
-                                      "storenumber==primarylocation1 " +
-                                      "then 1 else 0 end as " +
-                                      "primarylocationindicator " +
-                                      "from empstore4")
-
-dfEmpStoreAssociationInd2.show()
-
-dfEmpStoreAssociationInd2.registerTempTable("empstore5")
-
-dfEmpStoreAssociationInd3 = spark.sql("select  storenumber, " +
-                                      "primarylocation, " +
-                                      "companycd, sourceemployeeid, " +
-                                      "sourcesystenname, CDC_IND_CD, " +
-                                      "year, month,CASE WHEN storenumber " +
-                                      "like '%-2%' THEN '1' else " +
-                                      "primarylocationindicator " +
-                                      " END as primarylocationindicator " +
-                                      "from empstore5 ")
-
-dfEmpStoreAssociationInd4 = dfEmpStoreAssociationInd3.\
-    withColumn("storenumber", dfEmpStoreAssociationInd3["storenumber"].
-               cast(IntegerType()))
-
-dfEmpStoreAssociationInd5 = dfEmpStoreAssociationInd4.\
-    where(col("storenumber").isNotNull())
-dfEmpStoreAssociationInd6 = dfEmpStoreAssociationInd5.\
-    where(col("sourceemployeeid").isNotNull())
-dfEmpStoreAssociationInd7 = dfEmpStoreAssociationInd6.\
-    where(col("companycd").isNotNull())
-dfEmpStoreAssociationInd8 = dfEmpStoreAssociationInd7.\
-    where(col("sourcesystenname").isNotNull())
-
-dfEmpStoreAssociationInd9 = dfEmpStoreAssociationInd8.dropDuplicates(
-    ['storenumber', 'sourceemployeeid', 'companycd', 'sourcesystenname'])
-
-dfEmpStoreAssociationInd9.coalesce(1).select("*").\
-    write.mode("overwrite").parquet(EmployeeMasterListOp + '/' + 'Working')
-
-dfEmpStoreAssociationInd9.coalesce(1).write.mode('append').partitionBy(
-    'year', 'month').format('parquet').save(EmployeeMasterListOp)
-
-spark.stop()
+if __name__ == "__main__":
+    EmpStoreAssociationRefine().loadRefine()
