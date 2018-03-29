@@ -1,8 +1,19 @@
 from pyspark.sql import SparkSession
 import sys
 from datetime import datetime
-from pyspark.sql.functions import hash as hash_
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import udf, col, hash as hash_
 import boto3
+
+
+def ignoreSpecialChars(productName):
+    return productName.encode('utf-8').replace('"', ' ').decode('ascii', 'ignore')
+
+
+def removeExtraQuotes(productVendorSKU):
+    if productVendorSKU is not None:
+        return productVendorSKU.replace('"', ' ')
+    return ''
 
 
 class ProductDiscoveryToRefined(object):
@@ -35,6 +46,8 @@ class ProductDiscoveryToRefined(object):
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
+        self.ignoreSpecialCharsUDF = udf(lambda z: ignoreSpecialChars(z), StringType())
+        self.removeExtraQuotesUDF = udf(lambda z: removeExtraQuotes(z), StringType())
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
@@ -67,8 +80,8 @@ class ProductDiscoveryToRefined(object):
         self.sparkSession.read.parquet(self.discoveryCouponsWorkingPath).drop_duplicates().registerTempTable("coupons")
 
         dfProduct.withColumnRenamed("ProductSKU", "productsku"). \
-            withColumnRenamed("ProductName", "productname"). \
-            withColumnRenamed("ProductLabel", "productlabel"). \
+            withColumn("ProductName", self.ignoreSpecialCharsUDF(col("productname"))). \
+            withColumn("ProductLabel", self.ignoreSpecialCharsUDF(col("productlabel"))). \
             withColumnRenamed("DefaultCost", "defaultcost"). \
             withColumnRenamed("AverageCOS", "averagecost"). \
             withColumnRenamed("UnitCost", "unitcost"). \
@@ -97,7 +110,7 @@ class ProductDiscoveryToRefined(object):
             withColumnRenamed("EcommerceItem", "ecommerceitem"). \
             withColumnRenamed("WarehouseLocation", "warehouselocation"). \
             withColumnRenamed("DefaultVendorName", "defaultvendorname"). \
-            withColumnRenamed("PrimaryVendorSKU", "primaryvendorsku"). \
+            withColumn("PrimaryVendorSKU", self.removeExtraQuotesUDF(col("primaryvendorsku"))). \
             withColumnRenamed("CostofGoodsSoldAccount", "costaccount"). \
             withColumnRenamed("SalesRevenueAccount", "revenueaccount"). \
             withColumnRenamed("InventoryAccount", "inventoryaccount"). \
@@ -231,7 +244,7 @@ class ProductDiscoveryToRefined(object):
                                                 "NULL, "
                                                 "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as YEAR,"
                                                 "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as MONTH "
-                                                "from coupons c")
+                                                "from coupons c").drop_duplicates(['productsku'])
 
         # CDC Logic for PROD
 
