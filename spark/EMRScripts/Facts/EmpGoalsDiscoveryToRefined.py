@@ -74,6 +74,10 @@ dfEmpGoal = dfEmpGoal.withColumn("goalvalue",
                                  sf.round(dfEmpGoal["goalvalue"], 2))
 
 
+dfEmpGoal = dfEmpGoal.dropDuplicates(
+    ['report_date', 'sourceemployeeid', 'companycd', 'kpiname',
+     'sourcesystemname'])
+
 dfEmpGoal.coalesce(1).select("*"). write.\
     mode("overwrite").parquet(EmpGoalOP + '/' + 'Working')
 
