@@ -153,7 +153,7 @@ class DimStoreDelivery(object):
                                                                  self.refinedBucket)
 
         self.sparkSession.read.parquet(lastUpdatedAttDealerCodeFile).registerTempTable("att_dealer_code")
-        self.sparkSession.sql("select * from att_dealer_code").coalesce(1).write.mode("overwrite").csv(self.attDealerCodeCSVPath, header=True)
+        # self.sparkSession.sql("select * from att_dealer_code").coalesce(1).write.mode("overwrite").csv(self.attDealerCodeCSVPath, header=True)
 
         lastUpdatedstoreDealerCodeAssocFile = self.findLastModifiedFile(refinedBucketNode,
                                                                         self.prefixStoreDealerAssocPartitionPath,
@@ -161,7 +161,7 @@ class DimStoreDelivery(object):
 
         self.sparkSession.read.parquet(lastUpdatedstoreDealerCodeAssocFile).registerTempTable("store_dealer_code_assoc")
 
-        self.sparkSession.sql("select * from store_dealer_code_assoc").coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCSVPath, header=True)
+        # self.sparkSession.sql("select * from store_dealer_code_assoc").coalesce(1).write.mode("overwrite").csv(self.storeDealerAssocCSVPath, header=True)
         StoreRefineCurrFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath, self.refinedBucket)
         StoreRefinePrevFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStorePartitionPath, self.refinedBucket, 0)
 
