@@ -53,10 +53,12 @@ class StepBuilderSalesOthers(object):
         script_name = 'Facts/StoreDailyGoalsForecastCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket + '/StoreDailyGoalForecast/Working',
-            's3://' + output_bucket + '/StoreDailyGoalForecast/Working'
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working',
+            's3://' + error_bucket + '/StoreDailyGoalForecast'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -66,11 +68,13 @@ class StepBuilderSalesOthers(object):
         script_name = 'Facts/StoreDailyGoalsForecastDiscoveryToRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
             's3://' + input_bucket + '/StoreDailyGoalForecast/Working/',
-            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/'
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/',
+            's3://' + error_bucket + '/StoreDailyGoalForecast'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
