@@ -97,11 +97,11 @@ class StepBuilderSalesKPIandDetails(object):
     def _build_step_salesKPIlist(self):
         step_name = 'SalesKPIList'
         script_name = 'Facts/TB_KPI_LIST.py'
-        input_bucket = self.buckets['refined_regular']
+        input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/KPI_Testing/TB_KPI_LIST.xlsx',
+            's3://' + input_bucket + '/KPI_Testing/Working/TB_KPI_LIST.xlsx',
             's3://' + output_bucket + '/WT_TB_KPI_LIST'
         ]
 
@@ -111,7 +111,8 @@ class StepBuilderSalesKPIandDetails(object):
         step_name = 'SalesKPIRefined'
         script_name = 'Facts/SalesKPIRefined.py'
         input_bucket = self.buckets['refined_regular']
-        KPI_FILE = '/KPI_Testing/TB_KPI_LIST.xlsx'
+        raw_bucket = self.buckets['raw_regular']
+        KPI_FILE = '/KPI_Testing/Working/TB_KPI_LIST.xlsx'
 
         script_args = [
             's3://' + input_bucket + '/SalesDetails/Working/',
@@ -127,7 +128,7 @@ class StepBuilderSalesKPIandDetails(object):
             's3://' + input_bucket + '/EmpStoreAssociation/Working/',
             's3://' + input_bucket + '/SalesLeads/Working/',
             's3://' + input_bucket + '/StoreCustomerExperience/Working/',
-            's3://' + input_bucket + KPI_FILE,
+            's3://' + raw_bucket + KPI_FILE,
             's3://' + input_bucket + '/SalesKPI/'
         ]
 
