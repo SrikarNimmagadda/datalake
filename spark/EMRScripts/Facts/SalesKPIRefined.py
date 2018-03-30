@@ -1,21 +1,11 @@
 from __future__ import print_function
-from pyspark.sql import SparkSession,SQLContext
-from pyspark.sql import Row
-from pyspark import SparkConf, SparkContext 
-from py4j.protocol import Py4JJavaError
-import pyspark.sql.functions as sf
-from pyspark.sql.functions import split
-import sys,os
-import logging
 from datetime import datetime
-import collections
-from pyspark.sql.types import StructType,StringType,IntegerType,StructField,DoubleType
-from pyspark.sql.types import *
-from pyspark.sql.functions import col,lit
-import re
-from pyspark.sql.types import DateType
-from pyspark.sql.functions import *
+from pyspark.conf import SparkConf
+from pyspark.sql import SparkSession, SQLContext
+from pyspark.sql.types import StringType, StructType, StructField, IntegerType, DateType, DoubleType
+from pyspark.sql.functions import col, lit
 import time
+import sys
 from pyspark.storagelevel import StorageLevel
 
 SalesDetailInp = sys.argv[1]
@@ -35,52 +25,31 @@ KPIList = sys.argv[14]
 KPIOutput = sys.argv[15]
 
 Config = SparkConf().setAppName("SalesKPI")
-SparkCtx = SparkContext(conf=Config)
-spark = SparkSession.builder.config(conf=Config).\
-		getOrCreate() 
-
+spark = SparkSession.builder.config(conf=Config).getOrCreate()
 sqlContext = SQLContext(spark)
-
 
 sqlContext.registerFunction("getDateS", lambda x: datetime.strptime(x, '%m/%d/%Y'), DateType())
 sqlContext.registerFunction("getDateH", lambda x: datetime.strptime(x, '%m-%d-%y'), DateType())
-sqlContext.registerFunction("doubleToInt", lambda x: IntType(x), IntegerType())
-sqlContext.registerFunction("getOnlyDate",lambda x : time.strftime("%m-%d-%Y", time.strptime(x[:19], "%Y-%m-%dT%H:%M:%S")))
-sqlContext.registerFunction("correctFormatDate",lambda x : time.strftime("%m/%d/%Y", time.strptime(x[:10],"%m/%d/%Y")))  
-sqlContext.registerFunction("getOnlyDate2", lambda x: time.strftime("%m/%d/%Y", time.strptime(x[:15],"%m/%d/%y %H:%M")))   
+sqlContext.registerFunction("doubleToInt", lambda x: IntegerType(x), IntegerType())
+sqlContext.registerFunction("getOnlyDate", lambda x: time.strftime("%m-%d-%Y", time.strptime(x[:19], "%Y-%m-%dT%H:%M:%S")))
+sqlContext.registerFunction("correctFormatDate", lambda x: time.strftime("%m/%d/%Y", time.strptime(x[:10], "%m/%d/%Y")))
+sqlContext.registerFunction("getOnlyDate2", lambda x: time.strftime("%m/%d/%Y", time.strptime(x[:15], "%m/%d/%y %H:%M")))
 
-#########################################################################################################
-#                                 Read the source files                                              #
-#########################################################################################################
+dfSalesDetail = spark.read.parquet(SalesDetailInp)
+dfProduct = spark.read.parquet(ProductInp)
+dfProductCategory = spark.read.parquet(ProductCategoryInp)
+dfStoreTransAdjustment = spark.read.parquet(StoreTransAdjustmentInp)
+dfStore = spark.read.parquet(StoreInp)
+dfATTSalesActual = spark.read.parquet(ATTSalesActualInp)
+dfStoreTraffic = spark.read.parquet(StoreTrafficInp)
+dfStoreRecruitingHeadcount = spark.read.parquet(StoreRecruitingHeadcountInp)
+dfEmployeeGoal = spark.read.parquet(EmployeeGoalInp)
+dfEmployeeMaster = spark.read.parquet(EmployeeMasterInp)
+dfEmpStoreAssociation = spark.read.parquet(EmpStoreAssociationInp)
+dfSalesLead = spark.read.parquet(SalesLeadInp)
+dfStoreCustomerExp = spark.read.parquet(StoreCustomerExpInp)
 
-dfSalesDetail  = spark.read.parquet(SalesDetailInp)
-dfProduct  = spark.read.parquet(ProductInp)
-dfProductCategory  = spark.read.parquet(ProductCategoryInp)
-dfStoreTransAdjustment  = spark.read.parquet(StoreTransAdjustmentInp)
-dfStore  = spark.read.parquet(StoreInp)
-dfATTSalesActual  = spark.read.parquet(ATTSalesActualInp)
-dfStoreTraffic  = spark.read.parquet(StoreTrafficInp)
-dfStoreRecruitingHeadcount  = spark.read.parquet(StoreRecruitingHeadcountInp)
-dfEmployeeGoal  = spark.read.parquet(EmployeeGoalInp)
-dfEmployeeMaster  = spark.read.parquet(EmployeeMasterInp)
-dfEmpStoreAssociation  = spark.read.parquet(EmpStoreAssociationInp)
-dfSalesLead  = spark.read.parquet(SalesLeadInp)
-dfStoreCustomerExp  = spark.read.parquet(StoreCustomerExpInp)
-
-dfKpilist = spark.read.format("com.crealytics.spark.excel").\
-                option("location", KPIList).\
-                option("sheetName", "KPIs for DL-Calculation").\
-                option("treatEmptyValuesAsNulls", "true").\
-                option("addColorColumns", "false").\
-                option("inferSchema", "true").\
-                option("spark.read.simpleMode","true"). \
-                option("useHeader", "true").\
-                load("com.databricks.spark.csv")
-
-
-#########################################################################################################
-#                                 Read the source files                                              #
-#########################################################################################################
+dfKpilist = spark.read.format("com.crealytics.spark.excel").option("location", KPIList).option("sheetName", "KPIs for DL-Calculation").option("treatEmptyValuesAsNulls", "true").option("addColorColumns", "false").option("inferSchema", "true").option("spark.read.simpleMode", "true").option("useHeader", "true").load("com.databricks.spark.csv")
 
 dfSalesDetail.registerTempTable("SalesDetails")
 dfProduct.registerTempTable("Product")
@@ -96,16 +65,11 @@ dfSalesLead.registerTempTable("SalesLeads")
 dfStoreCustomerExp.registerTempTable("StoreCustomerExperience")
 dfEmployeeGoal.registerTempTable("EmployeeGoal")
 
-
 Lev0KPIDict = {}
 Lev1KPIDict = {}
 Lev2KPIDict = {}
 
-schema = StructType([StructField('storenumber', StringType(), True),StructField('sourceemployeeid', IntegerType(), True),\
-    StructField('kpiname', StringType(), False),StructField('kpivalue', DoubleType(), True),\
-    StructField('report_date', DateType(), False),StructField('companycd', IntegerType(), False)])
-
-
+schema = StructType([StructField('storenumber', StringType(), True), StructField('sourceemployeeid', IntegerType(), True), StructField('kpiname', StringType(), False), StructField('kpivalue', DoubleType(), True), StructField('report_date', DateType(), False), StructField('companycd', IntegerType(), False)])
 
 dfKPI = spark.createDataFrame(spark.sparkContext.emptyRDD(), schema)
 dfKpilistlev0 = dfKpilist.filter(col('CalculationLevel') == 0)
@@ -117,14 +81,14 @@ listvalue = dfKpilistlev0.rdd
 list1 = listvalue.take(listvalue.count())
 i = 0
 for value in list1:
-    i = i+1
+    i = i + 1
     doclist = []
     kpiheader = value.KPIName
     expression = value.Expression
     filtercondition = value.FilterCondition
     tablename = value.FromClause
     groupbycolumn = value.GroupByColumns
-    companycd=value.Companycd
+    companycd = value.Companycd
     words = tablename.split(' ')
     for word in words:
         doclist.append(word)
@@ -152,18 +116,12 @@ for value in list1:
                 + tablename
 
     df = spark.sql(sqlstring)
-    df=df.withColumn('companycd',lit(companycd))
-    df=df.withColumnRenamed("getOnlyDate(invoicedate)","report_date")
+    df = df.withColumn('companycd', lit(companycd))
+    df = df.withColumnRenamed("getOnlyDate(invoicedate)", "report_date")
     dfKPI.registerTempTable("DFKPI")
-    dfKPI=spark.sql("select sourceemployeeid,storenumber,report_date,kpiname,kpivalue,companycd from DFKPI")
+    dfKPI = spark.sql("select sourceemployeeid, storenumber, report_date, kpiname, kpivalue, companycd from DFKPI")
     dfKPI = dfKPI.union(df)
     Lev0KPIDict[kpiheader] = df
-
-
-#### LEVEL 1 KPI code starts here ########
-
-
-
 
 dfKpilistlev1 = dfKpilist.filter(col('CalculationLevel') == 1)
 lev1rowcount = dfKpilistlev1.count()
@@ -172,7 +130,7 @@ listlv1value = dfKpilistlev1.rdd
 listlv1 = listlv1value.take(listlv1value.count())
 
 for value in listlv1:
-    i = i+1
+    i = i + 1
     doclist = []
     headerlist = []
     kpiheader = value.KPIName
@@ -182,13 +140,13 @@ for value in listlv1:
     groupbycolumn = value.GroupByColumns
     lev1headername = value.LveTableName
     wordsplit = lev1headername.split(',')
-    j=0
+    j = 0
     for word in wordsplit:
         word1 = word.split('=')
         for word2 in word1:
             headerlist.append(word2)
-        Lev0KPIDict[headerlist[j]].registerTempTable(headerlist[j+1])
-        j=j+2
+        Lev0KPIDict[headerlist[j]].registerTempTable(headerlist[j + 1])
+        j = j + 2
     words = tablename.split(' ')
     for word in words:
         doclist.append(word)
@@ -216,13 +174,9 @@ for value in listlv1:
                 + tablename
 
     df = spark.sql(sqlstring)
-    df=df.withColumn('companycd',lit(companycd))
+    df = df.withColumn('companycd', lit(companycd))
     dfKPI = dfKPI.union(df)
     Lev1KPIDict[kpiheader] = df
-
-
-############Logic starts for KPI level2###########
-
 
 dfKpilistlev2 = dfKpilist.filter(col('CalculationLevel') == 2)
 lev1rowcount = dfKpilistlev2.count()
@@ -230,7 +184,7 @@ lev1rowcount = dfKpilistlev2.count()
 listlv2value = dfKpilistlev2.rdd
 listlv2 = listlv2value.take(listlv2value.count())
 for value in listlv2:
-    i = i+1
+    i = i + 1
     doclist = []
     headerlist = []
     kpiheader = value.KPIName
@@ -240,52 +194,48 @@ for value in listlv2:
     groupbycolumn = value.GroupByColumns
     lev1headername = value.LveTableName
     wordsplit = lev1headername.split(',')
-    j=0
+    j = 0
     for word in wordsplit:
         word1 = word.split('=')
         for word2 in word1:
             headerlist.append(word2)
 
         if headerlist[j] in Lev1KPIDict:
-            Lev1KPIDict[headerlist[j]].registerTempTable(headerlist[j+1])
+            Lev1KPIDict[headerlist[j]].registerTempTable(headerlist[j + 1])
         else:
-           Lev0KPIDict[headerlist[j]].registerTempTable(headerlist[j+1])
+            Lev0KPIDict[headerlist[j]].registerTempTable(headerlist[j + 1])
 
-        j=j+2
+        j = j + 2
     words = tablename.split(' ')
     for word in words:
         doclist.append(word)
 
     firsttablename = doclist[0]
 
-
     sqlstring = ""
     if filtercondition:
         sqlstring = "select " + groupbycolumn + ",'" + kpiheader + "' as kpiname, " + expression  \
-                + " as kpivalue from " \
-                + tablename + "  " + filtercondition + " group by " + groupbycolumn
-
-
+                    + " as kpivalue from " \
+                    + tablename + "  " + filtercondition + " group by " + groupbycolumn
 
     else:
         sqlstring = "select " + groupbycolumn + ",'" + kpiheader + "' as kpiname, " + expression  \
-                + " as kpivalue from " \
-                + tablename + " group by " + groupbycolumn
+                    + " as kpivalue from " \
+                    + tablename + " group by " + groupbycolumn
 
         df = spark.sql(sqlstring)
-        df=df.withColumn('companycd',lit(companycd))
+        df = df.withColumn('companycd', lit(companycd))
         dfKPI = dfKPI.union(df)
         Lev2KPIDict[kpiheader] = df
-
 
 dfKPI = dfKPI.na.drop(subset=["kpivalue"])
 
 dfKPI.registerTempTable("DFKPI2")
-dfKPI=spark.sql("select sourceemployeeid,storenumber,report_date,kpiname,kpivalue,companycd from DFKPI2")
+dfKPI = spark.sql("select sourceemployeeid,storenumber,report_date,kpiname,kpivalue,companycd from DFKPI2")
 
 dfKPI.persist(StorageLevel.MEMORY_ONLY)
 dfKPI.rdd.getNumPartitions()
-dfKPI.coalesce(1).select("*").write.mode("overwrite").parquet(KPIOutput +'/'+ 'Working' )
-dfKPI.coalesce(1).select("*").write.mode("append").parquet(KPIOutput +'/'+ 'Previous' )
+dfKPI.coalesce(1).select("*").write.mode("overwrite").parquet(KPIOutput + '/' + 'Working')
+dfKPI.coalesce(1).select("*").write.mode("append").parquet(KPIOutput + '/' + 'Previous')
 
 spark.stop()
