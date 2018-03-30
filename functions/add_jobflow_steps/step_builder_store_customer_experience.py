@@ -31,10 +31,7 @@ class StepBuilderStoreCustomerExperience(object):
         steps = [
             self._build_step_csv_to_parquet_store_customer_experience(),
             self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery(),
-            self._build_step_csv_to_parquet_store_recruiting_headcount(),
-            self._build_step_store_recruiting_headcount_refined(),
-            self._build_step_store_recruiting_headcount_delivery()
+            self._build_step_store_customer_experience_delivery()
         ]
 
         return steps
@@ -80,49 +77,6 @@ class StepBuilderStoreCustomerExperience(object):
         script_args = [
             's3://' + output_bucket + '/WT_STORE_CUST_EXPRC',
             's3://' + input_bucket + '/StoreCustomerExperience/Working'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_csv_to_parquet_store_recruiting_headcount(self):
-        step_name = 'CSVToParquetStoreRecruitingHeadcount'
-        script_name = 'Facts/StoreRecHeadcountCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
-
-        script_args = [
-            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + output_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + error_bucket + '/StoreRecruitingHeadcount'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_store_recruiting_headcount_refined(self):
-        step_name = 'StoreRecruitingHeadcountRefined'
-        script_name = 'Facts/StoreRecHeadcountDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
-        output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
-
-        script_args = [
-            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + output_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + error_bucket + '/StoreRecruitingHeadcount'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
-
-    def _build_step_store_recruiting_headcount_delivery(self):
-        step_name = 'StoreRecruitingHeadcountDelivery'
-        script_name = 'Facts/StoreRecHeadcountRefinedToDelivery.py'
-        input_bucket = self.buckets['refined_regular']
-        output_bucket = self.buckets['delivery_regular']
-
-        script_args = [
-            's3://' + input_bucket + '/StoreRecruitingHeadcount/Working',
-            's3://' + output_bucket + '/WT_STORE_RCRTING_HDCT/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

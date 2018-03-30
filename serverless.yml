@@ -154,6 +154,66 @@ functions:
     package:
       artifact: ${self:custom.package.extractMetadataArtifact}
 
+  addJobFlowStepsCustomer:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-customer-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 5 * * ? *) # every day at 5AM UTC/12AM Dallas time
+          input:
+            builder: customer
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsProduct:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-product-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-product-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
+          rate: cron(10 5 * * ? *) # every day at 5:10AM UTC/12:10AM Dallas time
+          input:
+            builder: product
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
   addJobFlowStepsStore:
     role: AddJobFlowStepsRole
     environment:
@@ -178,131 +238,10 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-store-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          rate: cron(20 5 * * ? *) # every day at 5:20AM UTC/12:20AM Dallas time
           input:
             builder: store
             enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
- 
-  addJobFlowStepsCustomer:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-customer-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
-          input:
-            builder: customer
-          enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-      
-  addJobFlowStepsEmployee:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-employee-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-employee-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-employee-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: employee
-            enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-    
-  addJobFlowStepsProduct:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-product-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-product-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: product
-          enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-
-  addJobFlowStepsStoreCustomerExperience:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-storecustexpr-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: storecustomerexperience
-          enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -329,10 +268,10 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-goalskpi-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          rate: cron(50 5 * * ? *) # every day at 5:50AM UTC/12:50AM Dallas time
           input:
             builder: goalskpi
-          enabled: true
+            enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -359,10 +298,10 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          rate: cron(10 6 * * ? *) # every day at 6:10AM UTC/1:10AM Dallas time
           input:
             builder: salesothers
-          enabled: true
+            enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -390,9 +329,39 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-salestransactions-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          rate: cron(25 6 * * ? *) # every day at 6:25AM UTC/1:25AM Dallas time
           input:
             builder: salestransactions
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsStoreCustomerExperience:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-storecustexpr-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
+          rate: cron(40 6 * * ? *) # every day at 6:40AM UTC/1:40AM Dallas time
+          input:
+            builder: storecustomerexperience
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
@@ -421,7 +390,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-saleskpianddetails-sched-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
+          rate: cron(55 6 * * ? *) # every day at 6:55AM UTC/1:55AM Dallas time
           input:
             builder: saleskpianddetails
             enabled: true
