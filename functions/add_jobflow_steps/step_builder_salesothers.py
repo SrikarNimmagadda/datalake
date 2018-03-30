@@ -94,7 +94,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_csv_to_parquet_salesleads(self):
         step_name = 'CSVToParquetSalesLeads'
-        script_name = 'Facts/SalesLeadCSVToParquet_Latest.py'
+        script_name = 'Facts/SalesLeadCSVToParquet.py'
         input_bucket = self.buckets['raw_customer_pii']
         output_bucket = self.buckets['discovery_customer_pii']
 
@@ -108,7 +108,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_salesleads_refinery(self):
         step_name = 'SalesLeadsRefinery'
-        script_name = 'Facts/SalesLeadsRefined_Latest.py'
+        script_name = 'Facts/SalesLeadsRefined.py'
         input_bucket = self.buckets['discovery_customer_pii']
         output_bucket = self.buckets['refined_regular']
 
@@ -127,7 +127,7 @@ class StepBuilderSalesOthers(object):
 
     def _build_step_salesleads_delivery(self):
         step_name = 'SalesLeadsDelivery'
-        script_name = 'Facts/SalesLeadDelivery_Latest.py'
+        script_name = 'Facts/SalesLeadDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
