@@ -1,7 +1,7 @@
 """ Contains the class StepBuilderSalestransactions.
 Builds EMR Steps for sales Transaction files.
 """
-
+import datetime
 
 class StepBuilderSalesTransactions(object):
     """Build the steps that will be sent to the EMR cluster."""
@@ -50,10 +50,12 @@ class StepBuilderSalesTransactions(object):
         script_name = 'Facts/ATTSalesActualsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        today = datetime.date.today()
+        sysdate = today.strftime("%m-%d-%Y")
 
         script_args = [
             's3://' + output_bucket + '/ATTSalesActual',
-            's3://' + input_bucket + '/AT_T_MyResults_SFTP/Working',
+            's3://' + input_bucket + '/AT_T_MyResults_SFTP/loaded_date=' + str(sysdate),
             's3://' + input_bucket + '/AT_T_MyResults_RPT/Working'
         ]
 
