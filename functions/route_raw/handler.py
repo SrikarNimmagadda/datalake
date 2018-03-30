@@ -73,7 +73,7 @@ def handle_event(event, s3_service):
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
                   'CompanyCode': 'Company',
-                  'TB_KPI_List': 'TB_KPI_List'
+                  'TB_KPI': 'KPI_Testing'
                   }
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
