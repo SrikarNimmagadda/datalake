@@ -70,7 +70,7 @@ dfEmployee = dfEmployee.\
     withColumnRenamed("RowThumbprint", "rowthumbprint").\
     withColumnRenamed("RowInserted", "rowinserted").\
     withColumnRenamed("RowUpdated", "rowupdated").\
-    withColumnRenamed("RowEvent", "rowevent")
+    withColumnRenamed("RowEvent\r", "rowevent")
 
 dfEmployee.registerTempTable("employee")
 dfEmployee_Write = spark.sql("select *," +
