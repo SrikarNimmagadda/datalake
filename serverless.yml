@@ -971,24 +971,6 @@ resources:
             Value:
               Ref: AddJobFlowStepsCustomerLambdaFunction
 
-    EmployeelambdafailureAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmployee Lambda Function
-        AlarmActions:
-          - Ref: SNSNotificationTopic
-        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
-        Namespace: AWS/Lambda
-        Statistic: Sum
-        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
-        EvaluationPeriods: 1
-        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
-        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
-        Dimensions:
-          - Name: FunctionName
-            Value:
-              Ref: AddJobFlowStepsEmployeeLambdaFunction
-
     ProductlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
