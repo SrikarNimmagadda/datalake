@@ -3,6 +3,7 @@ Builds EMR Steps for sales Transaction files.
 """
 import datetime
 
+
 class StepBuilderSalesTransactions(object):
     """Build the steps that will be sent to the EMR cluster."""
 
