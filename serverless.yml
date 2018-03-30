@@ -115,7 +115,7 @@ functions:
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
-    name: ${self:service}-route-raw-${self:provider.stage}
+    name: ${self:service}-route-raw-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - s3:
@@ -133,7 +133,7 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
-    name: ${self:service}-extract-metadata-${self:provider.stage}
+    name: ${self:service}-extract-metadata-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - s3:
@@ -171,12 +171,12 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-customer-${self:provider.stage}
+    name: ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-customer-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(0 5 * * ? *) # every day at 5AM UTC/12AM Dallas time
           input:
             builder: customer
@@ -201,12 +201,12 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-product-${self:provider.stage}
+    name: ${self:service}-add-steps-product-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-product-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-product-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-product-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(10 5 * * ? *) # every day at 5:10AM UTC/12:10AM Dallas time
           input:
             builder: product
@@ -232,12 +232,12 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-store-${self:provider.stage}
+    name: ${self:service}-add-steps-store-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-store-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-store-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-store-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(20 5 * * ? *) # every day at 5:20AM UTC/12:20AM Dallas time
           input:
             builder: store
@@ -262,12 +262,12 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-goalskpi-${self:provider.stage}
+    name: ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-goalskpi-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-goalskpi-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(50 5 * * ? *) # every day at 5:50AM UTC/12:50AM Dallas time
           input:
             builder: goalskpi
@@ -292,12 +292,12 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-salesothers-${self:provider.stage}
+    name: ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-salesothers-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(10 6 * * ? *) # every day at 6:10AM UTC/1:10AM Dallas time
           input:
             builder: salesothers
@@ -323,12 +323,12 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-salestransactions-${self:provider.stage}
+    name: ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salestransactions-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-salestransactions-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(25 6 * * ? *) # every day at 6:25AM UTC/1:25AM Dallas time
           input:
             builder: salestransactions
@@ -353,12 +353,12 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-storecustexpr-${self:provider.stage}
+    name: ${self:service}-add-steps-storecustexpr-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-storecustexpr-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(40 6 * * ? *) # every day at 6:40AM UTC/1:40AM Dallas time
           input:
             builder: storecustomerexperience
@@ -384,12 +384,12 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-saleskpianddetails-${self:provider.stage}
+    name: ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-saleskpianddetails-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-saleskpianddetails-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(55 6 * * ? *) # every day at 6:55AM UTC/1:55AM Dallas time
           input:
             builder: saleskpianddetails
@@ -1500,7 +1500,7 @@ resources:
     LogPolicy:
       Type: AWS::IAM::Policy
       Properties:
-        PolicyName: ${self:service}-log-policy-${self:provider.stage}
+        PolicyName: ${self:service}-log-policy-${self:custom.hen}-${self:provider.stage}
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -1519,7 +1519,7 @@ resources:
     RouteRawRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-routeRawRole-${self:provider.stage}
+        RoleName: ${self:service}-routeRawRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument: 
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1553,7 +1553,7 @@ resources:
     ExtractMetadataRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        RoleName: ${self:service}-extractMetadataRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1587,7 +1587,7 @@ resources:
     AddJobFlowStepsRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-AddJobFlowStepsRole-${self:provider.stage}
+        RoleName: ${self:service}-AddJobFlowStepsRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1638,7 +1638,7 @@ resources:
     AthenaaccessCustomerPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessCustomerPiibucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessCustomerPiibucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1668,7 +1668,7 @@ resources:
     AthenaaccessHrPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessHrPiibucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessHrPiibucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1698,7 +1698,7 @@ resources:
     AthenaaccessRegularbucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessRegularbucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessRegularbucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1724,7 +1724,7 @@ resources:
     GlueRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-glueRole-${self:provider.stage}
+        RoleName: ${self:service}-glueRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-glue-role-policy-doc.yml)}    
         Policies:
