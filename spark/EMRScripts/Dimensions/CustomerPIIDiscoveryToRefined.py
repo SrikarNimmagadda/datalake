@@ -41,7 +41,7 @@ dfCustomerPII = spark.sql("select a.sourcecustomerid as sourceidentifier," +
                           "a.employeeidassignedto " +
                           "as sourceemployeeidassignedto," +
                           " a.rowupdated as customerlastmodifieddate," +
-                          "a.notes, 'NA' as phone2type, 'NA' as phone2," +
+                          "'NA' as phone2type, 'NA' as phone2," +
                           " 'NA' as phone3type, 'NA' as phone3," +
                           " 'NA' as phone4type, 'NA' as phone4," +
                           " 'NA' as phone5type, 'NA' as phone5," +

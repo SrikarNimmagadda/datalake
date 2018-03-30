@@ -42,7 +42,7 @@ def handle_event(event, s3_service):
 
         target_bucket = determine_target(key1)
 
-        myDict = {'RPT_ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis':
+        myDict = {'RPT_ATTHistorical_Grid_RPT_ATTHistorical_RPT_ATTMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_RPT',
                   'ATTHistorical_Grid_ATTHistorical_ATTMyResultsHistoricalAnalysis':
                   'AT_T_MyResults_SFTP',
@@ -73,7 +73,7 @@ def handle_event(event, s3_service):
                   'ApprovedFTE_CurrentHeadcount':
                   'StoreRecruitingHeadcount',
                   'CompanyCode': 'Company',
-                  'TB_KPI_List': 'TB_KPI_List'
+                  'TB_KPI': 'KPI_Testing'
                   }
 
         myKey = [v for k, v in myDict.items() if key1.startswith(k)]
