@@ -4,26 +4,54 @@ from datetime import datetime
 from pyspark.sql.types import StructType, StringType, StructField, DecimalType
 from pyspark.sql.functions import lit, regexp_replace, rtrim, when
 import boto3
+from urlparse import urlparse
 
 
 class ATTSalesActualsCSVToParquet(object):
 
     def __init__(self):
+        self.appName = self.__class__.__name__
+        self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.AttSalesActualsOutput = sys.argv[1]
         self.AttSalesActualsInput = sys.argv[2]
         self.ATTMyResultsInp2 = sys.argv[3]
 
     def loadParquet(self):
         print("-------------------Fetching the dates------------------------------------")
-        print(self.ATTMyResultsInp2)
-        s3keys = self.ATTMyResultsInp2.split(':')[1].split('//')[1].split('/')
+        print(self.AttSalesActualsInput)
+        s3keys = self.AttSalesActualsInput.split(':')[1].split('//')[1].split('/')
         key = ""
         filefolderPrefix = s3keys[1] + "/" + s3keys[2]
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(s3keys[0])
         listofObj = list(bucket.objects.filter(Prefix=filefolderPrefix))
+        schema = StructType([StructField('Location', StringType(), False), StructField('Loc Id', StringType(), False), StructField('Dlr1 Code', StringType(), False), StructField('KPI', StringType(), False), StructField('KPI ID', StringType(), False), StructField('Dec 2017 Actual', StringType(), True), StructField('Dec 2017 Projected', StringType(), True), StructField('Dec 2017 Target', StringType(), True)])
+        dfATTSalesActuals = self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD(), schema)
+        bucketWithPath = urlparse(self.AttSalesActualsInput)
+        bucket = bucketWithPath.netloc
+        spark = SparkSession.builder.appName("ATTSalesActuals").getOrCreate()
         for obj in listofObj:
                 key = obj.key
+                file = "s3://" + bucket + "/" + obj.key
+                df1 = self.sparkSession.read.format("com.databricks.spark.csv").\
+                    option("header", "true").\
+                    option("treatEmptyValuesAsNulls", "true").\
+                    option("inferSchema", "false").\
+                    load(file, schema=schema)
+                df1 = df1.filter(~(df1.Location.like('Histori%%')))
+                df1 = df1.filter(~(df1.Location.like('AT&T MyRe%%')))
+                df1 = df1.filter(~(df1.Location.like('AR : SPRI%%')))
+                df1 = df1.filter(~(df1.Location.like('Generated%%')))
+                df1 = df1.filter(~(df1.Location.like('Locat%%')))
+                dfATTSalesActuals = df1.unionAll(dfATTSalesActuals)
+                dfATTSalesActuals = dfATTSalesActuals.withColumnRenamed("Location", "attlocationname").\
+                    withColumnRenamed("Loc Id", "locid").\
+                    withColumnRenamed("Dlr1 Code", "dealercode").\
+                    withColumnRenamed("KPI", "kpiname").\
+                    withColumnRenamed("KPI ID", "kpiid").\
+                    withColumnRenamed("Dec 2017 Actual", "actual_value").\
+                    withColumnRenamed("Dec 2017 Projected", "projected_value").\
+                    withColumnRenamed("Dec 2017 Target", "target_value")
 
         filedate = key.split("/")[2].split("_")[3].split(".")[1]
 
@@ -33,31 +61,7 @@ class ATTSalesActualsCSVToParquet(object):
         #                                 Reading the source data files                                         #
         #########################################################################################################
 
-        spark = SparkSession.builder.appName("ATTSalesActuals").getOrCreate()
-
-        schema = StructType([StructField('Location', StringType(), False), StructField('Loc Id', StringType(), False), StructField('Dlr1 Code', StringType(), False), StructField('KPI', StringType(), False), StructField('KPI ID', StringType(), False), StructField('Dec 2017 Actual', StringType(), True), StructField('Dec 2017 Projected', StringType(), True), StructField('Dec 2017 Target', StringType(), True)])
-
-        dfATTSalesActuals = spark.read.format("com.databricks.spark.csv").\
-            option("header", "true").\
-            option("treatEmptyValuesAsNulls", "true").\
-            option("inferSchema", "false").\
-            load(self.AttSalesActualsInput, schema=schema)
-
-        dfATTSalesActuals1 = dfATTSalesActuals.filter(~(dfATTSalesActuals.Location.like('Histori%%')))
-        dfATTSalesActuals2 = dfATTSalesActuals1.filter(~(dfATTSalesActuals.Location.like('AT&T MyRe%%')))
-        dfATTSalesActuals3 = dfATTSalesActuals2.filter(~(dfATTSalesActuals.Location.like('AR : SPRI%%')))
-        dfATTSalesActuals4 = dfATTSalesActuals3.filter(~(dfATTSalesActuals.Location.like('Generated%%')))
-        dfAttSalesActualsInput = dfATTSalesActuals4.filter(~(dfATTSalesActuals.Location.like('Locat%%')))
-
-        FinalHistDF1 = dfAttSalesActualsInput.withColumnRenamed("Location", "attlocationname").\
-            withColumnRenamed("Loc Id", "locid").\
-            withColumnRenamed("Dlr1 Code", "dealercode").\
-            withColumnRenamed("KPI", "kpiname").\
-            withColumnRenamed("KPI ID", "kpiid").\
-            withColumnRenamed("Dec 2017 Actual", "actual_value").\
-            withColumnRenamed("Dec 2017 Projected", "projected_value").\
-            withColumnRenamed("Dec 2017 Target", "target_value")
-
+        FinalHistDF1 = dfATTSalesActuals
         FinalHistDF1 = FinalHistDF1.withColumn("actualvalue", when(FinalHistDF1.actual_value.contains('%'), rtrim(regexp_replace("actual_value", '\\%|\\,', '')).cast(DecimalType()) / 100).otherwise(rtrim(regexp_replace("actual_value", '\\$|\\%|\\,', ''))))
 
         FinalHistDF1 = FinalHistDF1.withColumn("projectedvalue", when(FinalHistDF1.actual_value.contains('%'), rtrim(regexp_replace("projected_value", '\\%|\\,', '')).cast(DecimalType()) / 100).otherwise(rtrim(regexp_replace("projected_value", '\\$|\\%|\\,', ''))))
@@ -96,13 +100,9 @@ class ATTSalesActualsCSVToParquet(object):
         FinalRPTDF1 = FinalRPTDF1.withColumn('reportdate2', lit(filedateS))
         FinalRPTDF1.registerTempTable("RPT")
 
-        FinalHistDF = spark.sql("select attlocationname,locid,dealercode,kpiname,kpiid,actualvalue ,projectedvalue,"
-                                "targetvalue,reportdate,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                                "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from HIST")
+        FinalHistDF = self.sparkSession.sql("select attlocationname, locid, dealercode, kpiname, kpiid, actualvalue, projectedvalue, targetvalue, reportdate, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from HIST")
 
-        FinalRPTDF = spark.sql("select attlocationname2,locid2,dealercode2,kpiname2,kpiid2,"
-                               "actualvalue2 ,projectedvalue2,targetvalue2,reportdate2,"
-                               "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from RPT")
+        FinalRPTDF = self.sparkSession.sql("select attlocationname2,locid2,dealercode2,kpiname2,kpiid2,actualvalue2 ,projectedvalue2,targetvalue2,reportdate2,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from RPT")
         '''
         FinalHistDF = spark.sql("select attlocationname,locid,dealercode,kpiname,kpiid,actualvalue ,projectedvalue,"
                                 "targetvalue,reportdate,"
