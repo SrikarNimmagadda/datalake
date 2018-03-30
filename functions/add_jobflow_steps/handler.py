@@ -14,7 +14,7 @@ from step_factory import StepFactory
 
 from step_builder_store import StepBuilderStore
 from step_builder_customer import StepBuilderCustomer
-from step_builder_employee import StepBuilderEmployee
+#from step_builder_employee import StepBuilderEmployee
 from step_builder_product import StepBuilderProduct
 from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
 from step_builder_goalskpi import StepBuilderGoalskpi
