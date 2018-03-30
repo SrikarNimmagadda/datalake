@@ -96,12 +96,12 @@ class StepBuilderSalesKPIandDetails(object):
 
     def _build_step_salesKPIlist(self):
         step_name = 'SalesKPIList'
-        script_name = 'Facts/tb_kpi_list_script.py'
+        script_name = 'Facts/TB_KPI_LIST.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/KPI_Testing/KPIsinScopeV6-DL.xlsx ',
+            's3://' + input_bucket + '/KPI_Testing/TB_KPI_LIST.xlsx',
             's3://' + output_bucket + '/WT_TB_KPI_LIST'
         ]
 
@@ -109,15 +109,15 @@ class StepBuilderSalesKPIandDetails(object):
 
     def _build_step_salesDetails_Refinery(self):
         step_name = 'SalesKPIRefined'
-        script_name = 'Facts/SalesKPI.py'
+        script_name = 'Facts/SalesKPIRefined.py'
         input_bucket = self.buckets['refined_regular']
-        KPI_FILE = '/KPI_Testing/KPIsinScopeV6-DL.xlsx'
+        KPI_FILE = '/KPI_Testing/TB_KPI_LIST.xlsx'
 
         script_args = [
             's3://' + input_bucket + '/SalesDetails/Working/',
             's3://' + input_bucket + '/Product/Working/',
             's3://' + input_bucket + '/ProductCategory/Working/',
-            's3://' + input_bucket + '/StoreTransactionAdj/Working/',
+            's3://' + input_bucket + '/StoreTransactionAdjustment/Working/',
             's3://' + input_bucket + '/Store/Working/',
             's3://' + input_bucket + '/ATTSalesActual/Working/',
             's3://' + input_bucket + '/StoreTraffic/Working/',
