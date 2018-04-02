@@ -1226,7 +1226,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/
+            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/Customer/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1246,47 +1246,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedCustomerPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    CustomerPiiDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    CustomerPiiRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedCustomerPii}/
+            - Path: s3://${self:custom.buckets.refinedCustomerPii}/CustomerPII/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1306,7 +1266,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryHrPii}/
+            - Path: s3://${self:custom.buckets.discoveryHrPii}/Employee/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1326,7 +1286,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedHrPii}/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Employee/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1346,7 +1306,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Product/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1366,7 +1326,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Product/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1386,7 +1346,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ProductCategory/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1406,17 +1366,17 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
+            - Path: s3://${self:custom.buckets.refinedRegular}/ProductCategory/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
           ScheduleExpression: 'cron(0 0 * * ? *)'
 
-    StoreDiscoveryCrawler:
+    StoreattdlrcdDiscoveryCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-store-discovery-${self:custom.hen}-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-Storeattdlrcd-discovery-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
@@ -1426,7 +1386,127 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/ATTDealerCodes/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StorebaeDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storebae-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/BAE/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoredtvDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storedtv-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/DTV/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoredlrcdsDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storedlrcds-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/DealerCodes/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StorelocDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storeloc-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/Location/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoremultitracDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storemultitrac-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/MultiTracker/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StorespringmobDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-storespringmob-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/SpringMobileStore/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1446,7 +1526,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Store/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1466,7 +1546,7 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTDealerCode/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1486,7 +1566,586 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
+            - Path: s3://${self:custom.buckets.refinedRegular}/ATTDealerCode/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    TbgoalPointempDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-tb-goalpointemp-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/TBGoalPointEmployee/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    TbgoalPointstoreDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-tb-goalpointstore-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/TBGoalPointStore/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'		  
+
+    TbgoalPointRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-tb-goalpoint-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/TBGoalPoint/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'   
+
+    StorerctinghdctDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-rcrting-hdct-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreRecruitingHeadcount/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StorerctinghdctRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-rcrting-hdct-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreRecruitingHeadcount/Working/
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoregoalsDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-goals-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreGoals/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoregoalsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-goals-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreGoals/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    EmpgoalsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-emp-goals-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeGoal/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoredlygoalfcstDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-dlygoalfcst-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreDailyGoalForecast/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoredlygoalfcstRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-dlygoalfcst-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreDailyGoalForecast/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    salesleadsDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-sales-leads-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/SalesLeads/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    SalesleadsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-sales-leads-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesLeads/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoretrafficDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-traffic-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTraffic/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoretrafficRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-traffic-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreTraffic/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    Storetransadjmnts1DiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-transadjmnts1-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTransactionAdjustment/Working1/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    Storetransadjmnts2DiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-transadjmnts2-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTransactionAdjustment/Working2/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StoretransadjmntsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-transadjmnts-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreTransactionAdj/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    Attsalesactls1DiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-att-salesactls1-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTSalesActual/Working1/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    Attsalesactls2DiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-att-salesactls2-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTSalesActual/Working2/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    AttsalesactlsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-att-salesactls-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/ATTSalesActual/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    EmptransadjmntsDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-emp-transadjmnts-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/EmployeeTransactionAdjustment/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    EmptransadjmntsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-emp-transadjmnts-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeTransactionAdjustment/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    EmpoperefcnyDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-emp-operefcny-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/EmployeeOperationalEfficiency/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    EmpoperefcnyRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-emp-operefcny-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeOperationalEfficiency/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'   
+
+    StorecustexprcDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-custexprc-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreCustomerExperience/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    StorecustexprcRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-store-custexprc-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreCustomerExperience/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    SalesdtlsDiscoveryCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-sales-dtls-discovery-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: DiscoveryDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.discoveryRegular}/SalesDetails/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    SalesdtlsRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-sales-dtls-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesDetails/Working/
+        SchemaChangePolicy:
+          UpdateBehavior: 'UPDATE_IN_DATABASE'
+          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
+        Schedule:
+          ScheduleExpression: 'cron(0 0 * * ? *)'
+
+    TbsaleskpisRefinedCrawler:
+      Type: AWS::Glue::Crawler
+      Properties:
+        Name: ${self:service}-glue-mtd-tb-saleskpis-refined-${self:custom.hen}-${self:provider.stage}
+        Role:
+          'Fn::GetAtt':
+            - GlueRole
+            - Arn
+        DatabaseName:
+          Ref: RefinedDatabase
+        TablePrefix: crw
+        Targets:
+          S3Targets:
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesKPI/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
