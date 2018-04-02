@@ -115,7 +115,7 @@ functions:
       RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
       RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
 
-    name: ${self:service}-route-raw-${self:provider.stage}
+    name: ${self:service}-route-raw-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - s3:
@@ -133,7 +133,7 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       FILE_METADATA_TABLE: ${self:custom.dynamo.fileMetadata.name}
-    name: ${self:service}-extract-metadata-${self:provider.stage}
+    name: ${self:service}-extract-metadata-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - s3:
@@ -154,6 +154,66 @@ functions:
     package:
       artifact: ${self:custom.package.extractMetadataArtifact}
 
+  addJobFlowStepsCustomer:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-customer-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 5 * * ? *) # every day at 5AM UTC/12AM Dallas time
+          input:
+            builder: customer
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsProduct:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-product-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-product-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-product-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(10 5 * * ? *) # every day at 5:10AM UTC/12:10AM Dallas time
+          input:
+            builder: product
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
   addJobFlowStepsStore:
     role: AddJobFlowStepsRole
     environment:
@@ -172,137 +232,16 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-store-${self:provider.stage}
+    name: ${self:service}-add-steps-store-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-store-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-store-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          name: ${self:service}-add-steps-store-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-store-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(20 5 * * ? *) # every day at 5:20AM UTC/12:20AM Dallas time
           input:
             builder: store
             enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
- 
-  addJobFlowStepsCustomer:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-customer-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-customer-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-customer-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
-          input:
-            builder: customer
-          enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-      
-  addJobFlowStepsEmployee:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-employee-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-employee-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-employee-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: employee
-            enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-    
-  addJobFlowStepsProduct:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-product-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-product-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-product-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: product
-          enabled: true
-    package:
-      artifact: ${self:custom.package.addStepsArtifact}
-
-  addJobFlowStepsStoreCustomerExperience:
-    role: AddJobFlowStepsRole
-    environment:
-      CODE_BUCKET: ${self:custom.buckets.code}
-      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
-      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
-      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
-      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
-      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
-      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
-      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
-      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
-      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
-      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
-      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
-      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
-      EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-storecustexpr-${self:provider.stage}
-    handler: handler.lambda_handler
-    events:
-      - schedule:
-          name: ${self:service}-add-steps-storecustexpr-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
-          input:
-            builder: storecustomerexperience
-          enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -323,16 +262,16 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-goalskpi-${self:provider.stage}
+    name: ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-goalskpi-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          name: ${self:service}-add-steps-goalskpi-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(50 5 * * ? *) # every day at 5:50AM UTC/12:50AM Dallas time
           input:
             builder: goalskpi
-          enabled: true
+            enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -353,16 +292,16 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-salesothers-${self:provider.stage}
+    name: ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salesothers-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          name: ${self:service}-add-steps-salesothers-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(10 6 * * ? *) # every day at 6:10AM UTC/1:10AM Dallas time
           input:
             builder: salesothers
-          enabled: true
+            enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
@@ -384,15 +323,45 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-salestransactions-${self:provider.stage}
+    name: ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salestransactions-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 10 * * ? *) # every day at 10AM UTC/5AM Dallas time
+          name: ${self:service}-add-steps-salestransactions-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(25 6 * * ? *) # every day at 6:25AM UTC/1:25AM Dallas time
           input:
             builder: salestransactions
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsStoreCustomerExperience:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-storecustexpr-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storecustexpr-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(40 6 * * ? *) # every day at 6:40AM UTC/1:40AM Dallas time
+          input:
+            builder: storecustomerexperience
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
@@ -415,13 +384,13 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-saleskpianddetails-${self:provider.stage}
+    name: ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-saleskpianddetails-sched-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:provider.stage} lambda on a schedule'
-          rate: cron(0/15 * * * ? *) # every 15 minutes, every day, all day
+          name: ${self:service}-add-steps-saleskpianddetails-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(55 6 * * ? *) # every day at 6:55AM UTC/1:55AM Dallas time
           input:
             builder: saleskpianddetails
             enabled: true
@@ -1002,24 +971,6 @@ resources:
             Value:
               Ref: AddJobFlowStepsCustomerLambdaFunction
 
-    EmployeelambdafailureAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmployee Lambda Function
-        AlarmActions:
-          - Ref: SNSNotificationTopic
-        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
-        Namespace: AWS/Lambda
-        Statistic: Sum
-        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
-        EvaluationPeriods: 1
-        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
-        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
-        Dimensions:
-          - Name: FunctionName
-            Value:
-              Ref: AddJobFlowStepsEmployeeLambdaFunction
-
     ProductlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -1275,7 +1226,8 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/
+            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/Customer/Working/
+            - Path: s3://${self:custom.buckets.discoveryHrPii}/Employee/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1295,247 +1247,8 @@ resources:
         TablePrefix: crw
         Targets:
           S3Targets:
-            - Path: s3://${self:custom.buckets.refinedCustomerPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    CustomerPiiDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    CustomerPiiRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-customer-pii-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedCustomerPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    EmployeeDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-employee-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryHrPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    EmployeeRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-employee-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedHrPii}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    ProductDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-product-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    ProductRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-product-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    ProductCategoryDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-product-category-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    ProductCategoryRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-product-category-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    StoreDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-store-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    StoreRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-store-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    AttDealercodeDiscoveryCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-att-dealercode-discovery-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: DiscoveryDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.discoveryRegular}/
-        SchemaChangePolicy:
-          UpdateBehavior: 'UPDATE_IN_DATABASE'
-          DeleteBehavior: 'DEPRECATE_IN_DATABASE'
-        Schedule:
-          ScheduleExpression: 'cron(0 0 * * ? *)'
-
-    AttDealercodeRefinedCrawler:
-      Type: AWS::Glue::Crawler
-      Properties:
-        Name: ${self:service}-glue-mtd-att-dealercode-refined-${self:custom.hen}-${self:provider.stage}
-        Role:
-          'Fn::GetAtt':
-            - GlueRole
-            - Arn
-        DatabaseName:
-          Ref: RefinedDatabase
-        TablePrefix: crw
-        Targets:
-          S3Targets:
-            - Path: s3://${self:custom.buckets.refinedRegular}/
+            - Path: s3://${self:custom.buckets.refinedCustomerPii}/CustomerPII/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Employee/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
@@ -1549,7 +1262,7 @@ resources:
     LogPolicy:
       Type: AWS::IAM::Policy
       Properties:
-        PolicyName: ${self:service}-log-policy-${self:provider.stage}
+        PolicyName: ${self:service}-log-policy-${self:custom.hen}-${self:provider.stage}
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -1568,7 +1281,7 @@ resources:
     RouteRawRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-routeRawRole-${self:provider.stage}
+        RoleName: ${self:service}-routeRawRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument: 
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1585,9 +1298,13 @@ resources:
                   Action:
                     - s3:PutObject
                     - s3:DeleteObject
+                    - s3:List*
                   Resource:
+                    - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}
                     - arn:aws:s3:::${self:custom.buckets.rawCustomerPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawHrPii}
                     - arn:aws:s3:::${self:custom.buckets.rawHrPii}/*
+                    - arn:aws:s3:::${self:custom.buckets.rawRegular}
                     - arn:aws:s3:::${self:custom.buckets.rawRegular}/*
                 - Effect: Allow
                   Action:
@@ -1598,7 +1315,7 @@ resources:
     ExtractMetadataRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-extractMetadataRole-${self:provider.stage}
+        RoleName: ${self:service}-extractMetadataRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1632,7 +1349,7 @@ resources:
     AddJobFlowStepsRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-AddJobFlowStepsRole-${self:provider.stage}
+        RoleName: ${self:service}-AddJobFlowStepsRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-role-policy-doc.yml)}
         Policies:
@@ -1683,7 +1400,7 @@ resources:
     AthenaaccessCustomerPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessCustomerPiibucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessCustomerPiibucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1713,7 +1430,7 @@ resources:
     AthenaaccessHrPiibucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessHrPiibucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessHrPiibucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1743,7 +1460,7 @@ resources:
     AthenaaccessRegularbucketsRole:
       Type: AWS::IAM::Role
       Properties:
-         RoleName: ${self:service}-AthenaaccessRegularbucketsRole-${self:provider.stage}
+         RoleName: ${self:service}-AthenaaccessRegularbucketsRole-${self:custom.hen}-${self:provider.stage}
          AssumeRolePolicyDocument:
            ${file(sls-include/assume-athena-role-policy-doc.yml)}
          Policies:
@@ -1769,7 +1486,7 @@ resources:
     GlueRole:
       Type: AWS::IAM::Role
       Properties:
-        RoleName: ${self:service}-glueRole-${self:provider.stage}
+        RoleName: ${self:service}-glueRole-${self:custom.hen}-${self:provider.stage}
         AssumeRolePolicyDocument:
           ${file(sls-include/assume-glue-role-policy-doc.yml)}    
         Policies:
