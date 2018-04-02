@@ -54,7 +54,7 @@ class ATTSalesActualsCSVToParquet(object):
                     withColumnRenamed("Dec 2017 Target", "target_value")
 
         filedate = key.split("/")[2].split("_")[3].split(".")[1]
-
+        filedate = filedate[0:8]
         filedateS = datetime.strptime(filedate, '%Y%m%d').strftime('%m/%d/%Y')
 
         #########################################################################################################
