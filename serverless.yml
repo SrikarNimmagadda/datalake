@@ -1201,7 +1201,7 @@ resources:
         CatalogId: 
           Ref: AWS::AccountId
         DatabaseInput:
-          Name: ${self:service}-discoveyglue-${self:custom.hen}-${self:provider.stage}
+          Name: ${self:service}-discoverylayer-database-${self:custom.hen}-${self:provider.stage}
           Description: Database for discovery layer
 
     RefinedDatabase:
@@ -1210,45 +1210,88 @@ resources:
         CatalogId: 
           Ref: AWS::AccountId
         DatabaseInput:
-          Name: ${self:service}-refinedglue-${self:custom.hen}-${self:provider.stage}
+          Name: ${self:service}-refinedlayer-database-${self:custom.hen}-${self:provider.stage}
           Description: Database for refined layer
 
-    CustomerDiscoveryCrawler:
+    DiscoverylayerCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-discovery-${self:custom.hen}-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-discovery-layer-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
             - Arn
         DatabaseName:
           Ref: DiscoveryDatabase
-        TablePrefix: crw
+        TablePrefix: discoverycrw
         Targets:
           S3Targets:
             - Path: s3://${self:custom.buckets.discoveryCustomerPii}/Customer/Working/
             - Path: s3://${self:custom.buckets.discoveryHrPii}/Employee/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Product/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ProductCategory/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/ATTDealerCodes/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/BAE/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/DTV/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/DealerCodes/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/Location/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/MultiTracker/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/Store/SpringMobileStore/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTDealerCode/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/TBGoalPointEmployee/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/TBGoalPointStore/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreRecruitingHeadcount/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreGoals/Working/			
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreDailyGoalForecast/Working/
+            - Path: s3://${self:custom.buckets.discoveryCustomerPii}/SalesLeads/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTraffic/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTransactionAdjustment/Working1/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreTransactionAdjustment/Working2/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTSalesActual/Working1/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/ATTSalesActual/Working2/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/EmployeeTransactionAdjustment/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/EmployeeOperationalEfficiency/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/StoreCustomerExperience/Working/
+            - Path: s3://${self:custom.buckets.discoveryRegular}/SalesDetails/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
         Schedule:
           ScheduleExpression: 'cron(0 0 * * ? *)'
 
-    CustomerRefinedCrawler:
+    RefinedlayerCrawler:
       Type: AWS::Glue::Crawler
       Properties:
-        Name: ${self:service}-glue-mtd-customer-refined-${self:custom.hen}-${self:provider.stage}
+        Name: ${self:service}-glue-mtd-refined-layer-${self:custom.hen}-${self:provider.stage}
         Role:
           'Fn::GetAtt':
             - GlueRole
             - Arn
         DatabaseName:
           Ref: RefinedDatabase
-        TablePrefix: crw
+        TablePrefix: refinedcrw
         Targets:
           S3Targets:
             - Path: s3://${self:custom.buckets.refinedCustomerPii}/CustomerPII/Working/
             - Path: s3://${self:custom.buckets.refinedRegular}/Employee/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Product/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/ProductCategory/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/Store/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/ATTDealerCode/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/TBGoalPoint/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreRecruitingHeadcount/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreGoals/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeGoal/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreDailyGoalForecast/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesLeads/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreTraffic/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreTransactionAdj/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/ATTSalesActual/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeTransactionAdjustment/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/EmployeeOperationalEfficiency/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/StoreCustomerExperience/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesDetails/Working/
+            - Path: s3://${self:custom.buckets.refinedRegular}/SalesKPI/Working/
         SchemaChangePolicy:
           UpdateBehavior: 'UPDATE_IN_DATABASE'
           DeleteBehavior: 'DEPRECATE_IN_DATABASE'
