@@ -184,6 +184,36 @@ functions:
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
+    addJobFlowStepsEmployee:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-employee-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-employee-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-employee-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(10 5 * * ? *) # every day at 5:10AM UTC/12:10AM Dallas time
+          input:
+            builder: employee
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact} 
+
   addJobFlowStepsProduct:
     role: AddJobFlowStepsRole
     environment:
@@ -207,7 +237,7 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-product-sched-${self:custom.hen}-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-product-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
-          rate: cron(10 5 * * ? *) # every day at 5:10AM UTC/12:10AM Dallas time
+          rate: cron(15 5 * * ? *) # every day at 5:15AM UTC/12:15AM Dallas time
           input:
             builder: product
             enabled: true
@@ -238,14 +268,14 @@ functions:
       - schedule:
           name: ${self:service}-add-steps-store-sched-${self:custom.hen}-${self:provider.stage}
           description: 'Invokes the ${self:service}-add-steps-store-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
-          rate: cron(20 5 * * ? *) # every day at 5:20AM UTC/12:20AM Dallas time
+          rate: cron(25 5 * * ? *) # every day at 5:25AM UTC/12:25AM Dallas time
           input:
             builder: store
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
-  addJobFlowStepsGoalsKPI:
+  addJobFlowStepsTbgoalpoint:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -262,20 +292,81 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage}
+    name: ${self:service}-add-steps-tbgoalpoint-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-goalskpi-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-goalskpi-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-tbgoalpoint-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-tbgoalpoint-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(40 5 * * ? *) # every day at 5:40AM UTC/12:40AM Dallas time
+          input:
+            builder: tbgoalpoint
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsStorercrtinghdct:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-storercrtinghdct-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storercrtinghdct-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storercrtinghdct-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(45 5 * * ? *) # every day at 5:45AM UTC/12:45AM Dallas time
+          input:
+            builder: storercrtinghdct
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsStoreandempgoals:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
+    name: ${self:service}-add-steps-storeandempgoals-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storeandempgoals-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storeandempgoals-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(50 5 * * ? *) # every day at 5:50AM UTC/12:50AM Dallas time
           input:
-            builder: goalskpi
+            builder: storeandempgoals
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
-  addJobFlowStepsSalesOthers:
+  addJobFlowStepsStoredlygoalfcst:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -292,20 +383,111 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage}
+    name: ${self:service}-add-steps-storedlygoalfcst-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salesothers-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salesothers-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-storedlygoalfcst-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storedlygoalfcst-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(0 6 * * ? *) # every day at 6:00AM UTC/1:00AM Dallas time
+          input:
+            builder: storedlygoalfcst
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsSalesleads:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
+    name: ${self:service}-add-steps-salesleads-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-salesleads-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salesleads-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(5 6 * * ? *) # every day at 6:05AM UTC/1:05AM Dallas time
+          input:
+            builder: salesleads
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+    addJobFlowStepsStoretraffic:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-storetraffic-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storetraffic-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storetraffic-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(10 6 * * ? *) # every day at 6:10AM UTC/1:10AM Dallas time
           input:
-            builder: salesothers
+            builder: storetraffic
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact} 
+
+  addJobFlowStepsStoretransadj:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-storetransadj-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-storetransadj-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storetransadj-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(15 6 * * ? *) # every day at 6:15AM UTC/1:15AM Dallas time
+          input:
+            builder: storetransadj
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
-  addJobFlowStepsSalesTransactions:
+  addJobFlowStepsAttsalesactls:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -323,20 +505,50 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage}
+    name: ${self:service}-add-steps-attsalesactls-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-salestransactions-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-salestransactions-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          name: ${self:service}-add-steps-attsalesactls-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-attsalesactls-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(20 6 * * ? *) # every day at 6:20AM UTC/1:20AM Dallas time
+          input:
+            builder: attsalesactls
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsEmptransadj:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}	
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-emptransadj-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-emptransadj-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-emptransadj-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
           rate: cron(25 6 * * ? *) # every day at 6:25AM UTC/1:25AM Dallas time
           input:
-            builder: salestransactions
+            builder: emptransadj
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
-  addJobFlowStepsStoreCustomerExperience:
+  addJobFlowStepsEmpoperefcny:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -353,20 +565,20 @@ functions:
       DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
-    name: ${self:service}-add-steps-storecustexpr-${self:custom.hen}-${self:provider.stage}
+    name: ${self:service}-add-steps-empoperefcny-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-storecustexpr-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-storecustomerexpr-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
-          rate: cron(40 6 * * ? *) # every day at 6:40AM UTC/1:40AM Dallas time
+          name: ${self:service}-add-steps-empoperefcny-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-empoperefcny-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(30 6 * * ? *) # every day at 6:30AM UTC/1:30AM Dallas time
           input:
-            builder: storecustomerexperience
+            builder: empoperefcny
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
-  addJobFlowStepsSalesKPIandDetails:
+  addJobFlowStepsStorecustexprc:
     role: AddJobFlowStepsRole
     environment:
       CODE_BUCKET: ${self:custom.buckets.code}
@@ -384,19 +596,80 @@ functions:
       DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
       EMR_STACK_NAME: ${self:custom.emrStackName}
       PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
-    name: ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage}
+    name: ${self:service}-add-steps-storecustexprc-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
       - schedule:
-          name: ${self:service}-add-steps-saleskpianddetails-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-saleskpianddetails-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
-          rate: cron(55 6 * * ? *) # every day at 6:55AM UTC/1:55AM Dallas time
+          name: ${self:service}-add-steps-storecustexprc-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-storecustexprc-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(35 6 * * ? *) # every day at 6:35AM UTC/1:35AM Dallas time
           input:
-            builder: saleskpianddetails
+            builder: storecustexprc
             enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
-      
+
+  addJobFlowStepsSalesdtls:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+    name: ${self:service}-add-steps-salesdtls-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-salesdtls-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-salesdtls-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(40 6 * * ? *) # every day at 6:40AM UTC/1:40AM Dallas time
+          input:
+            builder: salesdtls
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
+  addJobFlowStepsSaleskpi:
+    role: AddJobFlowStepsRole
+    environment:
+      CODE_BUCKET: ${self:custom.buckets.code}
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      RAW_CUSTOMER_PII_BUCKET: ${self:custom.buckets.rawCustomerPii}
+      RAW_HR_PII_BUCKET: ${self:custom.buckets.rawHrPii}
+      RAW_REGULAR_BUCKET: ${self:custom.buckets.rawRegular}
+      DISCOVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.discoveryCustomerPii}
+      DISCOVERY_HR_PII_BUCKET: ${self:custom.buckets.discoveryHrPii}
+      DISCOVERY_REGULAR_BUCKET: ${self:custom.buckets.discoveryRegular}
+      REFINED_CUSTOMER_PII_BUCKET: ${self:custom.buckets.refinedCustomerPii}
+      REFINED_HR_PII_BUCKET: ${self:custom.buckets.refinedHrPii}
+      REFINED_REGULAR_BUCKET: ${self:custom.buckets.refinedRegular}
+      DELIVERY_CUSTOMER_PII_BUCKET: ${self:custom.buckets.deliveryCustomerPii}
+      DELIVERY_REGULAR_BUCKET: ${self:custom.buckets.deliveryRegular}
+      EMR_STACK_NAME: ${self:custom.emrStackName}
+      PROCESS_METADATA_TABLE: ${self:custom.dynamo.processMetadata.name}
+    name: ${self:service}-add-steps-saleskpi-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - schedule:
+          name: ${self:service}-add-steps-saleskpi-sched-${self:custom.hen}-${self:provider.stage}
+          description: 'Invokes the ${self:service}-add-steps-saleskpi-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+          rate: cron(45 6 * * ? *) # every day at 6:45AM UTC/1:45AM Dallas time
+          input:
+            builder: saleskpi
+            enabled: true
+    package:
+      artifact: ${self:custom.package.addStepsArtifact}
+
 # NOTE: If needed, add additional Lambda Function definitions here
 # See https://serverless.com/framework/docs/providers/aws/guide/functions/ for more information
 
@@ -935,24 +1208,6 @@ resources:
             Value:
               Ref: ExtractMetadataLambdaFunction
 
-    StorelambdafailureAlarm:
-      Type: AWS::CloudWatch::Alarm
-      Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
-        AlarmActions:
-          - Ref: SNSNotificationTopic
-        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
-        Namespace: AWS/Lambda
-        Statistic: Sum
-        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
-        EvaluationPeriods: 1
-        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
-        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
-        Dimensions:
-          - Name: FunctionName
-            Value:
-              Ref: AddJobFlowStepsStoreLambdaFunction
-
     CustomerlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -970,6 +1225,24 @@ resources:
           - Name: FunctionName
             Value:
               Ref: AddJobFlowStepsCustomerLambdaFunction
+
+    EmployeelambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmployee Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsEmployeeLambdaFunction
 
     ProductlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -989,10 +1262,10 @@ resources:
             Value:
               Ref: AddJobFlowStepsProductLambdaFunction
 
-    StoreCustomerExperiencelambdafailureAlarm:
+    StorelambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoreCustomerExperience Lambda Function
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStore Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
@@ -1005,12 +1278,12 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              Ref: AddJobFlowStepsStoreCustomerExperienceLambdaFunction
+              Ref: AddJobFlowStepsStoreLambdaFunction
 
-    GoalsKPIlambdafailureAlarm:
+    TbgoalpointlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsGoalsKPI Lambda Function
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsTbgoalpoint Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
@@ -1023,12 +1296,12 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              Ref: AddJobFlowStepsGoalsKPILambdaFunction
+              Ref: AddJobFlowStepsTbgoalpointLambdaFunction
 
-    SalesOtherslambdafailureAlarm:
+    StorercrtinghdctlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesOthers Lambda Function
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStorercrtinghdct Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
@@ -1041,12 +1314,12 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              Ref: AddJobFlowStepsSalesOthersLambdaFunction
+              Ref: AddJobFlowStepsStorercrtinghdctLambdaFunction
 
-    SalesTransactionslambdafailureAlarm:
+    StoreandempgoalslambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesTransactions Lambda Function
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoreandempgoals Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
@@ -1059,12 +1332,12 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              Ref: AddJobFlowStepsSalesTransactionsLambdaFunction
+              Ref: AddJobFlowStepsStoreandempgoalsLambdaFunction
 
-    SalesKPIandDetailslambdafailureAlarm:
+    StoredlygoalfcstlambdafailureAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
-        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesKPIandDetails Lambda Function
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoredlygoalfcst Lambda Function
         AlarmActions:
           - Ref: SNSNotificationTopic
         MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
@@ -1077,7 +1350,169 @@ resources:
         Dimensions:
           - Name: FunctionName
             Value:
-              Ref: AddJobFlowStepsSalesKPIandDetailsLambdaFunction
+              Ref: AddJobFlowStepsStoredlygoalfcstLambdaFunction
+
+    SalesleadslambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesleads Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsSalesleadsLambdaFunction
+
+    StoretrafficlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoretraffic Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsStoretrafficLambdaFunction
+
+    StoretransadjlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStoretransadj Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsStoretransadjLambdaFunction
+
+    AttsalesactlslambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsAttsalesactls Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsAttsalesactlsLambdaFunction
+
+    EmptransadjlambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmptransadj Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsEmptransadjLambdaFunction
+
+    EmpoperefcnylambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsEmpoperefcny Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsEmpoperefcnyLambdaFunction
+
+    StorecustexprclambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsStorecustexprc Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsStorecustexprcLambdaFunction
+
+    SalesdtlslambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsSalesdtls Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsSalesdtlsLambdaFunction
+
+    SaleskpilambdafailureAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: Lambda failure alarm for addJobFlowStepsSaleskpi Lambda Function
+        AlarmActions:
+          - Ref: SNSNotificationTopic
+        MetricName: ${self:custom.addjobflow.lambda.lambdametricName}
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: ${self:custom.addjobflow.lambda.lambdaperiod}
+        EvaluationPeriods: 1
+        Threshold: ${self:custom.addjobflow.lambda.lambdathreshold}
+        ComparisonOperator: ${self:custom.addjobflow.lambda.lambdacomparisonoperator}
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: AddJobFlowStepsSaleskpiLambdaFunction
 
     ######################################################################
     # SNS Notification Topic
