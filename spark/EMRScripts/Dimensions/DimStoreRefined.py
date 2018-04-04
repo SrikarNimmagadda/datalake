@@ -4,12 +4,13 @@ from pyspark.sql.functions import split, regexp_extract, regexp_replace, col, wh
 from pyspark.sql.types import StructField, StructType, DateType, StringType, DecimalType, BooleanType, IntegerType
 import boto3
 import sys
-from pyspark.sql.utils import AnalysisException
 from datetime import datetime
 
 
 def splitOnIndex(locationName):
-    return locationName.split(' ', 1)[1]
+    if locationName is not None and locationName.split(' ', 1).__len__() > 1:
+        return locationName.split(' ', 1)[1]
+    return ''
 
 
 class DimStoreRefined(object):
@@ -29,7 +30,7 @@ class DimStoreRefined(object):
         self.storeWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + self.workingName
         self.storePartitonPath = 's3://' + self.refinedBucket + '/' + self.storeName
         self.storeCSVPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + 'csv'
-        self.dataProcessingErrorPath = sys.argv[3] + '/refined'
+        self.dataProcessingErrorPath = sys.argv[3] + '/refined/'
 
         self.locationName = "Location"
         self.baeName = "BAE"
@@ -82,8 +83,9 @@ class DimStoreRefined(object):
                             + "CFixtures,TIOKioskIndicator,ApprovedforFlexBladeIndicator,CapIndexScore," \
                             + "SellingWallNotes,RemodelDate,SpringMarket,SpringRegion,SpringDistrict,DTVNowIndicator," \
                             + "BAEWorkDayId,BSISWorkDayId,SpringRegionVP,SpringMarketDirector,SpringDistrictManager"
-
         self.splitOnIndexUDF = udf(lambda z: splitOnIndex(z), StringType())
+        self.regExForChar = "[^\d]"
+        self.regExForDate = "([0-9]|0[0-9]|1[0-2])\/([1-9]|0[1-9]|([12][0-9]|3[01])\/(19|20)[0-9][0-9])"
         self.storeRefineSchema = StructType([StructField("StoreNumber", IntegerType(), True), StructField("CompanyCd", IntegerType(), True),
                                              StructField("SourceStoreIdentifier", IntegerType(), True), StructField("LocationName", StringType(), True),
                                              StructField("Abbreviation", StringType(), True), StructField("GLCode", StringType(), True),
@@ -153,83 +155,98 @@ class DimStoreRefined(object):
 
         lastUpdatedLocationFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixLocationDiscoveryPath,
                                                             self.discoveryBucket)
-        dfLocationMaster = self.sparkSession.read.parquet(lastUpdatedLocationFile)
+        dfLocationMasterFull = self.sparkSession.read.parquet(lastUpdatedLocationFile).cache()
 
         lastUpdatedBAEFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixBaeDiscoveryPath,
                                                        self.discoveryBucket)
 
-        dfBAE = self.sparkSession.read.parquet(lastUpdatedBAEFile)
+        dfBAEFull = self.sparkSession.read.parquet(lastUpdatedBAEFile).cache()
 
         lastUpdatedDealerFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixDealerDiscoveryPath,
                                                           self.discoveryBucket)
-        dfDealer = self.sparkSession.read.parquet(lastUpdatedDealerFile).withColumnRenamed("TBLoc", "StoreNo")
+        dfDealerFull = self.sparkSession.read.parquet(lastUpdatedDealerFile).withColumnRenamed("TBLoc", "StoreNo").cache()
 
         lastUpdatedSpringMobileFile = self.findLastModifiedFile(discoveryBucketNode,
                                                                 self.prefixSpringMobileDiscoveryPath,
                                                                 self.discoveryBucket)
-        dfSpringMobile = self.sparkSession.read.parquet(lastUpdatedSpringMobileFile)
+        dfSpringMobileFull = self.sparkSession.read.parquet(lastUpdatedSpringMobileFile).cache()
 
         lastUpdatedMultiTrackerFile = self.findLastModifiedFile(discoveryBucketNode,
                                                                 self.prefixMultitrackerDiscoveryPath,
                                                                 self.discoveryBucket)
-        dfRealEstate = self.sparkSession.read.parquet(lastUpdatedMultiTrackerFile)
+        dfRealEstateFull = self.sparkSession.read.parquet(lastUpdatedMultiTrackerFile).cache()
 
         lastUpdatedDTVLocationFile = self.findLastModifiedFile(discoveryBucketNode, self.prefixDtvLocationDiscoveryPath,
                                                                self.discoveryBucket)
-        dfDTVLocation = self.sparkSession.read.parquet(lastUpdatedDTVLocationFile)
+        dfDTVLocationFull = self.sparkSession.read.parquet(lastUpdatedDTVLocationFile).withColumn('StoreNumber', split(col('Location'), ' ').getItem(0)).cache()
 
-        dfLocationMaster = dfLocationMaster.withColumn('StoreNo', split(col('StoreName'), ' ').getItem(0))
-
-        dfLocationMaster = dfLocationMaster.withColumn('StoreNumber', regexp_replace(col('StoreNo'), '\D', ''))
+        dfLocationMasterFull = dfLocationMasterFull.withColumn('StoreNumber', split(col('StoreName'), ' ').getItem(0)).cache()
 
         self.log.info("Exception Handling of Store Refine starts")
 
-        dfLocationMaster.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.locationName, header=True)
+        dfLocationMasterErrorData = dfLocationMasterFull.filter(dfLocationMasterFull["StoreNumber"].rlike(self.regExForChar))
 
-        dfSpringMobile.filter("Store == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.springMobileName, header=True)
-        try:
-            dfSpringMobile = dfSpringMobile.withColumn('OpenDate1', dfSpringMobile['OpenDate'].cast(DateType()))
-        except AnalysisException:
-            self.log.error("SpringMobile OpenDate value is not in correct date format")
-            # dfSpringMobile = dfSpringMobile.withColumn('OpenDate1', lit(''))
-            dfSpringMobile.coalesce(1).write.mode("append").csv(
-                self.dataProcessingErrorPath + '/' + self.springMobileName + '/' + self.storeRefinedName + '/' +
-                self.springMobileName, header=True)
-            return
-        try:
-            dfRealEstate = dfRealEstate.withColumn('RemodelorOpenDate1', dfRealEstate['RemodelorOpenDate'].cast(
-                DateType()))
-        except AnalysisException:
-            self.log.error("RealEstate RemodelorOpenDate value is not in correct date format")
-            # dfRealEstate = dfRealEstate.withColumn('RemodelorOpenDate1', lit(''))
-            dfRealEstate.coalesce(1).write.mode("append").csv(
-                self.dataProcessingErrorPath + '/' + self.multiTrackerName + '/' + self.storeRefinedName + '/' +
-                self.springMobileName, header=True)
-            return
+        dfLocationMaster = dfLocationMasterFull.subtract(dfLocationMasterErrorData)
 
-        dfRealEstate.filter("Loc == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.multiTrackerName, header=True)
+        if (dfLocationMasterErrorData is not None) and (dfLocationMasterErrorData.count() > 0):
+            self.log.info("Location Master has erroneous records having invalid store number.")
+            dfLocationMasterErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.locationName, header=True)
 
-        dfDealer.filter("StoreNo == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.dealerName, header=True)
+        dfSpringMobileErrorDataWithStore = dfSpringMobileFull.filter(dfSpringMobileFull["Store"].rlike(self.regExForChar))
 
-        dfDTVLocation.filter("Location == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.dtvLocationName, header=True)
+        dfSpringMobileErrorDataWithOpenDate = dfSpringMobileFull.subtract(dfSpringMobileFull.filter(dfSpringMobileFull["OpenDate"].rlike(self.regExForDate)))
 
-        dfBAE.filter("StoreNumber == ''").coalesce(1).write.mode("append").\
-            csv(self.dataProcessingErrorPath + '/' + self.baeName, header=True)
+        dfSpringMobileErrorDataWithCloseDate = dfSpringMobileFull.subtract(dfSpringMobileFull.filter(dfSpringMobileFull["ClosedDate"].rlike(self.regExForDate)))
+
+        dfSpringMobileErrorData = dfSpringMobileErrorDataWithStore.union(dfSpringMobileErrorDataWithOpenDate).union(dfSpringMobileErrorDataWithCloseDate).drop_duplicates()
+
+        dfSpringMobile = dfSpringMobileFull.subtract(dfSpringMobileErrorData)
+
+        if (dfSpringMobileErrorData is not None) and (dfSpringMobileErrorData.count() > 0):
+            self.log.info("Spring Mobile Store List has erroneous records having either invalid store number or open date or closed date.")
+            dfSpringMobileErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.springMobileName, header=True)
+
+        dfRealEstateErrorData = dfRealEstateFull.filter(dfRealEstateFull["Loc"].rlike(self.regExForChar))
+        # dfRealEstateErrorDataWithRemodelorOpenDate = dfRealEstateFull.subtract(dfRealEstateFull.filter(dfRealEstateFull["RemodelorOpenDate"].rlike(self.regExForDate)))
+        # dfRealEstateErrorData = dfRealEstateErrorDataWithLoc.unionAll(dfRealEstateErrorDataWithRemodelorOpenDate).drop_duplicates()
+
+        dfRealEstate = dfRealEstateFull.subtract(dfRealEstateErrorData)
+
+        if (dfRealEstateErrorData is not None) and (dfRealEstateErrorData.count() > 0):
+            self.log.info("Multi Tracker has erroneous records having invalid store number.")
+            dfRealEstateErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.multiTrackerName, header=True)
+
+        dfDealerErrorData = dfDealerFull.filter(dfDealerFull["StoreNo"].rlike(self.regExForChar))
+
+        dfDealer = dfDealerFull.subtract(dfDealerErrorData)
+
+        if (dfDealerErrorData is not None) and (dfDealerErrorData.count() > 0):
+            self.log.info("Att Delaer code has erroneous records having invalid store number.")
+            dfDealerErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.dealerName, header=True)
+
+        dfDTVLocationErrorData = dfDTVLocationFull.filter(dfDTVLocationFull["StoreNumber"].rlike(self.regExForChar))
+
+        dfDTVLocation = dfDTVLocationFull.subtract(dfDTVLocationErrorData)
+
+        if (dfDTVLocationErrorData is not None) and (dfDTVLocationErrorData.count() > 0):
+            self.log.info("DTV Location has erroneous records having invalid store number.")
+            dfDTVLocationErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.dtvLocationName, header=True)
+
+        dfBAEErrorData = dfBAEFull.filter(dfBAEFull["StoreNumber"].rlike(self.regExForChar))
+
+        dfBAE = dfBAEFull.subtract(dfBAEErrorData)
+
+        if (dfBAEErrorData is not None) and (dfBAEErrorData.count() > 0):
+            self.log.info("BAE has erroneous records having invalid store number.")
+            dfBAEErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.baeName, header=True)
 
         self.log.info("Exception Handling of Store Refine Ends")
 
-        dfLocationMaster = dfLocationMaster.filter("StoreNumber != ''")
-        dfBAE.filter(dfBAE.StoreNumber > 0).registerTempTable("BAE")
+        dfBAE.registerTempTable("BAE")
         dfDTVLocation.filter("Location != ''").registerTempTable("dtvLocation")
-        dfDealer.filter(dfDealer.StoreNo > 0).registerTempTable("Dealer")
-        # dfSpringMobile.coalesce(1).write.mode("overwrite").csv(self.storeCSVPath + '/spring', header=True)
-        dfSpringMobile.filter(dfSpringMobile.Store > 0).registerTempTable("SpringMobile")
-        dfRealEstate.filter(dfRealEstate.Loc > 0).registerTempTable("RealEstate")
+        dfDealer.registerTempTable("Dealer")
+        dfSpringMobile.withColumn('OpenDate1', dfSpringMobile['OpenDate'].cast(DateType())).registerTempTable("SpringMobile")
+        dfRealEstate.withColumn('RemodelorOpenDate1', dfRealEstate['RemodelorOpenDate'].cast(DateType())).registerTempTable("RealEstate")
 
         dfLocationMaster = dfLocationMaster.withColumn('Location', self.splitOnIndexUDF(col('StoreName')))
         dfLocationMaster = dfLocationMaster.withColumn('SaleInvoiceCommentRe', regexp_replace(
