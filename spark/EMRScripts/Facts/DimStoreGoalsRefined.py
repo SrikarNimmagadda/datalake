@@ -86,12 +86,12 @@ class DimStoreGoalsRefined(object):
         dfStoreGoalsDisc.withColumn('StoreNumber', regexp_replace(col("Store"), '\D', '')).drop("Store").\
             registerTempTable("StoreGoalsTT")
 
-        dfFlatteningStoreGoals = self.sparkSession.sql("select StoreNumber, Date,concat(" +
+        dfFlatteningStoreGoals = self.sparkSession.sql("select StoreNumber, ReportDate,concat(" +
                                                        self.storeTransposeConcat + ") as concatenated from "
                                                                                    "StoreGoalsTT")
 
         dfFlatTableExplodedFrame = dfFlatteningStoreGoals.\
-            select("StoreNumber", "Date", explode(split(dfFlatteningStoreGoals.concatenated, ",")).
+            select("StoreNumber", "ReportDate", explode(split(dfFlatteningStoreGoals.concatenated, ",")).
                    alias("Goal_ValueTemp"))
 
         splitGoalValues = split(dfFlatTableExplodedFrame['Goal_ValueTemp'], '&')
@@ -107,7 +107,7 @@ class DimStoreGoalsRefined(object):
             sqlKPINameQuery = sqlKPINameQuery + "when a.KPIName = '" + name + "' then '" + newName + "' "
         sqlKPINameQuery = sqlKPINameQuery + " else a.KPIName end as KPIName"
 
-        self.sparkSession.sql("select distinct a.Date as ReportDate, " + sqlKPINameQuery +
+        self.sparkSession.sql("select distinct a.ReportDate, " + sqlKPINameQuery +
                               ", a.StoreNumber, '4' as CompanyCd, a.GoalValue as GoalValue, "
                               "b.LocationName as LocationName, b.SpringMarket as SpringMarket, "
                               "b.SpringRegion as SpringRegion, b.SpringDistrict as SpringDistrict "
