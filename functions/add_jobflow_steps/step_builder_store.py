@@ -29,10 +29,10 @@ class StepBuilderStore(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_store(),
             self._build_step_csv_to_parquet(),
             self._build_step_employee_refinery(),
             self._build_step_employee_delivery(),
+            self._build_step_csv_to_parquet_store(),
             self._build_step_csv_to_parquet_ATT_Dealer_code(),
             self._build_step_ATT_Dealer_code_refinery(),
             self._build_step_ATT_Dealer_code_delivery(),
@@ -51,26 +51,6 @@ class StepBuilderStore(object):
     # ============================================
     # Step Definitions
     # ============================================
-
-    def _build_step_csv_to_parquet_store(self):
-        step_name = 'CSVToParquetStore'
-        script_name = 'Dimensions/DimStoreCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
-
-        script_args = [
-            's3://' + input_bucket + '/Location/Working',
-            's3://' + input_bucket + '/BAE/Working',
-            's3://' + input_bucket + '/ATTDealerCodes/Working',
-            's3://' + input_bucket + '/MultiTracker/Working',
-            's3://' + input_bucket + '/SpringMobileStore/Working',
-            's3://' + input_bucket + '/DTV/Working',
-            's3://' + output_bucket + '/Store/Working',
-            's3://' + error_bucket + '/Store'
-        ]
-
-        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet(self):
         step_name = 'CSVToParquetEmployee'
@@ -93,7 +73,7 @@ class StepBuilderStore(object):
 
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/Employee/'
+            's3://' + output_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -107,6 +87,26 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
             's3://' + output_bucket + '/WT_EMP/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_store(self):
+        step_name = 'CSVToParquetStore'
+        script_name = 'Dimensions/DimStoreCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
+
+        script_args = [
+            's3://' + input_bucket + '/Location/Working',
+            's3://' + input_bucket + '/BAE/Working',
+            's3://' + input_bucket + '/ATTDealerCodes/Working',
+            's3://' + input_bucket + '/MultiTracker/Working',
+            's3://' + input_bucket + '/SpringMobileStore/Working',
+            's3://' + input_bucket + '/DTV/Working',
+            's3://' + output_bucket + '/Store/Working',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
