@@ -1,9 +1,10 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import year, unix_timestamp, from_unixtime, substring
+from pyspark.sql.functions import year, unix_timestamp, from_unixtime, substring, lit
 import sys
 import os
 import csv
 import boto3
+from datetime import datetime
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -134,6 +135,10 @@ class DimStoreGoalsCSVToParquet(object):
             mapPartitions(lambda partition: csv.
                           reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: line[1] != 'Column1' and line[1] != 'Store').toDF(self.storeGoalsCols)
+
+        newformat = datetime.now().strftime('%m/%d/%Y')
+
+        dfStoreGoals = dfStoreGoals.withColumn('ReportDate', lit(newformat))
 
         dfStoreGoals.coalesce(1).write.mode('overwrite').format('parquet').\
             save(self.storeGoalsFileWorkingPath)
