@@ -31,9 +31,13 @@ class StoreTrafficRefined(object):
                                                         "from StoreTrafficInputTable a "
                                                         "inner join storerefine b "
                                                         "on a.storenumber = b.StoreNumber ")
-                final_Joined_Df = final_Joined_Df.dropDuplicates(['reportdate', 'storenumber', 'trafficdate', 'traffictime', 'companycd'])
+														
+				final_Joined_Df = final_Joined_Df.dropDuplicates(['reportdate', 'storenumber', 'trafficdate', 'traffictime', 'companycd' ])
+
                 final_Joined_Df.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(self.storeTrafficRefine)
+
                 final_Joined_Df.coalesce(1).select("*").write.mode("overwrite").parquet(self.storeTrafficRefine + '/' + 'Working')
+
                 self.sparkSession.stop()
 
 
