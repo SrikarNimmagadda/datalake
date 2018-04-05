@@ -45,11 +45,13 @@ class StepBuilderStoreCustomerExperience(object):
         script_name = 'Facts/StoreCustExpCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
-            's3://' + output_bucket,
-            input_bucket
+            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
+            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
+            's3://' + error_bucket + '/StoreCustomerExperience'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -59,11 +61,13 @@ class StepBuilderStoreCustomerExperience(object):
         script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + output_bucket,
-            output_bucket,
-            's3://' + input_bucket + '/StoreCustomerExperience/Working'
+            's3://' + input_bucket + '/StoreCustomerExperience/Working',
+            's3://' + output_bucket + '/StoreCustomerExperience/Working',
+            's3://' + error_bucket + '/StoreCustomerExperience'
+
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -75,8 +79,8 @@ class StepBuilderStoreCustomerExperience(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC',
-            's3://' + input_bucket + '/StoreCustomerExperience/Working'
+            's3://' + input_bucket + '/StoreCustomerExperience/Working',
+            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
