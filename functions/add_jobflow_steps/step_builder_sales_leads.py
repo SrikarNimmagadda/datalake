@@ -31,7 +31,7 @@ class StepBuilderSalesLeads(object):
             self._build_step_csv_to_parquet_salesleads(),
             self._build_step_salesleads_refinery(),
             self._build_step_salesleads_delivery()
-         ]
+        ]
 
         return steps
 
