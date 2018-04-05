@@ -12,14 +12,22 @@ import boto3
 from cluster_finder import ClusterFinder
 from step_factory import StepFactory
 
-from step_builder_store import StepBuilderStore
-from step_builder_customer import StepBuilderCustomer
-from step_builder_product import StepBuilderProduct
+from step_builder_customer_master import StepBuilderCustomer
+from step_builder_employee_master import StepBuilderEmployee
+from step_builder_product_master import StepBuilderProduct
+from step_builder_store_master import StepBuilderStore
+from step_builder_tb_goal_point import StepBuilderTBGoalPoint
+from step_builder_store_headcount_store_and_employee_goal import StepBuilderStoreHeadCountStoreandEmpGoal
+from step_builder_store_daily_goal_forecast import StepBuilderStoreDailyGoalForecast
+from step_builder_sales_leads import StepBuilderSalesLeads
+from step_builder_store_traffic import StepBuilderStoreTraffic
+from step_builder_store_transaction_adjustmet import StepBuilderStoreTransAdjustment
+from step_builder_att_sales_actuals import StepBuilderATTSalesActuals
+from step_builder_employee_transaction import StepBuilderEmpTransAdjustment
+from step_builder_employee_opperational_efficiency import StepBuilderEmpOppEfficiency
 from step_builder_store_customer_experience import StepBuilderStoreCustomerExperience
-from step_builder_goalskpi import StepBuilderGoalskpi
-from step_builder_salesothers import StepBuilderSalesOthers
-from step_builder_salestransactions import StepBuilderSalesTransactions
-from step_builder_salesKPI_and_details import StepBuilderSalesKPIandDetails
+from step_builder_sales_details import StepBuilderSalesDetails
+from step_builder_sales_kpi import StepBuilderSalesKPI
 
 S3 = boto3.resource('s3')
 CFN = boto3.client('cloudformation')
@@ -65,21 +73,37 @@ def choose_builder(event):
     now = datetime.now()
     switch = event['builder']
 
-    if switch == 'store':
-        return StepBuilderStore(factory, S3, BUCKETS, now)
-    elif switch == 'customer':
+    if switch == 'customer':
         return StepBuilderCustomer(factory, S3, BUCKETS, now)
+    elif switch == 'employee':
+        return StepBuilderEmployee(factory, S3, BUCKETS, now)
     elif switch == 'product':
         return StepBuilderProduct(factory, S3, BUCKETS, now)
-    elif switch == 'storecustomerexperience':
+    elif switch == 'store':
+        return StepBuilderStore(factory, S3, BUCKETS, now)
+    elif switch == 'tbgoalpoint':
+        return StepBuilderTBGoalPoint(factory, S3, BUCKETS, now)
+    elif switch == 'storeheadcountStoreandempgoals':
+        return StepBuilderStoreHeadCountStoreandEmpGoal(factory, S3, BUCKETS, now)
+    elif switch == 'storedlygoalfcst':
+        return StepBuilderStoreDailyGoalForecast(factory, S3, BUCKETS, now)
+    elif switch == 'salesleads':
+        return StepBuilderSalesLeads(factory, S3, BUCKETS, now)
+    elif switch == 'storetraffic':
+        return StepBuilderStoreTraffic(factory, S3, BUCKETS, now)
+    elif switch == 'storetransadj':
+        return StepBuilderStoreTransAdjustment(factory, S3, BUCKETS, now)
+    elif switch == 'attsalesactls':
+        return StepBuilderATTSalesActuals(factory, S3, BUCKETS, now)
+    elif switch == 'emptransadj':
+        return StepBuilderEmpTransAdjustment(factory, S3, BUCKETS, now)
+    elif switch == 'empoperefcny':
+        return StepBuilderEmpOppEfficiency(factory, S3, BUCKETS, now)
+    elif switch == 'storecustexprc':
         return StepBuilderStoreCustomerExperience(factory, S3, BUCKETS, now)
-    elif switch == 'goalskpi':
-        return StepBuilderGoalskpi(factory, S3, BUCKETS, now)
-    elif switch == 'salesothers':
-        return StepBuilderSalesOthers(factory, S3, BUCKETS, now)
-    elif switch == 'salestransactions':
-        return StepBuilderSalesTransactions(factory, S3, BUCKETS, now)
-    elif switch == 'saleskpianddetails':
-        return StepBuilderSalesKPIandDetails(factory, S3, BUCKETS, now)
+    elif switch == 'salesdtls':
+        return StepBuilderSalesDetails(factory, S3, BUCKETS, now)
+    elif switch == 'saleskpi':
+        return StepBuilderSalesKPI(factory, S3, BUCKETS, now)
     else:
         raise Exception('Could not find a step builder for input: ' + switch)
