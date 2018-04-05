@@ -32,7 +32,7 @@ class StepBuilderATTSalesActuals(object):
             self._build_step_csv_to_parquet_attsalesactuals(),
             self._build_step_attsalesactuals_refinery(),
             self._build_step_attsalesactuals_delivery()
-           ]
+        ]
 
         return steps
 
