@@ -1,14 +1,13 @@
-"""Contains the class StepBuilderStoreCustomerExperience.
-Builds EMR Steps for Store Customer Experience files.
+""" Contains the class StepBuilderEmpTransAdjustment.
+Builds EMR Steps for EmpTransAdjustment files.
 """
 
 
-class StepBuilderStoreCustomerExperience(object):
+class StepBuilderEmpTransAdjustment(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
         """Construct the StepBuilder
-
         Arguments:
         step_factory: an instance of the StepFactory
         s3: the boto3 s3 client
@@ -29,9 +28,9 @@ class StepBuilderStoreCustomerExperience(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_store_customer_experience(),
-            self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
+            self._build_step_csv_to_parquet_employeetrasactionadjustment(),
+            self._build_step_employeetrasactionadjustment_refinery(),
+            self._build_step_employeetrasactionadjustment_delivery()
         ]
 
         return steps
@@ -40,47 +39,42 @@ class StepBuilderStoreCustomerExperience(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_store_customer_experience(self):
-        step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'Facts/StoreCustExpCSVToParquet.py'
+    def _build_step_csv_to_parquet_employeetrasactionadjustment(self):
+        step_name = 'CSVToParquetEmployeeTransAdj'
+        script_name = 'Facts/EmployeeTransactionAdjustmentCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + error_bucket + '/StoreCustomerExperience'
+            's3://' + output_bucket + '/EmployeeTransactionAdjustment',
+            's3://' + input_bucket + '/EmpTransAdjustment/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_refinery(self):
-        step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
+    def _build_step_employeetrasactionadjustment_refinery(self):
+        step_name = 'EmployeeTransAdjRefinery'
+        script_name = 'Facts/EmployeeTransactionAdjustmentRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working',
-            's3://' + error_bucket + '/StoreCustomerExperience'
-
+            's3://' + output_bucket + '/EmployeeTransactionAdjustment',
+            's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/',
+            's3://' + output_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_delivery(self):
-        step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
+    def _build_step_employeetrasactionadjustment_delivery(self):
+        step_name = 'EmployeeTransAdjDelivery'
+        script_name = 'Facts/EmployeeTransactionAdjustmentDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
+            's3://' + output_bucket + '/WT_EMP_TRANS_ADJMNTS',
+            's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

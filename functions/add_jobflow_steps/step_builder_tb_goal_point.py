@@ -1,9 +1,9 @@
-"""Contains the class StepBuilderStoreCustomerExperience.
-Builds EMR Steps for Store Customer Experience files.
+"""Contains the class StepBuilderTBGoalPoint.
+Builds EMR Steps for TBGoalPoint files.
 """
 
 
-class StepBuilderStoreCustomerExperience(object):
+class StepBuilderTBGoalPoint(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -27,11 +27,16 @@ class StepBuilderStoreCustomerExperience(object):
 
     def build_steps(self):
         """Return list of steps that will be sent to the EMR cluster."""
+        # discovery_paths = self._build_discovery_paths(
+        #    self.buckets['discovery_regular'])
+
+        # refined_paths = self._build_refined_paths(
+        #    self.buckets['refined_regular'])
 
         steps = [
-            self._build_step_csv_to_parquet_store_customer_experience(),
-            self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
+            self._build_step_csv_to_parquet_tbgoalpoint(),
+            self._build_step_tbgoalpoint_refinery(),
+            self._build_step_tbgoalpoint_delivery()
         ]
 
         return steps
@@ -40,47 +45,46 @@ class StepBuilderStoreCustomerExperience(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_store_customer_experience(self):
-        step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'Facts/StoreCustExpCSVToParquet.py'
+    def _build_step_csv_to_parquet_tbgoalpoint(self):
+        step_name = 'CSVToParquetTbGoalPoint'
+        script_name = 'Facts/TBGoalPointsCSVtoParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + error_bucket + '/StoreCustomerExperience'
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
+            's3://' + output_bucket + '/TBGoalPointStore',
+            's3://' + output_bucket + '/TBGoalPointEmployee'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_refinery(self):
-        step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
+    def _build_step_tbgoalpoint_refinery(self):
+        step_name = 'TbGoalPointRefinery'
+        script_name = 'Facts/TBGoalPointsRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working',
-            's3://' + error_bucket + '/StoreCustomerExperience'
 
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
+            's3://' + output_bucket + '/TBGoalPoint'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_delivery(self):
-        step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
+    def _build_step_tbgoalpoint_delivery(self):
+        step_name = 'TbGoalPointDelivery'
+        script_name = 'Facts/TBGoalPointsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
+            's3://' + input_bucket + '/TBGoalPoint/Working',
+            's3://' + output_bucket + '/WT_TB_GOAL_PT'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

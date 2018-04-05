@@ -1,14 +1,13 @@
-"""Contains the class StepBuilderStoreCustomerExperience.
-Builds EMR Steps for Store Customer Experience files.
+""" Contains the class StepBuilderStoreDailyGoalForecast.
+Builds EMR Steps for StoreDailyGoalForecast files.
 """
 
 
-class StepBuilderStoreCustomerExperience(object):
+class StepBuilderStoreDailyGoalForecast(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
         """Construct the StepBuilder
-
         Arguments:
         step_factory: an instance of the StepFactory
         s3: the boto3 s3 client
@@ -29,9 +28,9 @@ class StepBuilderStoreCustomerExperience(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_store_customer_experience(),
-            self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
+            self._build_step_csv_to_parquet_storedailygoalforecast(),
+            self._build_step_storedailygoalforecast_refinery(),
+            self._build_step_storedailygoalforecast_delivery()
         ]
 
         return steps
@@ -40,47 +39,46 @@ class StepBuilderStoreCustomerExperience(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_store_customer_experience(self):
-        step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'Facts/StoreCustExpCSVToParquet.py'
+    def _build_step_csv_to_parquet_storedailygoalforecast(self):
+        step_name = 'CSVToParquetStoredailygoalforecast'
+        script_name = 'Facts/StoreDailyGoalsForecastCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + error_bucket + '/StoreCustomerExperience'
+            's3://' + input_bucket + '/StoreDailyGoalForecast/Working',
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working',
+            's3://' + error_bucket + '/StoreDailyGoalForecast'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_refinery(self):
-        step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
+    def _build_step_storedailygoalforecast_refinery(self):
+        step_name = 'StoreDailyGoalsForecastRefinery'
+        script_name = 'Facts/StoreDailyGoalsForecastDiscoveryToRefine.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
         error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working',
-            's3://' + error_bucket + '/StoreCustomerExperience'
 
+            's3://' + input_bucket + '/StoreDailyGoalForecast/Working/',
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/',
+            's3://' + error_bucket + '/StoreDailyGoalForecast'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_delivery(self):
-        step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
+    def _build_step_storedailygoalforecast_delivery(self):
+        step_name = 'StoreDailyGoalForecastDelivery'
+        script_name = 'Facts/StoreDailyGoalsForecastRefineToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
+            's3://' + input_bucket + '/StoreDailyGoalForecast/working',
+            's3://' + output_bucket + '/WT_STORE_DLY_GOAL_FCST/Current'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

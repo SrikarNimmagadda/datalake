@@ -28,7 +28,7 @@ class StepBuilderCustomer(object):
             self._build_step_customer_refinery(),
             self._build_step_customer_delivery(),
             self._build_step_customer_pii_refinery(),
-            self._build_step_customer_pii_delivery(),
+            self._build_step_customer_pii_delivery()
         ]
 
         return steps

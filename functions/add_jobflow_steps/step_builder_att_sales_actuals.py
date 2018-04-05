@@ -1,14 +1,14 @@
-"""Contains the class StepBuilderStoreCustomerExperience.
-Builds EMR Steps for Store Customer Experience files.
+""" Contains the class StepBuilderATTSalesActuals.
+Builds EMR Steps for ATTSalesActual files.
 """
+import datetime
 
 
-class StepBuilderStoreCustomerExperience(object):
+class StepBuilderATTSalesActuals(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
         """Construct the StepBuilder
-
         Arguments:
         step_factory: an instance of the StepFactory
         s3: the boto3 s3 client
@@ -29,10 +29,10 @@ class StepBuilderStoreCustomerExperience(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_store_customer_experience(),
-            self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
-        ]
+            self._build_step_csv_to_parquet_attsalesactuals(),
+            self._build_step_attsalesactuals_refinery(),
+            self._build_step_attsalesactuals_delivery()
+           ]
 
         return steps
 
@@ -40,47 +40,48 @@ class StepBuilderStoreCustomerExperience(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_store_customer_experience(self):
-        step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'Facts/StoreCustExpCSVToParquet.py'
+    def _build_step_csv_to_parquet_attsalesactuals(self):
+        step_name = 'CSVToParquetATTSalesActuals'
+        script_name = 'Facts/ATTSalesActualsCSVToParquet.py'
         input_bucket = self.buckets['raw_regular']
         output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
+        today = datetime.date.today()
+        sysdate = today.strftime("%m-%d-%Y")
 
         script_args = [
-
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + error_bucket + '/StoreCustomerExperience'
+            's3://' + output_bucket + '/ATTSalesActual',
+            's3://' + input_bucket + '/AT_T_MyResults_SFTP/loaded_date=' + str(sysdate),
+            's3://' + input_bucket + '/AT_T_MyResults_RPT/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_refinery(self):
-        step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
+    def _build_step_attsalesactuals_refinery(self):
+        step_name = 'ATTSalesActualsRefinery'
+        script_name = 'Facts/ATTSalesActualsRefined.py'
         input_bucket = self.buckets['discovery_regular']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working',
-            's3://' + error_bucket + '/StoreCustomerExperience'
-
+            's3://' + output_bucket + '/ATTSalesActual',
+            's3://' + input_bucket + '/ATTSalesActual/Working1/',
+            's3://' + output_bucket + '/Store/Working/',
+            's3://' + output_bucket + '/StoreDealerAssociation/Working/',
+            's3://' + output_bucket + '/ATTDealerCode/Working/',
+            's3://' + input_bucket + '/ATTSalesActual/Working2/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_delivery(self):
-        step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
+    def _build_step_attsalesactuals_delivery(self):
+        step_name = 'ATTSalesActualsDelivery'
+        script_name = 'Facts/ATTSalesActualsDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
+            's3://' + output_bucket + '/WT_ATT_SALES_ACTLS',
+            's3://' + input_bucket + '/ATTSalesActual/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)

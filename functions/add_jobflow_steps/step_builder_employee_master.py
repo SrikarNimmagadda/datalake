@@ -1,9 +1,9 @@
-"""Contains the class StepBuilderStoreCustomerExperience.
-Builds EMR Steps for Store Customer Experience files.
+"""Contains the class StepBuilderEmployee.
+Builds EMR Steps for Employee files.
 """
 
 
-class StepBuilderStoreCustomerExperience(object):
+class StepBuilderEmployee(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -29,9 +29,9 @@ class StepBuilderStoreCustomerExperience(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
-            self._build_step_csv_to_parquet_store_customer_experience(),
-            self._build_step_store_customer_experience_refinery(),
-            self._build_step_store_customer_experience_delivery()
+            self._build_step_csv_to_parquet(),
+            self._build_step_employee_refinery(),
+            self._build_step_employee_delivery()
         ]
 
         return steps
@@ -40,47 +40,41 @@ class StepBuilderStoreCustomerExperience(object):
     # Step Definitions
     # ============================================
 
-    def _build_step_csv_to_parquet_store_customer_experience(self):
-        step_name = 'CSVToParquetStoreCustomerExperience'
-        script_name = 'Facts/StoreCustExpCSVToParquet.py'
-        input_bucket = self.buckets['raw_regular']
-        output_bucket = self.buckets['discovery_regular']
-        error_bucket = self.buckets['data_processing_errors']
+    def _build_step_csv_to_parquet(self):
+        step_name = 'CSVToParquetEmployee'
+        script_name = 'Dimensions/EmployeeCSVToParquet.py'
+        input_bucket = self.buckets['raw_hr_pii']
+        output_bucket = self.buckets['discovery_hr_pii']
 
         script_args = [
-
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + error_bucket + '/StoreCustomerExperience'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_refinery(self):
-        step_name = 'StoreCustomerExperienceRefined'
-        script_name = 'Facts/StoreCustExpDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_regular']
+    def _build_step_employee_refinery(self):
+        step_name = 'EmployeeRefinery'
+        script_name = 'Dimensions/EmployeeDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_hr_pii']
         output_bucket = self.buckets['refined_regular']
-        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working',
-            's3://' + error_bucket + '/StoreCustomerExperience'
-
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_store_customer_experience_delivery(self):
-        step_name = 'StoreCustomerExperienceDelivery'
-        script_name = 'Facts/StoreCustExpRefinedToDelivery.py'
+    def _build_step_employee_delivery(self):
+        step_name = 'EmployeeDelivery'
+        script_name = 'Dimensions/EmployeeRefinedToDelivery.py'
         input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/StoreCustomerExperience/Working',
-            's3://' + output_bucket + '/WT_STORE_CUST_EXPRC/Current'
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/WT_EMP/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -88,6 +82,18 @@ class StepBuilderStoreCustomerExperience(object):
     # ============================================
     # Support Methods
     # ============================================
+
+    def _build_path(self, bucket, domain, name):
+        path_parts = [
+            's3://' + bucket,
+            domain,
+            self.date_parts['year'],
+            self.date_parts['month'],
+            name + self.date_parts['time'],
+            '*.parquet'
+        ]
+
+        return '/'.join(path_parts)
 
     def _find_source_file(self, bucketname, filter_prefix):
         bucket = self.s3_client.Bucket(bucketname)
