@@ -239,7 +239,7 @@ class StepBuilderStore(object):
     def _build_step_emp_store_assoc_refinery(self):
         step_name = 'EmpStoreAssocRefinery'
         script_name = 'Associations/EmpStoreAssociationDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_hr_pii']
+        input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
