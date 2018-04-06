@@ -21,7 +21,7 @@ dfEmployeeMasterList.registerTempTable("employee")
 dfEmpStoreAssociationInd = spark.sql("select a.assignedlocations " +
                                      "as storenumber," +
                                      " a.primarylocation, 4 as companycd," +
-                                     " a.employeeid as sourceemployeeid, " +
+                                     " a.sourceemployeeid as sourceemployeeid, " +
                                      "'RQ4' as sourcesystenname," +
                                      "a.CDC_IND_CD as CDC_IND_CD, " +
                                      "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
