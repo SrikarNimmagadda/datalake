@@ -49,8 +49,8 @@ class StepBuilderStoreCustomerExperience(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreCustomerExperience/Working ',
-            's3://' + output_bucket + '/StoreCustomerExperience/Working ',
+            's3://' + input_bucket + '/StoreCustomerExperience/Working',
+            's3://' + output_bucket + '/StoreCustomerExperience/Working',
             's3://' + error_bucket + '/StoreCustomerExperience'
         ]
 
