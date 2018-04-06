@@ -24,7 +24,7 @@ class StoreCustExpCSVToParquet(object):
         self.client = boto3.client('s3')
         self.inputWorkingPath = sys.argv[1]
         self.outputWorkingPath = sys.argv[2]
-        self.dataProcessingErrorPath = sys.argv[3] + '/discovery/'
+        self.dataProcessingErrorPath = sys.argv[3] + '/Discovery/'
 
         self.rawBucket = self.inputWorkingPath[self.inputWorkingPath.index('tb'):].split("/")[0]
         self.discoveryBucket = self.outputWorkingPath[self.outputWorkingPath.index('tb'):].split("/")[0]
@@ -35,14 +35,19 @@ class StoreCustExpCSVToParquet(object):
         self.storeCustExpFileWorkingPath = 's3://' + self.discoveryBucket + '/' + self.storeCustExpName + '/' + self.workingName
 
         self.fileFormat = ".csv"
+        self.storeCustExpFile, self.storeCustExpFileHeader = self.searchFile(self.inputWorkingPath, 0)
+        self.storeCustExpFileName, self.storeCustExpFileExtension = os.path.splitext(os.path.basename(self.storeCustExpFile))
+        if self.fileFormat not in self.storeCustExpFileExtension:
+            self.logger.error("StoreCustExp Source file not in csv format.")
+            self.copyFile(self.storeCustExpFile, self.dataProcessingErrorPath + self.storeCustExpName + datetime.now().strftime('%Y%m%d%H%M') + self.storeCustExpFileExtension)
+            sys.exit()
+
         self.storeCustExpExpectedColumns = ['Dealer Code', 'Location', '5 Key Behaviors', 'Effective Solutioning', 'Integrated Experience']
         self.storeCustExpFile, self.storeCustExpFileHeader = self.searchFile(self.inputWorkingPath)
         self.storeCustExpColumns = list(filter(None, self.storeCustExpFileHeader))
         self.storeCustExpColumns = [column.lower().replace(' ', '_').replace('5', 'five') for column in self.storeCustExpColumns]
 
-        self.storeCustExpFileName, self.storeCustExpFileExtension = os.path.splitext(os.path.basename(self.storeCustExpFile))
-
-    def searchFile(self, strS3url):
+    def searchFile(self, strS3url, isFileHeader=1):
 
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
@@ -60,6 +65,8 @@ class StoreCustExpCSVToParquet(object):
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
+        if isFileHeader == 0:
+            return file, header
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 0:
                 header = line
@@ -128,7 +135,7 @@ class StoreCustExpCSVToParquet(object):
 
         if not validSourceFormat or not validSourceSchema or not validReportDateFormat:
             self.logger.info("Copy the source files to data processing error path and return.")
-            self.copyFile(self.storeCustExpFile, self.dataProcessingErrorPath + self.storeCustExpName + self.fileFormat)
+            self.copyFile(self.storeCustExpFile, self.dataProcessingErrorPath + self.storeCustExpName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
             return
 
         self.logger.info('Source format and schema validation successful.')
