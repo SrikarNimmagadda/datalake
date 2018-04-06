@@ -20,12 +20,14 @@ class DimStoreManagementHierDelivery(object):
         self.refinedBucketWorking = sys.argv[1]
         self.springMobileWorkingPath = sys.argv[2]
         self.storeMgmtHierCurrentPath = sys.argv[3]
+        self.dataProcessingErrorPath = sys.argv[4] + '/delivery/'
 
         self.client = boto3.client('s3')
         self.s3 = boto3.resource('s3')
+        self.regExForChar = "[^\d]"
 
         self.refinedBucket = self.refinedBucketWorking[self.refinedBucketWorking.index('tb'):].split("/")[0]
-
+        self.springMobileName = self.springMobileWorkingPath[self.springMobileWorkingPath.index('tb'):].split("/")[2]
         self.deliveryBucket = self.storeMgmtHierCurrentPath[self.storeMgmtHierCurrentPath.index('tb'):].split("/")[0]
         self.storeMgmtHierDeliveryName = self.storeMgmtHierCurrentPath[self.storeMgmtHierCurrentPath.index(
             'tb'):].split("/")[1]
@@ -38,8 +40,6 @@ class DimStoreManagementHierDelivery(object):
         self.storeMgmtHierPrevPath = "s3://" + self.deliveryBucket + '/' + self.storeMgmtHierDeliveryName + '/Previous'
         self.storeMgmtHierCurrentPath = "s3://" + self.deliveryBucket + '/' + self.storeMgmtHierDeliveryName + '/' + \
                                         self.currentName
-        self.storeCSVPath = 's3://' + self.deliveryBucket + '/' + self.storeMgmtHierDeliveryName + '/' + 'csv/store'
-        self.empCSVPath = 's3://' + self.deliveryBucket + '/' + self.storeMgmtHierDeliveryName + '/' + 'csv/emp'
 
         self.storeMgmtHierColumns = "hier_id,lvl_1_src_mgr_id,lvl_2_src_mgr_id,lvl_3_src_mgr_id,lvl_4_src_mgr_id," \
                                     "lvl_5_src_mgr_id,lvl_6_src_mgr_id"
@@ -122,10 +122,22 @@ class DimStoreManagementHierDelivery(object):
         self.sparkSession.read.parquet(lastUpdatedEmployeeFile).registerTempTable("employee_refine_curr")
         dfEmployeeRefined = self.sparkSession.sql(
             "select workdayid,sourceemployeeid from employee_refine_curr where workdayid != ''")
-        # dfEmployeeRefined.coalesce(1).write.mode("overwrite").csv(self.empCSVPath, header=True)
         dfEmployeeRefined.registerTempTable("employee_curr")
 
-        dfSpringMobile = self.sparkSession.read.parquet(self.springMobileWorkingPath)
+        dfSpringMobileFull = self.sparkSession.read.parquet(self.springMobileWorkingPath)
+        dfSpringMobileErrorDataWithRVPID = dfSpringMobileFull.filter(
+            dfSpringMobileFull["RVPID"].rlike(self.regExForChar))
+        dfSpringMobileErrorDataWithMDIRID = dfSpringMobileFull.filter(
+            dfSpringMobileFull["MDIRID"].rlike(self.regExForChar))
+        dfSpringMobileErrorDataWithDMID = dfSpringMobileFull.filter(
+            dfSpringMobileFull["DMID"].rlike(self.regExForChar))
+        dfSpringMobileErrorData = dfSpringMobileErrorDataWithRVPID.unionAll(dfSpringMobileErrorDataWithMDIRID).unionAll(dfSpringMobileErrorDataWithDMID).drop_duplicates()
+        dfSpringMobile = dfSpringMobileFull.subtract(dfSpringMobileErrorData)
+
+        if (dfSpringMobileErrorData is not None) and (dfSpringMobileErrorData.count() > 0):
+            self.log.info("Spring Mobile StoreList have erroneous records having invalid values of RVPID, MDIRID or DMID.")
+            dfSpringMobileErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath + self.springMobileName, header=True)
+
         dfSpringMobile.filter(dfSpringMobile.Status == "Open").registerTempTable("SpringMobile")
 
         if lastPrevUpdatedStoreFile != '':
@@ -185,8 +197,6 @@ class DimStoreManagementHierDelivery(object):
             self.sparkSession.sql("select b.RVPID, b.MDIRID, b.DMID, a.SpringMarket, a.SpringRegion, a.SpringDistrict,"
                                   "a.StoreNumber from store_refine_curr a left join SpringMobile b "
                                   "on a.StoreNumber = b.Store").drop_duplicates().registerTempTable("store_curr")
-
-            # self.sparkSession.sql("select * from store_curr").coalesce(1).write.mode("overwrite").csv(self.storeCSVPath, header=True)
 
             self.sparkSession.sql(self.storeMgmtSelectQuery + ",'I' as cdc_ind_cd from store_curr a " + self.storeMgmtJoinWithCondition).drop_duplicates().registerTempTable("store_mgmt_curr_final")
 
