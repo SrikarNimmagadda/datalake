@@ -225,11 +225,13 @@ class StepBuilderStore(object):
         input_bucket_refined = self.buckets['refined_regular']
         input_bucket_discovery = self.buckets['discovery_regular']
         output_bucket = self.buckets['delivery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket_refined + '/Store/Working',
             's3://' + input_bucket_discovery + '/Store/SpringMobileStore/Working',
-            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
+            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
