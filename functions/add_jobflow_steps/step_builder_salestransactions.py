@@ -1,9 +1,10 @@
-""" Contains the class StepBuilderEmpOppEfficiency.
-Builds EMR Steps for EmpOperationalEfficiency files.
+""" Contains the class StepBuilderSalestransactions.
+Builds EMR Steps for sales Transaction files.
 """
+import datetime
 
 
-class StepBuilderEmpOppEfficiency(object):
+class StepBuilderSalesTransactions(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -28,6 +29,12 @@ class StepBuilderEmpOppEfficiency(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
+            self._build_step_csv_to_parquet_attsalesactuals(),
+            self._build_step_attsalesactuals_refinery(),
+            self._build_step_attsalesactuals_delivery(),
+            self._build_step_csv_to_parquet_employeetrasactionadjustment(),
+            self._build_step_employeetrasactionadjustment_refinery(),
+            self._build_step_employeetrasactionadjustment_delivery(),
             self._build_step_csv_to_parquet_employeeopperationalefficiency(),
             self._build_step_employeeopperationalefficiency_refinery(),
             self._build_step_employeeopperationalefficiency_delivery()
@@ -38,6 +45,92 @@ class StepBuilderEmpOppEfficiency(object):
     # ============================================
     # Step Definitions
     # ============================================
+
+    def _build_step_csv_to_parquet_attsalesactuals(self):
+        step_name = 'CSVToParquetATTSalesActuals'
+        script_name = 'Facts/ATTSalesActualsCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+        today = datetime.date.today()
+        sysdate = today.strftime("%m-%d-%Y")
+
+        script_args = [
+            's3://' + output_bucket + '/ATTSalesActual',
+            's3://' + input_bucket + '/AT_T_MyResults_SFTP/loaded_date=' + str(sysdate),
+            's3://' + input_bucket + '/AT_T_MyResults_RPT/Working'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_attsalesactuals_refinery(self):
+        step_name = 'ATTSalesActualsRefinery'
+        script_name = 'Facts/ATTSalesActualsRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/ATTSalesActual',
+            's3://' + input_bucket + '/ATTSalesActual/Working1/',
+            's3://' + output_bucket + '/Store/Working/',
+            's3://' + output_bucket + '/StoreDealerAssociation/Working/',
+            's3://' + output_bucket + '/ATTDealerCode/Working/',
+            's3://' + input_bucket + '/ATTSalesActual/Working2/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_attsalesactuals_delivery(self):
+        step_name = 'ATTSalesActualsDelivery'
+        script_name = 'Facts/ATTSalesActualsDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_ATT_SALES_ACTLS',
+            's3://' + input_bucket + '/ATTSalesActual/Working/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_csv_to_parquet_employeetrasactionadjustment(self):
+        step_name = 'CSVToParquetEmployeeTransAdj'
+        script_name = 'Facts/EmployeeTransactionAdjustmentCSVToParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/EmployeeTransactionAdjustment',
+            's3://' + input_bucket + '/EmpTransAdjustment/Working/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_employeetrasactionadjustment_refinery(self):
+        step_name = 'EmployeeTransAdjRefinery'
+        script_name = 'Facts/EmployeeTransactionAdjustmentRefined.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/EmployeeTransactionAdjustment',
+            's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/',
+            's3://' + output_bucket + '/Employee/Working'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_employeetrasactionadjustment_delivery(self):
+        step_name = 'EmployeeTransAdjDelivery'
+        script_name = 'Facts/EmployeeTransactionAdjustmentDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + output_bucket + '/WT_EMP_TRANS_ADJMNTS',
+            's3://' + input_bucket + '/EmployeeTransactionAdjustment/Working/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet_employeeopperationalefficiency(self):
         step_name = 'CSVToParquetOpperationalEfficiency'
