@@ -29,6 +29,9 @@ class StepBuilderStore(object):
         """Return list of steps that will be sent to the EMR cluster."""
 
         steps = [
+            self._build_step_csv_to_parquet(),
+            self._build_step_employee_refinery(),
+            self._build_step_employee_delivery(),
             self._build_step_csv_to_parquet_store(),
             self._build_step_csv_to_parquet_ATT_Dealer_code(),
             self._build_step_ATT_Dealer_code_refinery(),
@@ -48,6 +51,45 @@ class StepBuilderStore(object):
     # ============================================
     # Step Definitions
     # ============================================
+
+    def _build_step_csv_to_parquet(self):
+        step_name = 'CSVToParquetEmployee'
+        script_name = 'Dimensions/EmployeeCSVToParquet.py'
+        input_bucket = self.buckets['raw_hr_pii']
+        output_bucket = self.buckets['discovery_hr_pii']
+
+        script_args = [
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_employee_refinery(self):
+        step_name = 'EmployeeRefinery'
+        script_name = 'Dimensions/EmployeeDiscoveryToRefined.py'
+        input_bucket = self.buckets['discovery_hr_pii']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_employee_delivery(self):
+        step_name = 'EmployeeDelivery'
+        script_name = 'Dimensions/EmployeeRefinedToDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/WT_EMP/'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet_store(self):
         step_name = 'CSVToParquetStore'

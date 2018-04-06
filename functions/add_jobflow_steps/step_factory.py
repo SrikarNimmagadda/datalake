@@ -30,7 +30,7 @@ class StepFactory(object):
 
         step = {
             'Name': step_name,
-            'ActionOnFailure': 'CANCEL_AND_WAIT',
+            'ActionOnFailure': 'CONTINUE',
             'HadoopJarStep': {
                 'Jar': jar,
                 'Args': args

@@ -1,9 +1,9 @@
-"""Contains the class StepBuilderStoreHeadCountStoreandEmpGoali.
-Builds EMR Steps for StoreHeadCountStoreandEmpGoal files.
+"""Contains the class StepBuilderGoalsKPi.
+Builds EMR Steps for GoalsKPi files.
 """
 
 
-class StepBuilderStoreHeadCountStoreandEmpGoal(object):
+class StepBuilderGoalskpi(object):
     """Build the steps that will be sent to the EMR cluster."""
 
     def __init__(self, step_factory, s3, buckets, now):
@@ -34,6 +34,9 @@ class StepBuilderStoreHeadCountStoreandEmpGoal(object):
         #    self.buckets['refined_regular'])
 
         steps = [
+            self._build_step_csv_to_parquet_goalskpi(),
+            self._build_step_goalskpi_refinery(),
+            self._build_step_goalskpi_delivery(),
             self._build_step_csv_to_parquet_store_recruiting_headcount(),
             self._build_step_store_recruiting_headcount_refined(),
             self._build_step_store_recruiting_headcount_delivery(),
@@ -49,6 +52,50 @@ class StepBuilderStoreHeadCountStoreandEmpGoal(object):
     # ============================================
     # Step Definitions
     # ============================================
+
+    def _build_step_csv_to_parquet_goalskpi(self):
+        step_name = 'CSVToParquetTbGoalPoint'
+        script_name = 'Facts/TBGoalPointsCSVtoParquet.py'
+        input_bucket = self.buckets['raw_regular']
+        output_bucket = self.buckets['discovery_regular']
+
+        script_args = [
+
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
+            's3://' + output_bucket + '/TBGoalPointStore',
+            's3://' + output_bucket + '/TBGoalPointEmployee'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_goalskpi_refinery(self):
+        step_name = 'TbGoalPointRefinery'
+        script_name = 'Facts/TBGoalPointsRefine.py'
+        input_bucket = self.buckets['discovery_regular']
+        output_bucket = self.buckets['refined_regular']
+
+        script_args = [
+
+            's3://' + input_bucket + '/TBGoalPointStore/Working',
+            's3://' + input_bucket + '/TBGoalPointEmployee/Working',
+            's3://' + output_bucket + '/TBGoalPoint'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
+
+    def _build_step_goalskpi_delivery(self):
+        step_name = 'TbGoalPointDelivery'
+        script_name = 'Facts/TBGoalPointsDelivery.py'
+        input_bucket = self.buckets['refined_regular']
+        output_bucket = self.buckets['delivery_regular']
+
+        script_args = [
+            's3://' + input_bucket + '/TBGoalPoint/Working',
+            's3://' + output_bucket + '/WT_TB_GOAL_PT'
+        ]
+
+        return self.step_factory.create(step_name, script_name, script_args)
 
     def _build_step_csv_to_parquet_store_recruiting_headcount(self):
         step_name = 'CSVToParquetStoreRecruitingHeadcount'
