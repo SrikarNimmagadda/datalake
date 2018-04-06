@@ -18,7 +18,7 @@ class StoreCustExpDiscoveryToRefined(object):
 
         self.inputWorkingPath = sys.argv[1]
         self.OutputWorkingPath = sys.argv[2]
-        self.dataProcessingErrorPath = sys.argv[3] + '/refined/'
+        self.dataProcessingErrorPath = sys.argv[3] + '/Refined/'
 
         self.discoveryBucket = self.inputWorkingPath[self.inputWorkingPath.index('tb'):].split("/")[0]
         self.refinedBucket = self.OutputWorkingPath[self.OutputWorkingPath.index('tb'):].split("/")[0]
