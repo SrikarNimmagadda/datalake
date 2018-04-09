@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 import sys
-from pyspark.sql.types import DecimalType
 from pyspark.sql.functions import col
 
 
@@ -41,21 +40,18 @@ class EmpTransAdj(object):
         FinalDF1 = self.sparkSession.createDataFrame(dfEmpTransAdj.rdd.flatMap(rowExpander))
         FinalDF1.registerTempTable("EmpTransAdj1")
 
-        FinalDF_EmpTransAdj1 = self.sparkSession.sql("select market as springmarket, region as springregion, district as springdistrict, salesperson as employeename, salespersonid, reportdate, adjustmenttype, adjustmentamount from EmpTransAdj1")
+        FinalDF_EmpTransAdj1 = self.sparkSession.sql("select market as springmarket, region as springregion, district as springdistrict, salesperson as employeename, salespersonid, reportdate, adjustmenttype, cast(cast(regexp_replace(adjustmentamount,',','') as float) as decimal(20,8)) as adjustmentamount from EmpTransAdj1")
 
         dfEmployee.registerTempTable("Employee")
 
         FinalDF_EmpTransAdj1.registerTempTable("EmpTransAdj")
 
-        FinalDF = self.sparkSession.sql("select a.springmarket, a.springregion, a.springdistrict, a.employeename, a.reportdate, a.adjustmenttype, a.adjustmentamount as adjustmentamount1, b.sourceemployeeid, 'TBSFTP' as sourcesystemname, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from EmpTransAdj a inner join Employee b on a.salespersonid=b.workdayid")
-
-        finalDfChangedType = FinalDF.withColumn("adjustmentamount", FinalDF["adjustmentamount1"].cast(DecimalType()))
-
-        finalDfChangedType.drop('adjustmentamount1')
-        finalDfChangedType = finalDfChangedType.where(col("sourceemployeeid").isNotNull())
-        finalDfChangedType.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
-        finalDfChangedType.coalesce(1).select("*").write.mode("append").parquet(self.EmpTransAdjOut + '/' + 'Previous')
-        finalDfChangedType.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
+        FinalDF = self.sparkSession.sql("select a.springmarket, a.springregion, a.springdistrict, a.employeename, a.reportdate, a.adjustmenttype, CASE WHEN adjustmentamount = '0' THEN 0.00 ELSE cast(cast(adjustmentamount AS float) as double) END as adjustmentamount, b.sourceemployeeid, 'TBSFTP' as sourcesystemname, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from EmpTransAdj a inner join Employee b on a.salespersonid=b.workdayid")
+        FinalDF.printSchema()
+        FinalDF = FinalDF.where(col("sourceemployeeid").isNotNull())
+        FinalDF.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
+        FinalDF.coalesce(1).select("*").write.mode("append").parquet(self.EmpTransAdjOut + '/' + 'Previous')
+        FinalDF.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
         self.sparkSession.stop()
 
 
