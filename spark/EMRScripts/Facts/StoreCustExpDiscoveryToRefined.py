@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_unixtime, unix_timestamp, substring, year
 import sys
 from datetime import datetime
 import boto3
@@ -15,12 +16,19 @@ class StoreCustExpDiscoveryToRefined(object):
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
 
-        self.OutputPath = sys.argv[1]
-        self.CdcBucketName = sys.argv[2]
-        self.StoreCustExpInputPath = sys.argv[3]
+        self.inputWorkingPath = sys.argv[1]
+        self.OutputWorkingPath = sys.argv[2]
+        self.dataProcessingErrorPath = sys.argv[3] + '/Refined/'
+
+        self.discoveryBucket = self.inputWorkingPath[self.inputWorkingPath.index('tb'):].split("/")[0]
+        self.refinedBucket = self.OutputWorkingPath[self.OutputWorkingPath.index('tb'):].split("/")[0]
+        self.storeCustExpName = self.OutputWorkingPath[self.OutputWorkingPath.index('tb'):].split("/")[1]
+        self.storeCustExpPartitionPath = 's3://' + self.refinedBucket + '/' + self.storeCustExpName
+
         self.attDealerCodeName = 'ATTDealerCode'
         self.storeDealerAssoc = 'StoreDealerAssociation'
         self.storeName = 'Store'
+        self.regExForChar = "[^\d]"
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
@@ -48,52 +56,61 @@ class StoreCustExpDiscoveryToRefined(object):
 
     def loadRefined(self):
 
-        refinedBucketNode = self.s3.Bucket(name=self.CdcBucketName)
+        refinedBucketNode = self.s3.Bucket(name=self.refinedBucket)
 
-        lastUpdatedAttDealerFile = self.findLastModifiedFile(refinedBucketNode, self.attDealerCodeName, self.CdcBucketName)
+        lastUpdatedAttDealerFile = self.findLastModifiedFile(refinedBucketNode, self.attDealerCodeName, self.refinedBucket)
         self.spark.read.parquet(lastUpdatedAttDealerFile).registerTempTable("ATTDealerCodeTempTable")
-        StoreDlrCdAssoclastModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeDealerAssoc, self.CdcBucketName)
-        self.spark.read.parquet(StoreDlrCdAssoclastModifiedFileName).registerTempTable("StoreDealerCodeAssocTempTable")
-        StoreModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeName, self.CdcBucketName)
-        self.spark.read.parquet(StoreModifiedFileName).registerTempTable("StoreTempTable")
 
-        self.spark.read.parquet(self.StoreCustExpInputPath).registerTempTable("StoreCustExpTempTable1")
+        storeDlrCdAssoclastModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeDealerAssoc, self.refinedBucket)
+        self.spark.read.parquet(storeDlrCdAssoclastModifiedFileName).registerTempTable("StoreDealerCodeAssocTempTable")
+
+        storeModifiedFileName = self.findLastModifiedFile(refinedBucketNode, self.storeName, self.refinedBucket)
+        self.spark.read.parquet(storeModifiedFileName).registerTempTable("StoreTempTable")
+
+        self.spark.read.parquet(self.inputWorkingPath).registerTempTable("StoreCustExpTempTable1")
 
         self.spark.sql("select location,reverse(split(reverse(location),' ')[0]) as dealer_code,"
-                       "cast(cast(regexp_replace(five_key_behaviours,'%','') as float)/100 as decimal(8,4)) as five_key_behaviours, "
+                       "cast(cast(regexp_replace(five_key_behaviors,'%','') as float)/100 as decimal(8,4)) as five_key_behaviors, "
                        "cast(cast(regexp_replace(effective_solutioning,'%','') as float)/100 as decimal(8,4)) as effective_solutioning,"
                        "cast(cast(regexp_replace(integrated_experience,'%','') as float)/100 as decimal(8,4)) as integrated_experience,"
-                       "'4' as companycd,report_date,"
-                       "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,"
-                       "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month "
-                       "from StoreCustExpTempTable1").registerTempTable("StoreCustExpTempTable2")
+                       "'4' as companycd,report_date from StoreCustExpTempTable1").registerTempTable("StoreCustExpTempTable2")
 
-        self.spark.sql("select cast(c.StoreNumber as int) as store_number,five_key_behaviours,effective_solutioning,integrated_experience,"
-                       "b.attmarket as att_market,a.dealer_code as dealer_code,report_date,companycd,"
-                       "b.attlocationname as att_location_name ,b.attregion as att_region,year,month"
-                       " from StoreCustExpTempTable2 a "
-                       " LEFT OUTER JOIN ATTDealerCodeTempTable b"
-                       " on a.dealer_code = b.dealercode"
-                       " LEFT OUTER JOIN StoreDealerCodeAssocTempTable c"
-                       " on a.dealer_code = c.DealerCode"
-                       " where c.AssociationType = 'Retail' and c.AssociationStatus = 'Active'").registerTempTable("StoreCustExpTempTable3")
+        dfStoreCustExpFull = self.spark.sql("select cast(c.StoreNumber as int) as store_number,five_key_behaviors,effective_solutioning,integrated_experience,"
+                                            "b.attmarket as att_market,a.dealer_code as dealer_code,report_date,companycd,"
+                                            "b.attlocationname as att_location_name ,b.attregion as att_region"
+                                            " from StoreCustExpTempTable2 a "
+                                            " LEFT OUTER JOIN ATTDealerCodeTempTable b"
+                                            " on a.dealer_code = b.dealercode"
+                                            " LEFT OUTER JOIN StoreDealerCodeAssocTempTable c"
+                                            " on a.dealer_code = c.DealerCode"
+                                            " where c.AssociationType = 'Retail' and c.AssociationStatus = 'Active'")
+
+        self.logger.info("Exception Handling of Store Customer Experience Refine starts")
+
+        dfStoreCustExpErrorData = dfStoreCustExpFull.filter(dfStoreCustExpFull["store_number"].rlike(self.regExForChar))
+
+        dfStoreCustExpFull.subtract(dfStoreCustExpErrorData).registerTempTable("StoreCustExpTempTable3")
+
+        if (dfStoreCustExpErrorData is not None) and (dfStoreCustExpErrorData.count() > 0):
+            self.logger.info("Store Customer Experience has erroneous records having invalid store number.")
+            dfStoreCustExpErrorData.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath, header=True)
+
+        self.logger.info("Exception Handling of Store Customer Experience Refine Ends")
 
         dfStoreCustExpFinal = self.spark.sql("select report_date,store_number,a.companycd as companycd,b.LocationName as location_name,"
                                              "b.SpringDistrict as spring_district,b.SpringRegion as spring_region,"
                                              "b.SpringMarket as spring_market,dealer_code,att_location_name,att_region,att_market,"
-                                             "five_key_behaviours,effective_solutioning,integrated_experience,year,month"
+                                             "five_key_behaviors,effective_solutioning,integrated_experience"
                                              " from StoreCustExpTempTable3 a"
                                              " LEFT OUTER JOIN StoreTempTable b"
                                              " on a.store_number = b.StoreNumber").drop_duplicates()
 
-        dfStoreCustExpFinal.coalesce(1).\
-            select('report_date', 'store_number', 'companycd', 'location_name', 'spring_district', 'spring_region', 'spring_market', 'dealer_code', 'att_location_name', 'att_region', 'att_market', 'five_key_behaviours', 'effective_solutioning', 'integrated_experience').\
-            write.mode("overwrite").\
-            format('parquet').\
-            save(self.OutputPath + '/' + 'StoreCustomerExperience' + '/' + 'Working')
+        dfStoreCustExpFinal.coalesce(1).write.mode("overwrite").format('parquet').save(self.OutputWorkingPath)
 
-        dfStoreCustExpFinal.coalesce(1).write.mode('append').partitionBy('year', 'month').\
-            format('parquet').save(self.OutputPath + '/' + 'StoreCustomerExperience')
+        dfStoreCustExpFinal.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+            withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
+            write.mode('append').partitionBy('year', 'month').format('parquet').\
+            save(self.storeCustExpPartitionPath)
 
         self.spark.stop()
 

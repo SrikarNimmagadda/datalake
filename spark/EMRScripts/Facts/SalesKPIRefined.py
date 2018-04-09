@@ -31,7 +31,7 @@ sqlContext = SQLContext(spark)
 sqlContext.registerFunction("getDateS", lambda x: datetime.strptime(x, '%m/%d/%Y'), DateType())
 sqlContext.registerFunction("getDateH", lambda x: datetime.strptime(x, '%m-%d-%y'), DateType())
 sqlContext.registerFunction("doubleToInt", lambda x: IntegerType(x), IntegerType())
-sqlContext.registerFunction("getOnlyDate", lambda x: time.strftime("%m-%d-%Y", time.strptime(x[:19], "%Y-%m-%dT%H:%M:%S")))
+sqlContext.registerFunction("getOnlyDate", lambda x: time.strftime("%m-%d-%Y", time.strptime(x[:19], "%Y-%m-%d %H:%M:%S")))
 sqlContext.registerFunction("correctFormatDate", lambda x: time.strftime("%m/%d/%Y", time.strptime(x[:10], "%m/%d/%Y")))
 sqlContext.registerFunction("getOnlyDate2", lambda x: time.strftime("%m/%d/%Y", time.strptime(x[:15], "%m/%d/%y %H:%M")))
 

@@ -73,7 +73,7 @@ class StepBuilderStore(object):
 
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/Employee/'
+            's3://' + output_bucket + '/Employee/Working'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -225,11 +225,13 @@ class StepBuilderStore(object):
         input_bucket_refined = self.buckets['refined_regular']
         input_bucket_discovery = self.buckets['discovery_regular']
         output_bucket = self.buckets['delivery_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
             's3://' + input_bucket_refined + '/Store/Working',
             's3://' + input_bucket_discovery + '/Store/SpringMobileStore/Working',
-            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current'
+            's3://' + output_bucket + '/WT_STORE_MGMT_HIER/Current',
+            's3://' + error_bucket + '/Store'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -237,12 +239,11 @@ class StepBuilderStore(object):
     def _build_step_emp_store_assoc_refinery(self):
         step_name = 'EmpStoreAssocRefinery'
         script_name = 'Associations/EmpStoreAssociationDiscoveryToRefined.py'
-        input_bucket = self.buckets['discovery_hr_pii']
+        input_bucket = self.buckets['refined_regular']
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/EmpStoreAssociation/',
+            's3://' + input_bucket + '/Employee/Working/',
             's3://' + output_bucket + '/EmpStoreAssociation/'
         ]
 

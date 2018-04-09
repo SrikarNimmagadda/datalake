@@ -42,10 +42,16 @@ dfEmpGoal = spark.sql("select a.ReportDate as report_date," +
                       "b.companycd ," +
                       "'GoogleSheet' as sourcesystemname," +
                       " c.name as employeename," +
-                      "CASE WHEN a.KPIName !='Gross Profit' and e.pte=0 " +
-                      "THEN a.GoalValue/d.approved_headcount " +
-                      "WHEN a.KPIName !='Gross Profit' and e.pte=1 " +
-                      "THEN ((a.GoalValue/d.approved_headcount)*.75) " +
+                      "CASE WHEN a.KPIName NOT IN ('Gross Profit','WTR'," +
+                      "'Accessory Attach Rate', 'GoPhone Auto Enrollment %')" +
+                      " and e.pte=0 THEN a.GoalValue/d.approved_headcount " +
+                      "WHEN a.KPIName NOT IN ('Gross Profit','WTR'," +
+                      "'Accessory Attach Rate','GoPhone Auto Enrollment %')" +
+                      " and e.pte=1 THEN ((a.GoalValue/d.approved_headcount)" +
+                      "*.75) WHEN a.KPIName ='WTR' then a.GoalValue WHEN " +
+                      "a.KPIName ='Accessory Attach Rate' then a.GoalValue " +
+                      "WHEN a.KPIName ='GoPhone Auto Enrollment %' then " +
+                      "a.GoalValue " +
                       " WHEN a.KPIName ='Gross Profit' and e.pte=0 " +
                       "then e.gpgoal" +
                       " WHEN a.KPIName ='Gross Profit' and e.pte=1 " +

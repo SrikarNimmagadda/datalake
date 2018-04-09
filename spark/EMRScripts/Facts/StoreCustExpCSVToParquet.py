@@ -2,7 +2,7 @@ import sys
 import csv
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, year, from_unixtime, unix_timestamp, substring
 from datetime import datetime
 import boto3
 try:
@@ -14,17 +14,40 @@ except ImportError:
 class StoreCustExpCSVToParquet(object):
 
     def __init__(self):
+
         self.appName = self.__class__.__name__
         self.spark = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.spark.sparkContext._jvm.org.apache.log4j
         self.logger = self.log4jLogger.LogManager.getLogger(self.appName)
 
         self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
+        self.inputWorkingPath = sys.argv[1]
+        self.outputWorkingPath = sys.argv[2]
+        self.dataProcessingErrorPath = sys.argv[3] + '/Discovery/'
 
-        self.OutputPath = sys.argv[1]
-        self.InputPath = sys.argv[2]
+        self.rawBucket = self.inputWorkingPath[self.inputWorkingPath.index('tb'):].split("/")[0]
+        self.discoveryBucket = self.outputWorkingPath[self.outputWorkingPath.index('tb'):].split("/")[0]
+        self.storeCustExpName = self.outputWorkingPath[self.outputWorkingPath.index('tb'):].split("/")[1]
+        self.workingName = self.outputWorkingPath[self.outputWorkingPath.index('tb'):].split("/")[2]
 
-    def searchFile(self, strS3url):
+        self.storeCustExpFilePartitionPath = 's3://' + self.discoveryBucket + '/' + self.storeCustExpName
+        self.storeCustExpFileWorkingPath = 's3://' + self.discoveryBucket + '/' + self.storeCustExpName + '/' + self.workingName
+
+        self.fileFormat = ".csv"
+        self.storeCustExpFile, self.storeCustExpFileHeader = self.searchFile(self.inputWorkingPath, 0)
+        self.storeCustExpFileName, self.storeCustExpFileExtension = os.path.splitext(os.path.basename(self.storeCustExpFile))
+        if self.fileFormat not in self.storeCustExpFileExtension:
+            self.logger.error("StoreCustExp Source file not in csv format.")
+            self.copyFile(self.storeCustExpFile, self.dataProcessingErrorPath + self.storeCustExpName + datetime.now().strftime('%Y%m%d%H%M') + self.storeCustExpFileExtension)
+            sys.exit()
+
+        self.storeCustExpExpectedColumns = ['Dealer Code', 'Location', '5 Key Behaviors', 'Effective Solutioning', 'Integrated Experience']
+        self.storeCustExpFile, self.storeCustExpFileHeader = self.searchFile(self.inputWorkingPath)
+        self.storeCustExpColumns = list(filter(None, self.storeCustExpFileHeader))
+        self.storeCustExpColumns = [column.lower().replace(' ', '_').replace('5', 'five') for column in self.storeCustExpColumns]
+
+    def searchFile(self, strS3url, isFileHeader=1):
 
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
@@ -42,75 +65,99 @@ class StoreCustExpCSVToParquet(object):
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
+        if isFileHeader == 0:
+            return file, header
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
-            if i == 1:
+            if i == 0:
                 header = line
         self.logger.info('File name ' + fileName + ' exists in path  ' + filePath)
         return file, header
 
+    def isValidFormatInSource(self):
+
+        isValidStoreCustExpFormat = self.fileFormat in self.storeCustExpFileExtension
+
+        if all([isValidStoreCustExpFormat]):
+            return True
+        return False
+
+    def isValidSchemaInSource(self):
+
+        self.logger.info("StoreCustExp column count " + str(self.storeCustExpFileHeader.__len__()))
+
+        isValidStoreCustExpSchema = False
+
+        storeCustExpColumnsMissing = [item for item in self.storeCustExpExpectedColumns if item not in self.storeCustExpFileHeader]
+        if storeCustExpColumnsMissing.__len__() <= 0:
+            isValidStoreCustExpSchema = True
+
+        self.logger.info("isValidStoreCustExpSchema " + isValidStoreCustExpSchema.__str__())
+
+        if all([isValidStoreCustExpSchema]):
+            return True
+
+        return False
+
+    def copyFile(self, strS3url, newS3PathURL):
+
+        newBucketWithPath = urlparse(newS3PathURL)
+        newBucket = newBucketWithPath.netloc
+        newPath = newBucketWithPath.path.lstrip('/')
+
+        bucketWithPath = urlparse(strS3url)
+        bucket = bucketWithPath.netloc
+        originalName = bucketWithPath.path.lstrip('/')
+        self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
+        self.logger.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
+
     def loadParquet(self):
 
-        storeCustExpFileCheck = 0
+        self.logger.info('Exception Handling starts')
+        validReportDateFormat = True
 
-        workingPath = 's3://' + self.InputPath + '/StoreCustomerExperience/Working'
-        file, fileHeader = self.searchFile(workingPath)
-        fileName, fileExtension = os.path.splitext(os.path.basename(file))
+        try:
+            self.newformat = datetime.strptime(str(self.storeCustExpFileName.split("_")[-1]), '%Y%m%d%H%M').strftime('%m/%d/%Y')
+            self.logger.info(self.newformat)
+        except ValueError:
+            validReportDateFormat = False
 
-        newformat = datetime.strptime(str(fileName.split("_")[-1]), '%Y%m%d%H%M').strftime('%m/%d/%Y')
-        self.logger.info(newformat)
+        if not validReportDateFormat:
+            self.logger.error("StoreCustExp Source file report date not in required date format.")
 
-        if fileExtension == ".csv":
-            storeCustExpFileCheck = 1
+        validSourceFormat = self.isValidFormatInSource()
 
-        if storeCustExpFileCheck == 1:
-            self.logger.info("Raw file is in csv format, proceeding with the logic")
+        if not validSourceFormat:
+            self.logger.error("StoreCustExp Source file not in csv format.")
 
-            dfStoreCustExp = self.spark.read.format("com.databricks.spark.csv"). \
-                option("header", "true"). \
-                option("treatEmptyValuesAsNulls", "true"). \
-                option("inferSchema", "true"). \
-                load('s3://' + self.InputPath + '/StoreCustomerExperience/Working')
+        validSourceSchema = self.isValidSchemaInSource()
+        if not validSourceSchema:
+            self.logger.error("StoreCustExp Source schema does not have all the required columns.")
 
-            dfStoreCustExpCnt = dfStoreCustExp.count()
+        if not validSourceFormat or not validSourceSchema or not validReportDateFormat:
+            self.logger.info("Copy the source files to data processing error path and return.")
+            self.copyFile(self.storeCustExpFile, self.dataProcessingErrorPath + self.storeCustExpName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            return
 
-            if dfStoreCustExpCnt > 1:
-                self.logger.info("The store customer experience file has data")
-                fileHasDataFlag = 1
-            else:
-                self.logger.info("The store customer experience file does not have data")
-                fileHasDataFlag = 0
+        self.logger.info('Source format and schema validation successful.')
+        self.logger.info('Reading the input parquet file')
 
-            if fileHasDataFlag == 1:
-                self.logger.info("Csv file loaded into dataframe properly")
+        dfStoreCustExp = self.spark.read.format("com.databricks.spark.csv"). \
+            option("encoding", "UTF-8"). \
+            option("ignoreLeadingWhiteSpace", "true"). \
+            option("ignoreTrailingWhiteSpace", "true"). \
+            option("header", "true"). \
+            option("treatEmptyValuesAsNulls", "true"). \
+            option("inferSchema", "true"). \
+            option("escape", '"'). \
+            option("quote", "\""). \
+            option("multiLine", "true"). \
+            load(self.inputWorkingPath).toDF(*self.storeCustExpColumns)
 
-                dfStoreCustExp.withColumnRenamed("Location", "location").\
-                    withColumnRenamed("5 Key Behaviors", "five_key_behaviours"). \
-                    withColumnRenamed("Effective Solutioning", "effective_solutioning"). \
-                    withColumnRenamed("Integrated Experience", "integrated_experience"). \
-                    withColumnRenamed("GroupID", "group_id").\
-                    withColumn('report_date', lit(newformat)).\
-                    registerTempTable("StoreCustExpTempTable")
+        dfStoreCustExp = dfStoreCustExp.withColumn('report_date', lit(self.newformat))
 
-                dfStoreCustExpFinal = self.spark.sql(
-                    "select location,five_key_behaviours,effective_solutioning,integrated_experience,group_id,report_date,"
-                    "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month"
-                    " from StoreCustExpTempTable "
-                )
+        dfStoreCustExp.coalesce(1).write.mode('overwrite').format('parquet').save(self.outputWorkingPath)
 
-                dfStoreCustExpFinal.coalesce(1).select('location', 'five_key_behaviours', 'effective_solutioning',
-                                                       'integrated_experience', 'group_id', 'report_date'). \
-                    write.mode("overwrite"). \
-                    parquet(self.OutputPath + '/' + 'StoreCustomerExperience' + '/' + 'Working')
-
-                dfStoreCustExpFinal.coalesce(1). \
-                    write.mode('append').partitionBy('year', 'month'). \
-                    format('parquet').save(self.OutputPath + '/' + 'StoreCustomerExperience')
-
-            else:
-                self.logger.error("ERROR : Loading csv file into dataframe")
-
-        else:
-            self.logger.error("ERROR : Raw file is not in csv format")
+        dfStoreCustExp.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).write.mode('append').partitionBy('year', 'month').format('parquet').save(self.storeCustExpFilePartitionPath)
 
         self.spark.stop()
 
