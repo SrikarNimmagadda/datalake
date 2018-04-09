@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 import sys
 import os
 from datetime import datetime
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, year, from_unixtime, unix_timestamp, substring
 import boto3
 import csv
 from urlparse import urlparse
@@ -34,44 +34,27 @@ class EmpTransAdj(object):
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
-            if i == 1:
+            if i == 0:
                 header = line
 
         return file, header
 
     def loadParquet(self):
 
+        file, fileHeader = self.searchFile(self.EmpTransAdjIn)
+        nonTransposeCols = ['Market', 'Region', 'District', 'Location', 'Loc', 'SalesPerson', 'SalesPersonID']
+        empTrnasAdjCols = list(filter(None, fileHeader))
+        empTrnasAdjCols = [column.replace(' ', '') for column in empTrnasAdjCols]
+        empTrnasAdjCols = [column + '_wxyz' if column not in nonTransposeCols else column.lower() for index, column in enumerate(empTrnasAdjCols)]
+
+        self.logger.info("Employee Transaction Columns : " + ','.join(empTrnasAdjCols))
+
         dfEmpTrnasAdj = self.sparkSession.read.format("com.databricks.spark.csv").\
             option("header", "true").\
             option("treatEmptyValuesAsNulls", "true").\
             option("inferSchema", "true").\
-            load(self.EmpTransAdjIn)
+            load(self.EmpTransAdjIn).toDF(*empTrnasAdjCols)
 
-        dfEmpTrnasAdj = dfEmpTrnasAdj.withColumnRenamed("Market", "market").\
-            withColumnRenamed("Region", "region").\
-            withColumnRenamed("District", "district").\
-            withColumnRenamed("Location", "location").\
-            withColumnRenamed("Loc", "loc").\
-            withColumnRenamed("SalesPerson", "salesperson").\
-            withColumnRenamed("SalesPersonID", "salespersonid").\
-            withColumnRenamed(" DF Accessory Adjustment ", "DFAccessoryAdjustment_wxyz").\
-            withColumnRenamed(" Feature Adjustment ", "FeatureAdjustment_wxyz").\
-            withColumnRenamed(" Incorrect ActUpg ", "IncorrectActUpg_wxyz").\
-            withColumnRenamed(" Incorrect BYOD ", "IncorrectBYOD_wxyz").\
-            withColumnRenamed(" Incorrect DF ", "IncorrectDF_wxyz").\
-            withColumnRenamed(" Incorrect Plan ", "IncorrectPlan_wxyz").\
-            withColumnRenamed("Feature Disputes", "FeatureDisputes_wxyz").\
-            withColumnRenamed(" Incorrect Prepaid ", "IncorrectPrepaid_wxyz").\
-            withColumnRenamed(" Incorrect Transactions ", "IncorrectTransactions_wxyz").\
-            withColumnRenamed(" DirecTV NOW Adjustment ", "DirecTVNOWAdjustment_wxyz").\
-            withColumnRenamed(" TV Disputes ", "TVDisputes_wxyz").\
-            withColumnRenamed(" TV Extras Adjustment ", "TVExtrasAdjustment_wxyz").\
-            withColumnRenamed(" Wired Disputes ", "WiredDisputes_wxyz").\
-            withColumnRenamed(" Wired Extras Adjustment ", "WiredExtrasAdjustment_wxyz").\
-            withColumnRenamed(" Deposit Adjustment ", "DepositAdjustment_wxyz").\
-            withColumnRenamed(" Total Adjustment ", "TotalAdjustment_wxyz")
-
-        file, fileHeader = self.searchFile(self.EmpTransAdjIn)
         fileName, fileExtension = os.path.splitext(os.path.basename(file))
         fields = fileName.split('\\')
         newformat = ''
@@ -87,18 +70,9 @@ class EmpTransAdj(object):
 
         dfEmpTrnasAdj = dfEmpTrnasAdj.withColumn('reportdate', lit(newformat))
 
-        dfEmpTrnasAdj.registerTempTable("EmpTransAdj")
+        dfEmpTrnasAdj.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).write.mode('append').partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
 
-        FinalDF = self.sparkSession.sql("select market,region,district,location,loc,salesperson,salespersonid,DFAccessoryAdjustment_wxyz,"
-                                        "FeatureAdjustment_wxyz,IncorrectActUpg_wxyz,IncorrectBYOD_wxyz,IncorrectDF_wxyz,"
-                                        "IncorrectPrepaid_wxyz,IncorrectTransactions_wxyz,DirecTVNOWAdjustment_wxyz,FeatureDisputes_wxyz,"
-                                        "TVDisputes_wxyz,TVExtrasAdjustment_wxyz,WiredDisputes_wxyz,IncorrectPlan_wxyz,"
-                                        "WiredExtrasAdjustment_wxyz,DepositAdjustment_wxyz,TotalAdjustment_wxyz,reportdate,"
-                                        "YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from EmpTransAdj")
-
-        FinalDF.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
-
-        FinalDF.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
+        dfEmpTrnasAdj.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
 
         self.sparkSession.stop()
 
