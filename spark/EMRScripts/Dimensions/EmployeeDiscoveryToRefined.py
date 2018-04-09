@@ -21,16 +21,16 @@ class EmployeeRefine(object):
         self.discoveryBucket = self.\
             discoveryBucketWorking[self.
                                    discoveryBucketWorking.index(
-                                            'tb'):].split("/")[0]
+                                       'tb'):].split("/")[0]
         self.refinedBucketWorking = sys.argv[2]
         self.refinedBucket = self.\
             refinedBucketWorking[self.
                                  refinedBucketWorking.index(
-                                    'tb'):].split("/")[0]
+                                     'tb'):].split("/")[0]
         self.Employee = self.\
             refinedBucketWorking[self.
                                  refinedBucketWorking.index(
-                                    'tb'):].split("/")[1]
+                                     'tb'):].split("/")[1]
         self.workingName = self.\
             refinedBucketWorking[self.
                                  refinedBucketWorking.index(
