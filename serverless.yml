@@ -68,6 +68,7 @@ custom:
     routeRawArtifact: target/dist/${self:service}-route-raw.zip
     extractMetadataArtifact: target/dist/${self:service}-extract-metadata.zip
     addStepsArtifact: target/dist/${self:service}-add-jobflow-steps.zip
+    dataprocessingErrorsArtifact: target/dist/${self:service}-data-processing-errors.zip
 
 provider:
   name: aws
@@ -153,6 +154,21 @@ functions:
         event: s3:ObjectCreated:*
     package:
       artifact: ${self:custom.package.extractMetadataArtifact}
+
+  dataprocessingErrors:
+    role: DataprocessingErrorsRole
+    environment:
+      DATA_PROCESSING_ERRORS_BUCKET: ${self:custom.buckets.dataprocessingerrors}
+      HEN_NAME: ${self:custom.hen}
+      NOTIFICATION: ${self:custom.sns.snsnotification}
+    name: ${self:service}-data-processing-errors-${self:custom.hen}-${self:provider.stage}
+    handler: handler.lambda_handler
+    events:
+      - s3:
+        bucket: dataprocessingerrors
+        event: s3:ObjectCreated:*
+    package:
+      artifact: ${self:custom.package.dataprocessingErrorsArtifact}
 
   addJobFlowStepsCustomer:
     role: AddJobFlowStepsRole
@@ -424,17 +440,11 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:custom.buckets.dataprocessingerrors}
-        NotificationConfiguration:
-          TopicConfigurations:
-            - Event: s3:ObjectCreated:*
-              Topic:
-                Ref: SNSNotificationTopic
         LifecycleConfiguration:
           Rules:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
-      DependsOn: SNSTopicPolicy
 
     ######################################################################
     # LANDING BUCKET
@@ -1386,6 +1396,29 @@ resources:
                   Action:
                     - kms:Decrypt
                     - kms:Encrypt
+                  Resource: '*'
+
+    # This role will be used by dataprocessing error notification lambda
+    DataprocessingErrorsRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:service}-dataprocessingErrorsRole-${self:custom.hen}-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          ${file(sls-include/assume-role-policy-doc.yml)}
+        Policies:
+          - PolicyName: DataprocessingErrorsPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:*
+                  Resource:
+                    - arn:aws:s3:::${self:custom.buckets.dataprocessingerrors}
+                    - arn:aws:s3:::${self:custom.buckets.dataprocessingerrors}/*
+                - Effect: Allow
+                  Action:
+                    - sns:*
                   Resource: '*'
 
     # This role will be used by all AddJobFlowSteps lambdas
