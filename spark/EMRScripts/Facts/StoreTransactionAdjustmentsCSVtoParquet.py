@@ -100,8 +100,6 @@ class StoreTransactionAdjustments(object):
 
         dfStoreTransAdj = dfStoreTransAdj.withColumn('reportdate', lit(newformat))
         dfStoreTransAdj.printSchema()
-#        dfStoreTransAdj.registerTempTable("final")
-#        dfStoreTransAdj = self.sparkSession.sql("")
         dfStoreTransAdjMisc1.registerTempTable("MISC")
         dfStoreTransAdjMisc = self.sparkSession.sql("select location_Miscellaneous, replace(gpadjustments_Miscellaneous,'$','') as gpadjustments_Miscellaneous, cruadjustments_Miscellaneous, acceligoppsadjustment_Miscellaneous, totaloppsadjustment_Miscellaneous, storenumber, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from MISC")
         dfStoreTransAdjMisc.printSchema()
