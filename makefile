@@ -84,7 +84,7 @@ deploy-stage:
 # Lambda packaging rules
 #
 
-pack: pack-extract-metadata pack-route-raw pack-add-jobflow-steps
+pack: pack-extract-metadata pack-route-raw pack-add-jobflow-steps pack-data-processing-errors
 
 pack-extract-metadata: clean-extract-metadata prep-target
 	@echo '==> Packing extract_metadata lambda...'
