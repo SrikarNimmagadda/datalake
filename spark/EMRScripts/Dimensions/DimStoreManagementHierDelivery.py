@@ -20,7 +20,7 @@ class DimStoreManagementHierDelivery(object):
         self.refinedBucketWorking = sys.argv[1]
         self.springMobileWorkingPath = sys.argv[2]
         self.storeMgmtHierCurrentPath = sys.argv[3]
-        self.dataProcessingErrorPath = sys.argv[4] + '/delivery/'
+        self.dataProcessingErrorPath = sys.argv[4] + '/Delivery/'
 
         self.client = boto3.client('s3')
         self.s3 = boto3.resource('s3')

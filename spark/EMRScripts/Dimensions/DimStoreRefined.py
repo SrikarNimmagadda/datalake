@@ -30,7 +30,7 @@ class DimStoreRefined(object):
         self.storeWorkingPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + self.workingName
         self.storePartitonPath = 's3://' + self.refinedBucket + '/' + self.storeName
         self.storeCSVPath = 's3://' + self.refinedBucket + '/' + self.storeName + '/' + 'csv'
-        self.dataProcessingErrorPath = sys.argv[3] + '/refined/'
+        self.dataProcessingErrorPath = sys.argv[3] + '/Refined/'
 
         self.locationName = "Location"
         self.baeName = "BAE"
@@ -85,7 +85,7 @@ class DimStoreRefined(object):
                             + "BAEWorkDayId,BSISWorkDayId,SpringRegionVP,SpringMarketDirector,SpringDistrictManager"
         self.splitOnIndexUDF = udf(lambda z: splitOnIndex(z), StringType())
         self.regExForChar = "[^\d]"
-        self.regExForDate = "([0-9]|0[0-9]|1[0-2])\/([1-9]|0[1-9]|([12][0-9]|3[01])\/(19|20)[0-9][0-9])"
+        self.regExForDate = "^([0-9]|0[0-9]|1[0-2])\/([1-9]|0[1-9]|([12][0-9]|3[01]))\/((19|20)[0-9][0-9])$"
         self.storeRefineSchema = StructType([StructField("StoreNumber", IntegerType(), True), StructField("CompanyCd", IntegerType(), True),
                                              StructField("SourceStoreIdentifier", IntegerType(), True), StructField("LocationName", StringType(), True),
                                              StructField("Abbreviation", StringType(), True), StructField("GLCode", StringType(), True),
