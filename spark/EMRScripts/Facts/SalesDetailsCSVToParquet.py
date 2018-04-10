@@ -157,7 +157,7 @@ class SalesDetailsCSVToParquet(object):
         dfSalesDetailsFinal2.printSchema()
         dfSalesDetailsFinal2 = dfSalesDetailsFinal2.withColumn('datecreated', regexp_replace('datecreated2', 'T', ' '))
         dfSalesDetailsFinal = dfSalesDetailsFinal2.drop('datecreated2')
-        dfSalesDetailsFinal.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(self.salesDetailsPartitionFilePath)
+        dfSalesDetailsFinal.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(self.salesDetailsPartitionFilePath)
 
         dfSalesDetailsFinal.coalesce(1).select("*").write.mode("overwrite").parquet(self.salesDetailsWorkingFilePath)
         self.sparkSession.stop()
