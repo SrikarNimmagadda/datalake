@@ -33,7 +33,7 @@ class EmpOprEffRefined(object):
 
         Final_Joined_DF = Final_Joined_DF.dropDuplicates(['sourceemployeeid', 'companycd', 'sourcesystemname'])
         Final_Joined_DF = Final_Joined_DF.where(col("sourceemployeeid").isNotNull())
-        Final_Joined_DF.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(DimEmployeeOperationalEfficiencyOutput)
+        Final_Joined_DF.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(DimEmployeeOperationalEfficiencyOutput)
         Final_Joined_DF.coalesce(1).select("*").write.mode("overwrite").parquet(DimEmployeeOperationalEfficiencyOutput + '/' + 'Working')
         spark.stop()
 
