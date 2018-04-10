@@ -174,13 +174,18 @@ functions:
     name: ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage}
     handler: handler.lambda_handler
     events:
-      - schedule:
-          name: ${self:service}-add-steps-customer-sched-${self:custom.hen}-${self:provider.stage}
-          description: 'Invokes the ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
-          rate: cron(0 5 * * ? *) # every day at 5AM UTC/12AM Dallas time
-          input:
-            builder: customer
-            enabled: true
+      - s3:
+        bucket: rawCustomerPii
+        event: s3:ObjectCreated:*
+        rules:
+            - prefix: Customer/Working/
+      # - schedule:
+      #    name: ${self:service}-add-steps-customer-sched-${self:custom.hen}-${self:provider.stage}
+      #    description: 'Invokes the ${self:service}-add-steps-customer-${self:custom.hen}-${self:provider.stage} lambda on a schedule'
+      #    rate: cron(0 5 * * ? *) # every day at 5AM UTC/12AM Dallas time
+      #    input:
+      #      builder: customer
+      #      enabled: true
     package:
       artifact: ${self:custom.package.addStepsArtifact}
 
