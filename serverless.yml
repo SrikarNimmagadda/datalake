@@ -445,6 +445,28 @@ resources:
           - Id: ExpirationRule
             Status: Enabled
             ExpirationInDays: 90
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: s3:ObjectCreated:*
+              Function:
+                Fn::GetAtt:
+                  - DataprocessingErrorsLambdaFunction
+                  - Arn
+      DependsOn: ExtractMetadataLambdaPermissionDataprocessingerrorsS3
+
+    # Permission to invoke the Lambda that that send SNS notification
+    ExtractMetadataLambdaPermissionDataprocessingerrorsS3:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Fn::GetAtt:
+            - DataprocessingErrorsLambdaFunction
+            - Arn
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
+        SourceAccount:
+          Ref: AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:custom.buckets.dataprocessingerrors}
 
     ######################################################################
     # LANDING BUCKET
@@ -1330,6 +1352,7 @@ resources:
           - Ref: RouteRawRole
           - Ref: ExtractMetadataRole
           - Ref: AddJobFlowStepsRole
+          - Ref: DataprocessingErrorsRole
 
     RouteRawRole:
       Type: AWS::IAM::Role
