@@ -38,7 +38,7 @@ class TBGoalPointsCSVToParquet(object):
         dfTBGoalPoints.registerTempTable("TBGP")
         dfTBGoalPointsFinalStore = self.spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
 
-        dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").\
+        dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("append").\
             partitionBy('year', 'month').parquet(self.TBGoalPointsOpStore)
 
         dfTBGoalPointsFinalStore.coalesce(1).select("*").write.mode("overwrite").\
@@ -59,7 +59,7 @@ class TBGoalPointsCSVToParquet(object):
         dfTBGoalPoints.registerTempTable("TBGP")
         dfTBGoalPointsFinalEmployee = self.spark.sql("select a.kpiname,a.goalpoints, a.bonuspoints,a.decelerator,YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month,a.reportdate from TBGP a ")
 
-        dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").\
+        dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("append").\
             partitionBy('year', 'month').parquet(self.TBGoalPointsOpEmployee)
 
         dfTBGoalPointsFinalEmployee.coalesce(1).select("*").write.mode("overwrite").\

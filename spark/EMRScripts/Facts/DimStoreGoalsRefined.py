@@ -28,21 +28,6 @@ class DimStoreGoalsRefined(object):
         self.prefixStoreTransactionAdjRefinedPath = 'StoreTransactionAdj'
         self.prefixStoreRefinedPath = 'Store'
 
-        self.storeGoalTransposeColumns = "GrossProfit,PremiumVideo,DigitalLife,AccGPOROpp,CRUOpps,Tablets," \
-                                         "IntegratedProducts,WTR,GoPhone,Overtime,DTVNow,AccessoryAttachRate," \
-                                         "Broadband,Traffic,ApprovedFTE,ApprovedHC,GoPhoneAutoEnrollment,Opps," \
-                                         "SMTraffic,Entertainment"
-
-        self.columnsDict = {'GrossProfit': 'Gross Profit', 'PremiumVideo': 'Premium Video',
-                            'DigitalLife': 'Digital Life', 'AccGPOROpp': 'Acc GP/Opp', 'CRUOpps': 'CRU Opps',
-                            'IntegratedProducts': 'Integrated Products', 'GoPhone': 'Go Phone', 'DTVNow': 'DTV Now',
-                            'AccessoryAttachRate': 'Accessory Attach Rate', 'ApprovedFTE': 'Approved FTE',
-                            'ApprovedHC': 'Approved HC', 'GoPhoneAutoEnrollment': 'GoPhone Auto Enrollment %',
-                            'SMTraffic': 'SM Traffic'}
-        self.tempStr = ','.join(["'" + x + "&',nvl(" + x + ",'0.00'),','" for x in
-                                 self.storeGoalTransposeColumns.split(',')])
-        self.storeTransposeConcat = self.tempStr[:len(self.tempStr) - 4]
-
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
         prefixPath = prefixType + '/year=' + datetime.now().strftime('%Y')
@@ -81,14 +66,24 @@ class DimStoreGoalsRefined(object):
         lastUpdatedStoreFile = self.findLastModifiedFile(refinedBucketNode, self.prefixStoreRefinedPath,
                                                          self.refinedBucket)
 
-        dfStoreGoalsDisc = self.sparkSession.read.parquet(lastUpdatedStoreGoalsFile).filter("Store != ' '")
+        dfStoreGoalsDisc = self.sparkSession.read.parquet(lastUpdatedStoreGoalsFile).filter("Store != ' '").drop('Date')
+        storeGoalColumns = dfStoreGoalsDisc.schema.names
+        self.log.info('Store goal columns: ' + ','.join(storeGoalColumns))
+        storeGoalUnTransposeColumns = ['Store', 'ReportDate']
+        storeGoalTransposeColumns = [x for x in storeGoalColumns if x not in storeGoalUnTransposeColumns]
+        self.log.info('Store goal transpose columns : ' + ','.join(storeGoalTransposeColumns))
+        replaceChars = ['_', '1']
+        dictKeys = [x for x in storeGoalColumns for y in replaceChars if y in x]
+        self.log.info('Store goal dict Keys : ' + ','.join(dictKeys))
+        columnsDict = {value: value.replace('_', ' ').replace('1', '/') for value in dictKeys}
+        self.log.info('Store goal dict values : ' + ','.join(columnsDict.values()))
 
+        tempStr = ','.join(["'" + x + "&',nvl(" + x + ",'0.00'),','" for x in storeGoalTransposeColumns])
+        storeTransposeConcat = tempStr[:len(tempStr) - 4]
         dfStoreGoalsDisc.withColumn('StoreNumber', regexp_replace(col("Store"), '\D', '')).drop("Store").\
             registerTempTable("StoreGoalsTT")
 
-        dfFlatteningStoreGoals = self.sparkSession.sql("select StoreNumber, ReportDate,concat(" +
-                                                       self.storeTransposeConcat + ") as concatenated from "
-                                                                                   "StoreGoalsTT")
+        dfFlatteningStoreGoals = self.sparkSession.sql("select StoreNumber, ReportDate,concat(" + storeTransposeConcat + ") as concatenated from StoreGoalsTT")
 
         dfFlatTableExplodedFrame = dfFlatteningStoreGoals.\
             select("StoreNumber", "ReportDate", explode(split(dfFlatteningStoreGoals.concatenated, ",")).
@@ -103,7 +98,7 @@ class DimStoreGoalsRefined(object):
         self.sparkSession.read.parquet(lastUpdatedStoreFile).registerTempTable("StoreRefined_TT")
 
         sqlKPINameQuery = "case "
-        for name, newName in self.columnsDict.items():
+        for name, newName in columnsDict.items():
             sqlKPINameQuery = sqlKPINameQuery + "when a.KPIName = '" + name + "' then '" + newName + "' "
         sqlKPINameQuery = sqlKPINameQuery + " else a.KPIName end as KPIName"
 

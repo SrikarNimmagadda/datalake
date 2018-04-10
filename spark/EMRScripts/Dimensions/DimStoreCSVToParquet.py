@@ -3,6 +3,7 @@ import sys
 import os
 import csv
 import boto3
+from datetime import datetime
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -30,7 +31,7 @@ class DimStoreCSVToParquet(object):
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
         self.storeName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[1]
         self.workingName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[2]
-        self.dataProcessingErrorPath = sys.argv[8] + '/discovery'
+        self.dataProcessingErrorPath = sys.argv[8] + '/Discovery'
 
         self.locationName = self.locationMasterListWorkingFilePath[self.locationMasterListWorkingFilePath.index('tb'):].split("/")[1]
         self.baeName = self.baeLocationWorkingFilePath[self.baeLocationWorkingFilePath.index('tb'):].split("/")[1]
@@ -41,6 +42,31 @@ class DimStoreCSVToParquet(object):
         self.fileFormat = ".csv"
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
+
+        self.locationMasterListFile, self.locationHeader = self.searchFile(self.locationMasterListWorkingFilePath, self.locationName, 0)
+        self.baeLocationFile, self.baeHeader = self.searchFile(self.baeLocationWorkingFilePath, self.baeName, 0)
+        self.dealerCodesFile, self.dealerHeader = self.searchFile(self.dealerCodesWorkingFilePath, self.dealerName, 0)
+        self.multiTrackerFile, self.multiTrackerHeader = self.searchFile(self.multiTrackerStoreWorkingFilePath, self.multiTrackerName, 0)
+        self.springMobileStoreFile, self.springMobileHeader = self.searchFile(self.springMobileStoreListWorkingFilePath, self.springMobileName, 0)
+        self.dTVLocationFile, self.dtvHeader = self.searchFile(self.dtvLocationMasterWorkingFilePath, self.dtvLocationName, 0)
+        locationFileName, locationFileExtension = os.path.splitext(os.path.basename(self.locationMasterListFile))
+        baeFileName, baeFileExtension = os.path.splitext(os.path.basename(self.baeLocationFile))
+        dealerCOdesFileName, dealerCOdesFileExtension = os.path.splitext(os.path.basename(self.dealerCodesFile))
+        multiTrackerFileName, multiTrackerFileExtension = os.path.splitext(os.path.basename(self.multiTrackerFile))
+        springMobileFileName, springMobileFileExtension = os.path.splitext(os.path.basename(self.springMobileStoreFile))
+        dtvFileName, dtvFileExtension = os.path.splitext(os.path.basename(self.dTVLocationFile))
+
+        validSourceFormat = self.isValidFormatInSource()
+
+        if not validSourceFormat:
+            self.log.error("Store Source files not in csv format.")
+            self.copyFile(self.locationMasterListFile, self.dataProcessingErrorPath + '/' + self.locationName + datetime.now().strftime('%Y%m%d%H%M') + locationFileExtension)
+            self.copyFile(self.baeLocationFile, self.dataProcessingErrorPath + '/' + self.baeName + datetime.now().strftime('%Y%m%d%H%M') + baeFileExtension)
+            self.copyFile(self.dealerCodesFile, self.dataProcessingErrorPath + '/' + self.dealerName + datetime.now().strftime('%Y%m%d%H%M') + dealerCOdesFileExtension)
+            self.copyFile(self.multiTrackerFile, self.dataProcessingErrorPath + '/' + self.multiTrackerName + datetime.now().strftime('%Y%m%d%H%M') + multiTrackerFileExtension)
+            self.copyFile(self.springMobileStoreFile, self.dataProcessingErrorPath + '/' + self.springMobileName + datetime.now().strftime('%Y%m%d%H%M') + springMobileFileExtension)
+            self.copyFile(self.dTVLocationFile, self.dataProcessingErrorPath + '/' + self.dtvLocationName + datetime.now().strftime('%Y%m%d%H%M') + dtvFileExtension)
+            sys.exit()
 
         self.locationFileColumnCount = 54
         self.locationExpectedSourceColumns = ['StoreID', 'StoreName', 'Disabled', 'Abbreviation', 'ManagerEmployeeID', 'ManagerCommissionable', 'Address', 'City', 'StateProv', 'ZipPostal', 'Country', 'PhoneNumber', 'FaxNumber', 'DistrictName', 'RegionName', 'ChannelName', 'StoreType', 'GLCode', 'SquareFootage', 'LocationCode', 'Latitude', 'Longitude', 'AddressVerified', 'TimeZone', 'AdjustDST', 'CashPolicy', 'MaxCashDrawer', 'Serial_on_OE', 'Phone_on_OE', 'PAW_on_OE', 'Comment_on_OE', 'HideCustomerAddress', 'EmailAddress', 'GeneralLocationNotes', 'SaleInvoiceComment', 'StaffLevel', 'BankDetails', 'Taxes', 'LeaseStartDate', 'LeaseEndDate', 'Rent', 'PropertyTaxes', 'InsuranceAmount', 'OtherCharges', 'DepositTaken', 'LeaseNotes', 'InsuranceCompany', 'LandlordNotes', 'LandlordName', 'RelocationDate', 'UseLocationEmail', 'LocationEntityID', 'DateLastStatusChanged', 'UpdatedDate']
@@ -135,7 +161,7 @@ class DimStoreCSVToParquet(object):
         self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
         self.log.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
 
-    def searchFile(self, strS3url, name):
+    def searchFile(self, strS3url, name, isFileHeader=1):
 
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
@@ -154,6 +180,8 @@ class DimStoreCSVToParquet(object):
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
+        if isFileHeader == 0:
+            return file, header
         if name == self.multiTrackerName:
             for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
                 if i == 2:
@@ -264,16 +292,12 @@ class DimStoreCSVToParquet(object):
 
         if not validSourceFormat or not validSourceSchema:
             self.log.info("Copy the source files to data processing error path and return.")
-            self.copyFile(self.locationMasterListFile, self.dataProcessingErrorPath + '/' + self.locationName +
-                          self.fileFormat)
-            self.copyFile(self.baeLocationFile, self.dataProcessingErrorPath + '/' + self.baeName + self.fileFormat)
-            self.copyFile(self.dealerCodesFile, self.dataProcessingErrorPath + '/' + self.dealerName + self.fileFormat)
-            self.copyFile(self.multiTrackerFile, self.dataProcessingErrorPath + '/' + self.multiTrackerName +
-                          self.fileFormat)
-            self.copyFile(self.springMobileStoreFile, self.dataProcessingErrorPath + '/' + self.springMobileName +
-                          self.fileFormat)
-            self.copyFile(self.dTVLocationFile, self.dataProcessingErrorPath + '/' + self.dtvLocationName +
-                          self.fileFormat)
+            self.copyFile(self.locationMasterListFile, self.dataProcessingErrorPath + '/' + self.locationName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            self.copyFile(self.baeLocationFile, self.dataProcessingErrorPath + '/' + self.baeName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            self.copyFile(self.dealerCodesFile, self.dataProcessingErrorPath + '/' + self.dealerName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            self.copyFile(self.multiTrackerFile, self.dataProcessingErrorPath + '/' + self.multiTrackerName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            self.copyFile(self.springMobileStoreFile, self.dataProcessingErrorPath + '/' + self.springMobileName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
+            self.copyFile(self.dTVLocationFile, self.dataProcessingErrorPath + '/' + self.dtvLocationName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
             return
 
         self.log.info('Source format and schema validation successful.')

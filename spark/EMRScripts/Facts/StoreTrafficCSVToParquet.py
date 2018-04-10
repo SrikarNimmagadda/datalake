@@ -26,7 +26,7 @@ dfStoreTraffic = dfStoreTraffic.withColumn("storenumber", dfStoreTraffic["store_
 
 dfStoreTraffic.registerTempTable("StoreTraffic")
 dfStoreTrafficFinal = spark.sql("select a.trafficdate as reportdate,a.shoppertraklocationId,a.storename ,a.storenumber,a.trafficdate,a.traffictime,a.traffic,a.traffictype, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year,SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from StoreTraffic a")
-dfStoreTrafficFinal.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(storeTrafficOutput)
+dfStoreTrafficFinal.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(storeTrafficOutput)
 
 dfStoreTrafficFinal.coalesce(1).select("*").write.mode("overwrite").parquet(storeTrafficOutput + '/' + 'Working')
 

@@ -159,7 +159,7 @@ class EmpOprEffCSVToParquet(object):
         df1.registerTempTable("empopreff")
         df2 = self.sparkSession.sql("select e.market , e.region,e.district, e.location, e.salesperson, e.workdayid, e.totalloss, e.totalissues, e.actiontaken,e.hrconsultedbeforetermination , e.transactionerrors, e.totalerrors, e.nexttrades, e.totaldevices12, e.hylaloss, e.totaldevices14, e.deniedrmadevices, e.totaldevice16, e.cashdeposits, e.totalmissingdeposits, e.totalshortdeposits, e.shrinkage, e.comments, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month, e.reportdate from empopreff e ")
 
-        df2.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(OperationalEfficiencyScoreCardOutputArg)
+        df2.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(OperationalEfficiencyScoreCardOutputArg)
         df2.coalesce(1).select("*").write.mode("overwrite").parquet(OperationalEfficiencyScoreCardOutputArg + '/' + 'Working')
         self.sparkSession.stop()
 

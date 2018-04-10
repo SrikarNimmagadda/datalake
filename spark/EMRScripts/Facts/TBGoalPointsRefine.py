@@ -30,7 +30,7 @@ class TBGoalPointsRefine(object):
 
         FinaldfSpringMobileDiscovery = df1SpringMobileDiscoveryEmployee.union(df1SpringMobileDiscoveryStore)
 
-        FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').\
+        FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').\
             parquet(self.GoalPointOp)
         FinaldfSpringMobileDiscovery.coalesce(1).select("*").write.mode("overwrite").\
             parquet(self.GoalPointOp + '/' + 'Working')

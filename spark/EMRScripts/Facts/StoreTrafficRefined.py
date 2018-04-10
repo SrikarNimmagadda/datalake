@@ -19,7 +19,7 @@ Final_Joined_DF = spark.sql("select Distinct a.trafficdate as reportdate, a.stor
                             "inner join storerefine b "
                             "on a.storenumber = b.StoreNumber ")
 
-Final_Joined_DF.coalesce(1).select("*").write.mode("overwrite").partitionBy('year', 'month').parquet(StoreTrafficRefine)
+Final_Joined_DF.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(StoreTrafficRefine)
 
 Final_Joined_DF.coalesce(1).select("*").write.mode("overwrite").parquet(StoreTrafficRefine + '/' + 'Working')
 

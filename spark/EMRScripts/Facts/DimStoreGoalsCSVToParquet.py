@@ -24,11 +24,17 @@ class DimStoreGoalsCSVToParquet(object):
         self.discoveryBucketWorking = sys.argv[2]
         self.dataProcessingErrorPath = sys.argv[3] + '/discovery'
 
-        self.storeGoalsFileColumnCount = 23
-        self.storeGoalsExpectedColumns = ['Store', 'Date', 'Gross Profit', 'Premium Video', 'Digital Life', 'Acc GP/Opp', 'CRU Opps', 'Tablets', 'Integrated Products', 'WTR', 'Go Phone', 'Overtime', 'DTV Now', 'Accessory Attach Rate', 'Broadband', 'Traffic', 'Broadband', 'Approved FTE', 'Approved HC', 'GoPhone Auto Enrollment %', 'Opps', 'SM Traffic', 'Entertainment']
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
         self.fileFormat = ".csv"
+        self.log.info('Exception Handling starts')
+        self.storeGoalsFile, self.storeGoalsHeader = self.searchFile(self.storeGoalsPath, 0)
+        self.storeGoalsFileName, self.storeGoalsFileExtension = os.path.splitext(os.path.basename(self.storeGoalsFile))
+        if self.fileFormat not in self.storeGoalsFileExtension:
+            self.log.error("StoreGoals Source file not in csv format.")
+            self.log.info("Copy the source files to data processing error path and return.")
+            self.copyFile(self.storeGoalsFile, self.dataProcessingErrorPath + '/' + self.storeGoalsName + datetime.now().strftime('%Y%m%d%H%M') + self.storeGoalsFileExtension)
+            sys.exit()
 
         self.rawBucket = self.storeGoalsPath[self.storeGoalsPath.index('tb'):].split("/")[0]
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[0]
@@ -42,10 +48,11 @@ class DimStoreGoalsCSVToParquet(object):
         self.storeGoalsFile, self.storeGoalsHeader = self.searchFile(self.storeGoalsPath)
         self.log.info(self.storeGoalsFile)
         self.log.info(self.storeGoalsHeader)
-        self.storeGoalsCols = ['BroadbandDelete' if index in [16] else column.replace(' ', '').replace('/', 'OR').replace(
-            '%', '') for index, column in enumerate(self.storeGoalsHeader)]
-        self.log.info("StoreGoals Columns:" + ','.join(self.storeGoalsCols))
+        self.storeGoalsCols = [column.strip(' ') for index, column in enumerate(self.storeGoalsHeader)]
         self.storeGoalsCols = list(filter(None, self.storeGoalsCols))
+        self.storeGoalsCols = [column.replace(' ', '_').replace('/', '1') for column in self.storeGoalsCols]
+        self.log.info("StoreGoals Columns:" + ','.join(self.storeGoalsCols))
+        self.selectQuery = "select " + ','.join(self.storeGoalsCols).strip(',') + ",ReportDate from  store_goal"
 
     def copyFile(self, strS3url, newS3PathURL):
 
@@ -59,7 +66,7 @@ class DimStoreGoalsCSVToParquet(object):
         self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
         self.log.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
 
-    def searchFile(self, strS3url):
+    def searchFile(self, strS3url, isFileHeader=1):
 
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
@@ -77,57 +84,15 @@ class DimStoreGoalsCSVToParquet(object):
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
+        if isFileHeader == 0:
+            return file, header
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
             if i == 1:
                 header = line
         self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
         return file, header
 
-    def isValidFormatInSource(self):
-
-        storeGoalsFileName, storeGoalsFileExtension = os.path.splitext(os.path.basename(self.storeGoalsFile))
-
-        isValidStoreGoalsFormat = self.fileFormat in storeGoalsFileExtension
-
-        if all([isValidStoreGoalsFormat]):
-            return True
-        return False
-
-    def isValidSchemaInSource(self):
-
-        self.log.info("StoreGoals column count " + str(self.storeGoalsHeader.__len__()))
-
-        isValidStoreGoalsSchema = False
-
-        storeGoalsColumnsMissing = [item for item in self.storeGoalsExpectedColumns if item not in self.storeGoalsHeader]
-        if storeGoalsColumnsMissing.__len__() <= 0:
-            isValidStoreGoalsSchema = True
-
-        self.log.info("isValidStoreGoalsSchema " + isValidStoreGoalsSchema.__str__())
-
-        if all([isValidStoreGoalsSchema]):
-            return True
-
-        return False
-
     def loadParquet(self):
-
-        self.log.info('Exception Handling starts')
-
-        validSourceFormat = self.isValidFormatInSource()
-
-        if not validSourceFormat:
-            self.log.error("StoreGoals Source file not in csv format.")
-
-        validSourceSchema = self.isValidSchemaInSource()
-        if not validSourceSchema:
-            self.log.error("StoreGoals Source schema does not have all the required columns.")
-
-        if not validSourceFormat or not validSourceSchema:
-            self.log.info("Copy the source files to data processing error path and return.")
-            self.copyFile(self.storeGoalsFile, self.dataProcessingErrorPath + '/' + self.storeGoalsName +
-                          self.fileFormat)
-            return
 
         self.log.info('Source format and schema validation successful.')
         self.log.info('Reading the input parquet file')
@@ -138,12 +103,14 @@ class DimStoreGoalsCSVToParquet(object):
 
         newformat = datetime.now().strftime('%m/%d/%Y')
 
-        dfStoreGoals = dfStoreGoals.withColumn('ReportDate', lit(newformat))
+        dfStoreGoals.withColumn('ReportDate', lit(newformat)).registerTempTable("store_goal")
 
-        dfStoreGoals.coalesce(1).write.mode('overwrite').format('parquet').\
+        dfStoreGoalsFinal = self.sparkSession.sql(self.selectQuery)
+
+        dfStoreGoalsFinal.coalesce(1).write.mode('overwrite').format('parquet').\
             save(self.storeGoalsFileWorkingPath)
 
-        dfStoreGoals.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
+        dfStoreGoalsFinal.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
             withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).\
             write.mode('append').partitionBy('year', 'month').format('parquet').save(self.storeGoalsFilePartitionPath)
 
