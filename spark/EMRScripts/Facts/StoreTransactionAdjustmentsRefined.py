@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 import sys
-from pyspark.sql.functions import regexp_replace
 
 
 class StoreTransactionAdjustments(object):

@@ -3,8 +3,7 @@ from pyspark.sql.functions import split
 import sys
 import os
 from datetime import datetime
-from pyspark.sql.types import StructType, StringType, StructField, FloatType
-from pyspark.sql.functions import col, lit, regexp_replace
+from pyspark.sql.functions import lit
 import boto3
 import csv
 from urlparse import urlparse
