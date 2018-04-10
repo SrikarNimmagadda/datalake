@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 import sys
-from pyspark.sql.types import DecimalType
+from pyspark.sql.functions import regexp_replace
 
 
 class StoreTransactionAdjustments(object):
@@ -36,11 +36,11 @@ class StoreTransactionAdjustments(object):
         finalDf1 = self.sparkSession.createDataFrame(dfStoreTransAdjustments1.rdd.flatMap(rowExpander))
         finalDf1.registerTempTable("Store_Trans_Adj1")
 
-        finalDf_Hist = self.sparkSession.sql("select Market as springmarket,reportdate,Region as springregion,District as springdistrict,"
-                                             "Location as locationname,Loc as storenumber,AdjustmentType as adjustmenttype,"
-                                             "AdjustmentAmount as adjustmentamount,AdjustmentCategory as adjustmentcategory from Store_Trans_Adj1")
+        finalDf_Hist = self.sparkSession.sql("select Market as springmarket,reportdate,Region as springregion,District as springdistrict, Location as locationname,Loc as storenumber,AdjustmentType as adjustmenttype, AdjustmentAmount as adjustmentamount,AdjustmentCategory as adjustmentcategory from Store_Trans_Adj1")
 
         finalDf_Rpt2 = self.sparkSession.sql("select a.Market , a.Region, a.District, a.Location, a.reportdate, b.storenumber, b.gpadjustments_Miscellaneous, b.cruadjustments_Miscellaneous, b.acceligoppsadjustment_Miscellaneous, b.totaloppsadjustment_Miscellaneous from abc a inner join xyz b on b.storenumber=a.Loc")
+        finalDf_Rpt2.printSchema()
+        finalDf_Rpt2.show(5)
 
         def rowExpander(row):
             rowDict1 = row.asDict()
@@ -62,20 +62,15 @@ class StoreTransactionAdjustments(object):
         finalDf_Rpt2.registerTempTable("RPT")
 
         finalDf_Rpt = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentamount, adjustmentcategory from RPT")
-
         FinalDF = finalDf_Hist.union(finalDf_Rpt)
         FinalDF.registerTempTable("finaltable")
 
-        finalDf1 = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, adjustmentamount as adjustmentamount1,'4' companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from finaltable")
-
-        finalDf1 = finalDf1.where(finalDf1.storenumber != '')
-        finalDfChangedType = finalDf1.withColumn("adjustmentamount", finalDf1["adjustmentamount1"].cast(DecimalType()))
-        finalDfChangedType.drop('adjustmentamount1')
-        finalDfChangedType.coalesce(1).select("*").write.mode("overwrite").parquet(self.storeTransAdjustmentsOut + '/' + 'Working')
-        finalDfChangedType.coalesce(1).select("*").write.mode("append").parquet(self.storeTransAdjustmentsOut + '/' + 'Previous')
-
-        finalDfChangedType.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.storeTransAdjustmentsOut)
-
+        finalDf = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, replace(adjustmentamount,',','') as adjustmentamount, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from finaltable")
+        finalDf = finalDf.where(finalDf.storenumber != '')
+        finalDf.registerTempTable("final")
+        finalDf3 = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, case when adjustmentamount ='0E-8' then '0.0' else adjustmentamount end as adjustmentamount, companycd, year, month from final")
+        finalDf3.coalesce(1).select("*").write.mode("overwrite").parquet(self.storeTransAdjustmentsOut + '/' + 'Working')
+        finalDf3.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.storeTransAdjustmentsOut)
         self.sparkSession.stop()
 
 
