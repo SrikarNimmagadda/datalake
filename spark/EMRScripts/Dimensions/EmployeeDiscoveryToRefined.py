@@ -23,6 +23,7 @@ class EmployeeRefine(object):
                                    discoveryBucketWorking.index(
                                        'tb'):].split("/")[0]
         self.refinedBucketWorking = sys.argv[2]
+        self.refinedDeltaBucketWorking = sys.argv[3]
         self.refinedBucket = self.\
             refinedBucketWorking[self.
                                  refinedBucketWorking.index(
@@ -116,7 +117,7 @@ class EmployeeRefine(object):
                                   "a.CDC_IND_CD," +
                                   "a.datecreatedatsource, " +
                                   "a.employeelastmodifieddate," +
-                                  "a.assignedlocations " +
+                                  "a.primarylocation,a.assignedlocations " +
                                   "from employee a")
         # dfEmployeeprevious.show()
         dfEmployeeprevious.registerTempTable("employeehist")
@@ -164,7 +165,7 @@ class EmployeeRefine(object):
                                   "as CDC_IND_CD," +
                                   "a.rowinserted as datecreatedatsource, " +
                                   "a.rowupdated as employeelastmodifieddate," +
-                                  "a.assignedlocations " +
+                                  "a.primarylocation,a.assignedlocations " +
                                   "from employee1 a")
 #       dfEmployeeUpdated.show()
         dfEmployeeUpdated.registerTempTable("employeecurrent")
@@ -200,6 +201,31 @@ class EmployeeRefine(object):
         dfEmployee = dfEmployee.where(col("sourcesystemname").isNotNull())
         dfEmployee = dfEmployee.dropDuplicates(['companycd',
                                                 'sourceemployeeid'])
+        dfEmployee_delta = \
+            self.sparkSession.sql("select a.*, " +
+                                  "YEAR(FROM_UNIXTIME" +
+                                  "(UNIX_TIMESTAMP())) " +
+                                  "as year, SUBSTR(FROM_UNIXTIME " +
+                                  "(UNIX_TIMESTAMP()),6,2) " +
+                                  "as month from  employeecurrent a")
+        dfEmployee_delta = \
+            dfEmployee_delta.withColumn("startdate",
+                                        dfEmployee_delta["startdate"].
+                                        cast(DateType()))
+        dfEmployee_delta = dfEmployee_delta.withColumn(
+            "terminationdate", dfEmployee_delta["terminationdate"].
+            cast(DateType()))
+        dfEmployee_delta = dfEmployee_delta.\
+            where(col("sourceemployeeid").isNotNull())
+        dfEmployee_delta = dfEmployee_delta.\
+            where(col("companycd").isNotNull())
+        dfEmployee_delta = dfEmployee_delta.\
+            where(col("sourcesystemname").isNotNull())
+        dfEmployee_delta = dfEmployee_delta.\
+            dropDuplicates(['companycd', 'sourceemployeeid'])
+
+        dfEmployee_delta.coalesce(1).select("*"). \
+            write.mode("overwrite").parquet(self.refinedDeltaBucketWorking)
 
         dfEmployee.coalesce(1).select("*"). \
             write.mode("overwrite").parquet(self.refinedBucketWorking)
