@@ -73,12 +73,12 @@ class EmployeeRefine(object):
     def loadRefine(self):
 
         s3 = boto3.resource('s3')
-        discoveryBucketNode = s3.Bucket(name=self.discoveryBucket)
+        refinedBucketNode = s3.Bucket(name=self.refinedBucket)
 
         lastUpdatedEmployeeFile = self.\
-            findLastModifiedFile(discoveryBucketNode,
+            findLastModifiedFile(refinedBucketNode,
                                  self.prefixEmployeeDiscoveryPath,
-                                 self.discoveryBucket)
+                                 self.refinedBucket)
         dfEmployeeData = self.\
             sparkSession.read.parquet(lastUpdatedEmployeeFile)
 
@@ -86,43 +86,37 @@ class EmployeeRefine(object):
 
         dfEmployeeprevious = \
             self.sparkSession.sql("select " +
-                                  "a.employeeid as sourceemployeeid, " +
+                                  "a.sourceemployeeid, " +
                                   "4 as companycd, 'RQ4' as " +
                                   "sourcesystemname," +
-                                  "a.specialidentifier as workdayid," +
-                                  "a.employeename as name," +
-                                  "a.gender, a.emailpersonal as workemail," +
-                                  "CASE WHEN a.disabled IN ('TRUE','Yes',1) " +
+                                  "a.workdayid," +
+                                  "a.name," +
+                                  "a.gender, a.workemail," +
+                                  "CASE WHEN lower(a.statusindicator) " +
+                                  "IN ('true','yes',1) " +
                                   "THEN 0 ELSE 1 END " +
                                   "as statusindicator," +
-                                  "CASE WHEN a.parttime IN('TRUE','Yes',1) " +
+                                  "CASE WHEN lower(a.parttimeindicator) " +
+                                  "IN ('true','yes',1) " +
                                   "THEN 1 ELSE 0 END " +
                                   "as parttimeindicator," +
                                   "a.title, CASE WHEN a.language = " +
                                   "'en-us' THEN 'English' ELSE a.language " +
-                                  "END as language, a.securityrole as " +
-                                  "jobrole," +
+                                  "END as language, a.jobrole," +
                                   "a.city, a.stateprovince, a.country," +
-                                  "a.usermanageremployeeid as " +
-                                  "employeemanagerid," +
-                                  " a.supervisor as employeemanagername," +
+                                  "a.employeemanagerid," +
+                                  " a.employeemanagername," +
                                   " a.startdate," +
                                   "CASE WHEN a.terminationdate = 'TODAY' " +
                                   "THEN '' ELSE " +
                                   "a.terminationdate END as terminationdate," +
                                   "a.commissiongroup, a.compensationtype," +
-                                  "a.username, a.phone as worknumber, " +
+                                  "a.username, a.worknumber, " +
                                   "a.email as email," +
-                                  "CASE WHEN a.rowevent = 'Updated' " +
-                                  "THEN 'C' ELSE 'I' END " +
-                                  "as CDC_IND_CD," +
-                                  "a.rowinserted as datecreatedatsource, " +
-                                  "a.rowupdated as employeelastmodifieddate," +
-                                  "a.assignedlocations," +
-                                  " YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
-                                  "as year, SUBSTR(FROM_UNIXTIME " +
-                                  "(UNIX_TIMESTAMP()),6,2) " +
-                                  "as month " +
+                                  "a.CDC_IND_CD," +
+                                  "a.datecreatedatsource, " +
+                                  "a.employeelastmodifieddate," +
+                                  "a.assignedlocations " +
                                   "from employee a")
         # dfEmployeeprevious.show()
         dfEmployeeprevious.registerTempTable("employeehist")
@@ -141,10 +135,12 @@ class EmployeeRefine(object):
                                   "a.specialidentifier as workdayid," +
                                   "a.employeename as name," +
                                   "a.gender, a.emailpersonal as workemail," +
-                                  "CASE WHEN a.disabled IN ('TRUE','Yes',1) " +
+                                  "CASE WHEN lower(a.disabled) IN " +
+                                  "('true','yes',1) " +
                                   "THEN 0 ELSE 1 END " +
                                   "as statusindicator," +
-                                  "CASE WHEN a.parttime IN('TRUE','Yes',1) " +
+                                  "CASE WHEN lower(a.parttime) IN " +
+                                  "('true','yes',1) " +
                                   "THEN 1 ELSE 0 END " +
                                   "as parttimeindicator," +
                                   "a.title, CASE WHEN a.language = " +
@@ -158,7 +154,8 @@ class EmployeeRefine(object):
                                   " a.startdate," +
                                   "CASE WHEN a.terminationdate = 'TODAY' " +
                                   "THEN '' ELSE " +
-                                  "a.terminationdate END as terminationdate," +
+                                  "a.terminationdate END as " +
+                                  "terminationdate," +
                                   "a.commissiongroup, a.compensationtype," +
                                   "a.username, a.phone as worknumber, " +
                                   "a.email as email," +
@@ -167,19 +164,16 @@ class EmployeeRefine(object):
                                   "as CDC_IND_CD," +
                                   "a.rowinserted as datecreatedatsource, " +
                                   "a.rowupdated as employeelastmodifieddate," +
-                                  "a.assignedlocations," +
-                                  " YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) " +
-                                  "as year, SUBSTR(FROM_UNIXTIME " +
-                                  "(UNIX_TIMESTAMP()),6,2) " +
-                                  "as month " +
+                                  "a.assignedlocations " +
                                   "from employee1 a")
 #       dfEmployeeUpdated.show()
         dfEmployeeUpdated.registerTempTable("employeecurrent")
+
         joined_DF = self.sparkSession.sql(
             "select * from employeehist union select * from employeecurrent")
         joined_DF.registerTempTable("employeeuninon")
 
-        dfEmployee = \
+        dfEmployee1 = \
             self.sparkSession.sql("select a.* from employeeuninon " +
                                   " a INNER JOIN (select " +
                                   "sourceemployeeid, " +
@@ -189,17 +183,23 @@ class EmployeeRefine(object):
                                   "b on a.sourceemployeeid= " +
                                   "b.sourceemployeeid and " +
                                   "a.employeelastmodifieddate=b.value")
-        # dfEmployee.registerTempTable("emp")
-        # dfEmployee1= self.sparkSession.sql( "select count(*) from emp")
-        # dfEmployee1.show()
 
-        dfEmployee = dfEmployee.\
-            withColumn("startdate", dfEmployee["startdate"].cast(DateType()))
+        dfEmployee1.registerTempTable("employeefinal")
+        dfEmployee = self.sparkSession.sql("select a.*, YEAR(FROM_UNIXTIME" +
+                                           "(UNIX_TIMESTAMP())) " +
+                                           "as year, SUBSTR(FROM_UNIXTIME " +
+                                           "(UNIX_TIMESTAMP()),6,2) " +
+                                           "as month from  employeefinal a")
+        dfEmployee = dfEmployee.withColumn("startdate",
+                                           dfEmployee["startdate"].
+                                           cast(DateType()))
         dfEmployee = dfEmployee.withColumn(
             "terminationdate", dfEmployee["terminationdate"].cast(DateType()))
         dfEmployee = dfEmployee.where(col("sourceemployeeid").isNotNull())
         dfEmployee = dfEmployee.where(col("companycd").isNotNull())
         dfEmployee = dfEmployee.where(col("sourcesystemname").isNotNull())
+        dfEmployee = dfEmployee.dropDuplicates(['companycd',
+                                                'sourceemployeeid'])
 
         dfEmployee.coalesce(1).select("*"). \
             write.mode("overwrite").parquet(self.refinedBucketWorking)
