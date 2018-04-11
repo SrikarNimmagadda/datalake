@@ -11,7 +11,7 @@ my_session = boto3.session.Session()
 
 hen_name = os.getenv('HEN_NAME')
 topic = os.getenv('NOTIFICATION')
-data_processing = os.getenv('DATA_PROCESSING_ERRORS_BUCKET'),
+data_processing = os.getenv('DATA_PROCESSING_ERRORS_BUCKET')
 
 
 def lambda_handler(event, context):
