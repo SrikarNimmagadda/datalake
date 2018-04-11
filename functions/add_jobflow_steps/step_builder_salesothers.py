@@ -72,8 +72,8 @@ class StepBuilderSalesOthers(object):
 
         script_args = [
 
-            's3://' + input_bucket + '/StoreDailyGoalForecast/Working/',
-            's3://' + output_bucket + '/StoreDailyGoalForecast/Working/',
+            's3://' + input_bucket + '/StoreDailyGoalForecast/Working',
+            's3://' + output_bucket + '/StoreDailyGoalForecast/Working',
             's3://' + error_bucket + '/StoreDailyGoalForecast'
         ]
 
