@@ -20,6 +20,8 @@ class StoreDailyGoalsForecastDiscoveryToRefine(object):
         self.tableName = self.discoveryWorkingPath[self.discoveryWorkingPath.index('tb'):].split("/")[1]
         self.refinedBucket = self.refineWorkingPath[self.refineWorkingPath.index('tb'):].split("/")[0]
         self.storeDailyGoalsForecastPartitionPath = 's3://' + self.refinedBucket + '/' + self.tableName
+        self.regExForDate = "^([0-9]|0[0-9]|1[0-2])\/([1-9]|0[1-9]|([12][0-9]|3[01]))\/((19|20)[0-9][0-9])$"
+        self.dataProcessingErrorPath = sys.argv[3] + '/Refined/'
 
     def findLastModifiedFile(self, bucketNode, prefixType, bucket):
 
@@ -55,8 +57,14 @@ class StoreDailyGoalsForecastDiscoveryToRefine(object):
                                                                            self.tableName,
                                                                            self.discoveryBucket)
         self.sparkSession.read.parquet(lastUpdatedStoreDailyGoalsForecastFile).registerTempTable("StoreDailyGoalForecast")
-        dfStoreDailyGoalForecast = self.sparkSession.sql("select date, case when daypercenttoforecast rlike '%' then cast(cast(regexp_replace(daypercenttoforecast,'%','') as float)/100 as decimal(8,4)) else daypercenttoforecast end as daypercenttoforecast from StoreDailyGoalForecast")
+        dfStoreDailyGoalForecastFull = self.sparkSession.sql("select date, case when daypercenttoforecast rlike '%' then cast(cast(regexp_replace(daypercenttoforecast,'%','') as float)/100 as decimal(8,4)) else daypercenttoforecast end as daypercenttoforecast from StoreDailyGoalForecast")
+        dfStoreDailyGoalForecastErrorDataWithReportDate = dfStoreDailyGoalForecastFull.subtract(
+            dfStoreDailyGoalForecastFull.filter(dfStoreDailyGoalForecastFull["date"].rlike(self.regExForDate)))
+        if (dfStoreDailyGoalForecastErrorDataWithReportDate is not None) and (dfStoreDailyGoalForecastErrorDataWithReportDate.count() > 0):
+            self.log.info("Store Daily Goals Forecast has erroneous records having report date value.")
+            dfStoreDailyGoalForecastErrorDataWithReportDate.coalesce(1).write.mode("append").csv(self.dataProcessingErrorPath, header=True)
 
+        dfStoreDailyGoalForecast = dfStoreDailyGoalForecastFull.subtract(dfStoreDailyGoalForecastErrorDataWithReportDate)
         dfStoreDailyGoalForecast.coalesce(1).write.mode("overwrite").parquet(
             self.refineWorkingPath)
 

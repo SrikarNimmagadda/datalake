@@ -73,7 +73,8 @@ class StepBuilderStore(object):
 
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/Employee/Working'
+            's3://' + output_bucket + '/Employee/Working',
+            's3://' + output_bucket + '/Employee/WorkingDelta/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -85,7 +86,7 @@ class StepBuilderStore(object):
         output_bucket = self.buckets['delivery_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Employee/Working',
+            's3://' + input_bucket + '/Employee/WorkingDelta/',
             's3://' + output_bucket + '/WT_EMP/'
         ]
 
@@ -243,7 +244,7 @@ class StepBuilderStore(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + input_bucket + '/Employee/Working/',
+            's3://' + input_bucket + '/Employee/WorkingDelta/',
             's3://' + output_bucket + '/EmpStoreAssociation/'
         ]
 
