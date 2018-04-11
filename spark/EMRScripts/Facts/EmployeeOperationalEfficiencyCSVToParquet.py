@@ -6,34 +6,42 @@ from pyspark.sql.functions import regexp_replace, rtrim
 import csv
 import boto3
 from urlparse import urlparse
-
-
-OperationalEfficiencyScoreCard = sys.argv[1]
-OperationalEfficiencyScoreCardOutputArg = sys.argv[2]
+from datetime import datetime
 
 
 class EmpOprEffCSVToParquet(object):
+
     def __init__(self):
+
         self.appName = self.__class__.__name__
         self.sparkSession = SparkSession.builder.appName(self.appName).getOrCreate()
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.log = self.log4jLogger.LogManager.getLogger(self.appName)
-
+        self.OperationalEfficiencyScoreCard = sys.argv[1]
+        self.OperationalEfficiencyScoreCardOutputArg = sys.argv[2]
         self.EmpOprEffMasterList = sys.argv[1]
         self.EmpOprEffOutput = sys.argv[2]
         self.discoveryBucketWorking = sys.argv[3]
-        self.dataProcessingErrorPath = sys.argv[4]
         self.rawBucket = self.EmpOprEffMasterList[self.EmpOprEffMasterList.index('tb'):].split("/")[0]
         self.discoveryBucket = self.discoveryBucketWorking[self.discoveryBucketWorking.index(
             'tb'):].split("/")[0]
         self.EmpOprEffName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[1]
         self.workingName = self.discoveryBucketWorking[self.discoveryBucketWorking.index('tb'):].split("/")[2]
-        self.dataProcessingErrorPath = sys.argv[4]
+        self.dataProcessingErrorPath = sys.argv[4] + '/Discovery/'
         self.EmpOprEffName = "EmployeeOperationalEfficiency"
         self.fileFormat = ".csv"
         self.s3 = boto3.resource('s3')
         self.client = boto3.client('s3')
         self.EmpOprEffFileColumnCount = 22
+        # #
+        self.EmpOprEffFile, self.EmpOprEffHeader = self.searchFile(self.EmpOprEffMasterList, 0)
+        self.EmpOprEffFileName, self.EmpOprEffFileExtension = os.path.splitext(os.path.basename(self.EmpOprEffFile))
+        if self.fileFormat not in self.EmpOprEffFileExtension:
+            self.log.error("EmpOprEff Source file not in csv format.")
+            self.copyFile(self.EmpOprEffFile, self.dataProcessingErrorPath + self.EmpOprEffName + datetime.now().strftime('%Y%m%d%H%M') + self.EmpOprEffFileExtension)
+            sys.exit()
+        # #
+        self.sourceExpectedSourceColumns = ['market', 'region', 'district', 'location', 'sales person', 'workday id', 'total loss', 'total issues', 'action taken', 'hr consulted before termination', 'transaction errors', 'total errors', 'next trades', 'total devices', 'hyla loss', 'total devices', 'denied rma devices', 'total devices', 'cash deposits', 'total missing deposits', 'total short deposits', 'shrinkage', 'comments', 'date']
         self.EmpOprEffMasterListFile, self.EmpOprEffHeader = self.searchFile(self.EmpOprEffMasterList, self.EmpOprEffName)
         self.log.info(self.EmpOprEffMasterListFile)
         self.log.info("EmployeeOperationalEfficiency Columns:" + ','.join(self.EmpOprEffHeader))
@@ -52,7 +60,7 @@ class EmpOprEffCSVToParquet(object):
         self.client.copy_object(Bucket=newBucket, CopySource=bucket + '/' + originalName, Key=newPath)
         self.log.info('File name ' + originalName + ' within path  ' + bucket + " copied to new path " + newS3PathURL)
 
-    def searchFile(self, strS3url, name):
+    def searchFile(self, strS3url, isFileHeader=1):
 
         bucketWithPath = urlparse(strS3url)
         bucket = bucketWithPath.netloc
@@ -70,11 +78,12 @@ class EmpOprEffCSVToParquet(object):
             fileName = filename
             file = "s3://" + bucket + "/" + s3Object.key
             body = s3Object.get()['Body'].read()
-        self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
+        if isFileHeader == 0:
+            return file, header
         for i, line in enumerate(csv.reader(body.splitlines(), delimiter=',', quotechar='"')):
-                if i == 0:
-                    header = line
-
+            if i == 1:
+                header = line
+        self.log.info('File name ' + fileName + ' exists in path  ' + filePath)
         return file, header
 
     def isValidFormatInSource(self):
@@ -88,18 +97,16 @@ class EmpOprEffCSVToParquet(object):
         return False
 
     def isValidSchemaInSource(self):
+        isValidSchema = False
+        header = [x.lower().strip() for x in self.EmpOprEffHeader]
 
-        self.log.info("Customer column count " + str(self.EmpOprEffHeader.__len__()))
+        sourceColumnsMissing = [item for item in self.sourceExpectedSourceColumns if item not in header]
+        if sourceColumnsMissing.__len__() <= 0:
+            isValidSchema = True
 
-        isValidEmpOprEffSchema = False
+        self.log.info("============EmployeeOperationalEfficiency isValidSchema " + isValidSchema.__str__())
 
-        if self.EmpOprEffHeader.__len__() >= self.EmpOprEffFileColumnCount:
-            isValidEmpOprEffSchema = True
-            print("-------------------------------------")
-            print(self.EmpOprEffHeader.__len__())
-        self.log.info("isValidEmpOprEffSchema " + isValidEmpOprEffSchema.__str__())
-
-        if all([isValidEmpOprEffSchema]):
+        if all([isValidSchema]):
             return True
 
         return False
@@ -114,16 +121,15 @@ class EmpOprEffCSVToParquet(object):
         validSourceFormat = self.isValidFormatInSource()
 
         if not validSourceFormat:
-            self.log.error("Store Source files not in csv format.")
+            self.log.error(" Source files not in csv format.")
 
         validSourceSchema = self.isValidSchemaInSource()
         if not validSourceSchema:
-            self.log.error("Store Source schema does not have all the required columns.")
+            self.log.error(" Source schema does not have all the required columns.")
 
         if not validSourceFormat or not validSourceSchema:
-            self.log.info("Copy the source files to data processing error path and return.")
-            self.copyFile(self.EmpOprEffMasterListFile, self.dataProcessingErrorPath + '/' + self.EmpOprEffName +
-                          self.fileFormat)
+            self.log.error("Copy the source files to data processing error path and return.")
+            self.copyFile(self.EmpOprEffMasterListFile, self.dataProcessingErrorPath + self.EmpOprEffName + datetime.now().strftime('%Y%m%d%H%M') + self.fileFormat)
 
             return
 
@@ -131,7 +137,7 @@ class EmpOprEffCSVToParquet(object):
         self.log.info('Reading the input parquet file')
 
         schema = StructType([StructField('Market', StringType(), True), StructField('Region', StringType(), True), StructField('District', StringType(), True), StructField('Location', StringType(), True), StructField('Sales Person', StringType(), True), StructField('WorkDay ID', StringType(), False), StructField('Total Loss', StringType(), False), StructField('Total Issues', StringType(), False), StructField('Action Taken', StringType(), False), StructField('HR Consulted Before Termination', StringType(), False), StructField('Transaction Errors', StringType(), False), StructField('Total Errors', StringType(), False), StructField('NEXT Trades', StringType(), False), StructField('Total Devices12', StringType(), False), StructField('Hyla Loss', StringType(), False), StructField('Total Devices14', StringType(), False), StructField('Denied RMA Devices', StringType(), False), StructField('Total Devices16', StringType(), False), StructField('Cash Deposits', StringType(), False), StructField('Total Missing Deposits', StringType(), False), StructField('Total Short Deposits', StringType(), False), StructField('Shrinkage', StringType(), False), StructField('Comments', StringType(), False), StructField('Date', StringType(), False)])
-        df1 = self.sparkSession.read.format("com.databricks.spark.csv").option("header", "true").option("multiLine", "true").option("delimiter", ",").option("quotechar", '"').option("treatEmptyValuesAsNulls", "true").option("escape", ",").option("escape", '"').option("encoding", "UTF-8").option("inferSchema", "false").load(OperationalEfficiencyScoreCard, schema=schema)
+        df1 = self.sparkSession.read.format("com.databricks.spark.csv").option("header", "true").option("multiLine", "true").option("delimiter", ",").option("quotechar", '"').option("treatEmptyValuesAsNulls", "true").option("escape", ",").option("escape", '"').option("encoding", "UTF-8").option("inferSchema", "false").load(self.OperationalEfficiencyScoreCard, schema=schema)
         df1 = df1.filter(~(df1.Market.like('%%Marke%%')))
         df1 = df1.filter(~(df1.Market.like('%%Operational%%')))
         df1 = df1.filter(~(df1.Market.like(' Regio%%')))
@@ -159,8 +165,8 @@ class EmpOprEffCSVToParquet(object):
         df1.registerTempTable("empopreff")
         df2 = self.sparkSession.sql("select e.market , e.region,e.district, e.location, e.salesperson, e.workdayid, e.totalloss, e.totalissues, e.actiontaken,e.hrconsultedbeforetermination , e.transactionerrors, e.totalerrors, e.nexttrades, e.totaldevices12, e.hylaloss, e.totaldevices14, e.deniedrmadevices, e.totaldevice16, e.cashdeposits, e.totalmissingdeposits, e.totalshortdeposits, e.shrinkage, e.comments, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month, e.reportdate from empopreff e ")
 
-        df2.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(OperationalEfficiencyScoreCardOutputArg)
-        df2.coalesce(1).select("*").write.mode("overwrite").parquet(OperationalEfficiencyScoreCardOutputArg + '/' + 'Working')
+        df2.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').parquet(self.OperationalEfficiencyScoreCardOutputArg)
+        df2.coalesce(1).select("*").write.mode("overwrite").parquet(self.OperationalEfficiencyScoreCardOutputArg + '/' + 'Working')
         self.sparkSession.stop()
 
 
