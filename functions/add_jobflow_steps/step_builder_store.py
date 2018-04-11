@@ -74,7 +74,7 @@ class StepBuilderStore(object):
         script_args = [
             's3://' + input_bucket + '/Employee/Working',
             's3://' + output_bucket + '/Employee/Working',
-            's3://' + output_bucket + '/Employee/WorkingDelta/'		
+            's3://' + output_bucket + '/Employee/WorkingDelta/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
