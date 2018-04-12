@@ -39,7 +39,6 @@ class StoreTransactionAdjustments(object):
         finalDf_Hist = self.sparkSession.sql("select Market as springmarket,reportdate,Region as springregion,District as springdistrict, Location as locationname,Loc as storenumber,AdjustmentType as adjustmenttype, AdjustmentAmount as adjustmentamount,AdjustmentCategory as adjustmentcategory from Store_Trans_Adj1")
 
         finalDf_Rpt2 = self.sparkSession.sql("select a.Market , a.Region, a.District, a.Location, a.reportdate, b.storenumber, b.gpadjustments_Miscellaneous, b.cruadjustments_Miscellaneous, b.acceligoppsadjustment_Miscellaneous, b.totaloppsadjustment_Miscellaneous from abc a inner join xyz b on b.storenumber=a.Loc")
-        finalDf_Rpt2.printSchema()
         finalDf_Rpt2.show(5)
 
         def rowExpander(row):
@@ -65,7 +64,10 @@ class StoreTransactionAdjustments(object):
         FinalDF = finalDf_Hist.union(finalDf_Rpt)
         FinalDF.registerTempTable("finaltable")
 
-        finalDf = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, replace(adjustmentamount,',','') as adjustmentamount, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from finaltable")
+        finalDf = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, adjustmentamount as adjustmentamount1, '4' as companycd, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from finaltable")
+        finalDf = finalDf.withColumn('adjustmentamount', regexp_replace('adjustmentamount1', ',', ''))
+        finalDf = finalDf.drop('adjustmentamount1')
+        finalDf.printSchema()
         finalDf = finalDf.where(finalDf.storenumber != '')
         finalDf.registerTempTable("final")
         finalDf3 = self.sparkSession.sql("select springmarket, reportdate, springregion, springdistrict, locationname, storenumber, adjustmenttype, adjustmentcategory, case when adjustmentamount ='0E-8' then '0.0' else adjustmentamount end as adjustmentamount, companycd, year, month from final")
