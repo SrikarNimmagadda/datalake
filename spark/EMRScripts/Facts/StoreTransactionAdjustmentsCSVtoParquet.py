@@ -3,7 +3,8 @@ from pyspark.sql.functions import split
 import sys
 import os
 from datetime import datetime
-from pyspark.sql.functions import lit
+from pyspark.sql.types import StructType, StringType, StructField, FloatType
+from pyspark.sql.functions import col, lit, regexp_replace
 import boto3
 import csv
 from urlparse import urlparse
@@ -52,16 +53,16 @@ class StoreTransactionAdjustments(object):
     def loadParquet(self):
 
         file, fileHeader = self.searchFile(self.storeTransAdjustmentsIn)
-        storeTrnasAdjCols = [column.replace(' ', '').replace('&', '').replace('/', '') for column in fileHeader]
+        storeTrnasAdjCols = [column.replace(' ', '').replace('&', '').replace('/', 'OR') for column in fileHeader]
         storeTrnasAdjCols = [column.split(self.separator)[1] if index == 0 else column for index, column in enumerate(storeTrnasAdjCols)]
 
-        self.logger.info("Store Transaction Columns :" + ','.join(storeTrnasAdjCols))
-
+        self.logger.info("##################################Store Transaction Columns :" + ','.join(storeTrnasAdjCols))
+        dateStrInHeader = datetime.now().strftime('%b %Y')
         self.sparkSession.sparkContext.textFile(self.storeTransAdjustmentsIn). \
             mapPartitions(lambda partition: csv.
                           reader([line.encode('utf-8') for line in partition], delimiter=',', quotechar='"')).\
             filter(lambda line: ''.join(line).strip() != '' and
-                                line[0].strip() != 'Dec-17' and line[0].strip() != 'Market').\
+                                line[0].strip() != dateStrInHeader and line[0].strip() != 'Market').\
             toDF(storeTrnasAdjCols).registerTempTable("StoreTransactionAdjustment")
 
         percentColumns = [x for x in storeTrnasAdjCols if self.replaceChar in x]
@@ -104,6 +105,7 @@ class StoreTransactionAdjustments(object):
         dfStoreTransAdjMisc.printSchema()
         dfStoreTransAdj.coalesce(1).select("*").write.mode("overwrite").parquet(self.storeTransAdjustmentsOut + '/' + 'Working1')
         dfStoreTransAdjMisc.coalesce(1).select("*").write.mode("overwrite").parquet(self.storeTransAdjustmentsOut + '/' + 'Working2')
+        dfStoreTransAdjMisc.coalesce(1).select("*").write.mode("append").partitionBy('year', 'month').format('parquet').save(self.storeTransAdjustmentsOut)
 
         self.sparkSession.stop()
 
