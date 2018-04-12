@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType
 import sys
 from datetime import datetime
-from pyspark.sql.functions import udf, col, hash as hash_
+from pyspark.sql.functions import unix_timestamp, from_unixtime, year, substring, udf, col, hash as hash_
 import boto3
 
 
@@ -54,8 +54,11 @@ class ProductCategoryDiscoveryToRefined(object):
                                                 "level_seven_id, trim(split(trim(a.categorypath),'>>')[5]) as level_seven_name, "
                                                 "split(a.cat_id_list,'>>')[7] as level_eight_id, trim(split(trim(a.categorypath),'>>')[6]) as "
                                                 "level_eight_name, '' as level_nine_id, ' ' as level_nine_name, '' as level_ten_id, "
-                                                "' ' as level_ten_name, YEAR(FROM_UNIXTIME(UNIX_TIMESTAMP())) as year, "
-                                                "SUBSTR(FROM_UNIXTIME(UNIX_TIMESTAMP()),6,2) as month from ProdCategoryTempTable a")
+                                                "' ' as level_ten_name from ProdCategoryTempTable a")
+
+        newRow = self.sparkSession.createDataFrame([['20', 'Coupons', None, None, 0, '4', '20', 'Inventory Tree', '20', 'Coupons', None, None, None, None, None, None,
+                                                     None, None, None, None, None, None, '', '', '', '']], schema=SourceDataDFTmp.schema)
+        SourceDataDFTmp = SourceDataDFTmp.union(newRow)
 
         todayyear = datetime.now().strftime('%Y')
         # CDC Logic
@@ -100,7 +103,7 @@ class ProductCategoryDiscoveryToRefined(object):
                                                                     "level_five_name", "level_six_id", "level_six_name",
                                                                     "level_seven_id", "level_seven_name", "level_eight_id",
                                                                     "level_eight_name", "level_nine_id", "level_nine_name",
-                                                                    "level_ten_id", "level_ten_name"))
+                                                                    "level_ten_id", "level_ten_name")).withColumn("year", year(from_unixtime(unix_timestamp()))).withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2))
 
         sourceDataDF.registerTempTable("CurrentSourceTempTable")
 
