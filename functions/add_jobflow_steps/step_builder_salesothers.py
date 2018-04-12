@@ -188,8 +188,8 @@ class StepBuilderSalesOthers(object):
 
         script_args = [
             's3://' + output_bucket + '/StoreTransactionAdjustment',
-            's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/Working',
-            's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/Working'
+            's3://' + input_bucket + '/StoreTransAdjustments/StoreTrans/Working/',
+            's3://' + input_bucket + '/StoreTransAdjustments/MISC_input/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -201,7 +201,7 @@ class StepBuilderSalesOthers(object):
         output_bucket = self.buckets['refined_regular']
 
         script_args = [
-            's3://' + output_bucket + '/StoreTransactionAdj',
+            's3://' + output_bucket + '/StoreTransactionAdjustment',
             's3://' + input_bucket + '/StoreTransactionAdjustment/Working1/',
             's3://' + input_bucket + '/StoreTransactionAdjustment/Working2/'
         ]
@@ -216,7 +216,7 @@ class StepBuilderSalesOthers(object):
 
         script_args = [
             's3://' + output_bucket + '/WT_STORE_TRANS_ADJMNTS',
-            's3://' + input_bucket + '/StoreTransactionAdj/Working/'
+            's3://' + input_bucket + '/StoreTransactionAdjustment/Working/'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
