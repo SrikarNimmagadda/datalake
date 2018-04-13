@@ -97,11 +97,14 @@ class StepBuilderSalesOthers(object):
         script_name = 'Facts/SalesLeadCSVToParquet.py'
         input_bucket = self.buckets['raw_customer_pii']
         output_bucket = self.buckets['discovery_customer_pii']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
             's3://' + input_bucket + '/SalesLeads/Working/',
-            's3://' + output_bucket + '/SalesLeads'
+            's3://' + output_bucket + '/SalesLeads',
+            's3://' + output_bucket + '/SalesLeads/Working',
+            's3://' + error_bucket + '/SalesLeads'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
@@ -111,6 +114,7 @@ class StepBuilderSalesOthers(object):
         script_name = 'Facts/SalesLeadsRefined.py'
         input_bucket = self.buckets['discovery_customer_pii']
         output_bucket = self.buckets['refined_regular']
+        error_bucket = self.buckets['data_processing_errors']
 
         script_args = [
 
@@ -119,8 +123,8 @@ class StepBuilderSalesOthers(object):
             's3://' + output_bucket + '/StoreDealerAssociation/Working',
             's3://' + output_bucket + '/ATTDealerCode/Working/',
             's3://' + input_bucket + '/SalesLeads/Working',
-            's3://' + output_bucket + '/SalesLeads'
-
+            's3://' + output_bucket + '/SalesLeads/Working',
+            's3://' + error_bucket + '/SalesLeads/Refine'
         ]
 
         return self.step_factory.create(step_name, script_name, script_args)
