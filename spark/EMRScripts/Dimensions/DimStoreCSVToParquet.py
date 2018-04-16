@@ -75,7 +75,7 @@ class DimStoreCSVToParquet(object):
         self.dealerCodesColumnCount = 37
         self.dealerCodesExpectedColumns = ['Dealer Code', 'Loc #', 'Location', 'Retail IQ', 'District', 'ATT Mkt Abbrev', 'ATT Market Name', 'Market', 'Region', 'Dispute Mkt', 'DF', 'C&C', 'WS', 'WS Expires', 'Footprint Level', 'Business Expert', 'DF Code', 'Old Code', 'Old Code 2', 'ATT Location Name', 'ATT Location ID', 'ATT Region', 'State', 'Notes', 'Notes2', 'Open Date', 'Close Date', 'DC Origin', 'Store Origin', 'Acquisition Origin', 'TB Loc', 'SMF Mapping', 'SMF Market', 'DC status', 'Sorting Rank', 'Rank Description', 'Company']
         self.multiTrackerColumnCount = 40
-        self.multiTrackerExpectedColumns = ['Formula Link', 'AT&T Region', 'AT&T Market', 'Spring Region', 'Spring Market', 'Spring District', 'Loc', 'Store Name', 'Street Address', 'City, State, Zip', 'Square Feet', 'Total Monthly Rent', 'Lease Expiration', 'February 2018 Total Ops', 'Average Last 12 Months Ops', 'Average Traffic Count Last 12 Months', 'October SMF', 'Dealer Code', 'Exterior Photo', 'Interior Photo', 'Build Type', 'Store Type', 'C&C Designation', 'Remodel or Open Date', 'Signage Type', 'Pylon/Monument Panels', 'Selling Walls', 'Memorable Accessory Wall', 'Cash Wrap Expansion', 'Window Wrap Grpahics', 'Live DTV', 'Learning Tables', 'Community Table', 'Diamond Displays', 'C Fixtures', 'TIO Kiosk', 'Approved for Flex Blade', 'Cap Index Score', 'Authorized Retailer Tag Line', 'Selling Walls Notes']
+        self.multiTrackerExpectedColumns = ['Formula Link', 'AT&T Region', 'AT&T Market', 'Spring Region', 'Spring Market', 'Spring District', 'Loc', 'Store Name', 'Street Address', 'City, State, Zip', 'Square Feet', 'Total Monthly Rent', 'Lease Expiration', 'Average Last 12 Months Ops', 'Average Traffic Count Last 12 Months', 'Dealer Code', 'Exterior Photo', 'Interior Photo', 'Build Type', 'Store Type', 'C&C Designation', 'Remodel or Open Date', 'Signage Type', 'Pylon/Monument Panels', 'Selling Walls', 'Memorable Accessory Wall', 'Cash Wrap Expansion', 'Window Wrap Grpahics', 'Live DTV', 'Learning Tables', 'Community Table', 'Diamond Displays', 'C Fixtures', 'TIO Kiosk', 'Approved for Flex Blade', 'Cap Index Score', 'Authorized Retailer Tag Line', 'Selling Walls Notes']
         self.springMobileColumnCount = 24
         self.springMobileExpectedColumns = ['Store #', 'Store Name', 'Hyperion Store #', 'Open Date', 'Closed Date', 'Status', 'Comp', 'AcquisitionName', 'Region', 'Market', 'District', 'Region VP', 'Market Director', 'District Manager', 'RVP ID', 'MDIR ID', 'DM ID', 'Store Tier', 'SqFtRange', 'State', 'Zip', 'Attribute', 'Base', 'Classification', 'Same', 'Address', 'City', 'Sq Ft']
         self.dtvColumnCount = 2
@@ -346,8 +346,7 @@ class DimStoreCSVToParquet(object):
                                 line[1] != 'Formula Link' and line[2] != 'Spring Mobile Multi-Tracker').\
             toDF(self.multiTrackerCols)
 
-        dfMultiTrackerStore.coalesce(1).write.mode("overwrite").csv(self.multiTrackerWorkingStoreCSVFilePath,
-                                                                    header=True)
+        # dfMultiTrackerStore.coalesce(1).write.mode("overwrite").csv(self.multiTrackerWorkingStoreCSVFilePath, header=True)
 
         dfSpringMobileStoreList = self.sparkSession.read.format("com.databricks.spark.csv"). \
             option("encoding", "UTF-8"). \
