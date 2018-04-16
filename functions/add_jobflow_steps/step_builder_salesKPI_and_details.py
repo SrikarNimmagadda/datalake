@@ -38,8 +38,8 @@ class StepBuilderSalesKPIandDetails(object):
             self._build_step_salesdetails_refinery(),
             self._build_step_salesdetails_delivery(),
             self._build_step_salesKPIlist(),
-            self._build_step_salesDetails_Refinery(),
-            self._build_step_salesDetails_Delivery()
+            self._build_step_salesKPI_Refinery(),
+            self._build_step_salesKPI_Delivery()
         ]
 
         return steps
@@ -107,7 +107,7 @@ class StepBuilderSalesKPIandDetails(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_salesDetails_Refinery(self):
+    def _build_step_salesKPI_Refinery(self):
         step_name = 'SalesKPIRefined'
         script_name = 'Facts/SalesKPIRefined.py'
         input_bucket = self.buckets['refined_regular']
@@ -134,7 +134,7 @@ class StepBuilderSalesKPIandDetails(object):
 
         return self.step_factory.create(step_name, script_name, script_args)
 
-    def _build_step_salesDetails_Delivery(self):
+    def _build_step_salesKPI_Delivery(self):
         step_name = 'SalesKPIDelivery'
         script_name = 'Facts/SalesKPIDelivery.py'
         input_bucket = self.buckets['refined_regular']

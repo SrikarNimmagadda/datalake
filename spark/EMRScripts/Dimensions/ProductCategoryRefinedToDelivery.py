@@ -208,10 +208,8 @@ class ProductCategoryRefinedToDelivery:
             self.log.info("Current Path is : " + self.prodCatCurrentPath)
             self.log.info("Previous Path is : " + self.prodCatPreviousPath)
 
-            newRow = self.sparkSession.createDataFrame([[20, 4, 'Coupons', '', '', 20, 'Inventory Tree', 20, 'Coupons', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']])
-
-            dfProdCatCurr.union(newRow).coalesce(1).write.mode("overwrite").csv(self.prodCatCurrentPath, header=True)
-            dfProdCatCurr.union(newRow).coalesce(1).write.mode("append").csv(self.prodCatPreviousPath, header=True)
+            dfProdCatCurr.coalesce(1).write.mode("overwrite").csv(self.prodCatCurrentPath, header=True)
+            dfProdCatCurr.coalesce(1).write.mode("append").csv(self.prodCatPreviousPath, header=True)
 
         else:
             self.log.info("This should not be printed. Please check.")
