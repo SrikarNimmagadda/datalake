@@ -17,8 +17,10 @@ class EmpTransAdj(object):
         self.log4jLogger = self.sparkSession.sparkContext._jvm.org.apache.log4j
         self.logger = self.log4jLogger.LogManager.getLogger(self.appName)
         self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
         self.EmpTransAdjOut = sys.argv[1]
         self.EmpTransAdjIn = sys.argv[2]
+        self.EmpTransAdjDelivery = sys.argv[3]
 
     def searchFile(self, strS3url):
 
@@ -39,40 +41,58 @@ class EmpTransAdj(object):
 
         return file, header
 
+    def makeZeroByteFile(self, destinationPath, fileName):
+
+        newBucketWithPath = urlparse(destinationPath)
+        newBucket = newBucketWithPath.netloc
+        newBucketNode = self.s3.Bucket(name=newBucket)
+        newPath = newBucketWithPath.path.lstrip('/')
+        objs = newBucketNode.objects.filter(Prefix=newPath)
+        for s3Object in objs:
+            s3Object.delete()
+
+        newFile = open(fileName, 'w')
+        newFile.close()
+        self.client.upload_file(fileName, newBucket, newPath + '/' + fileName)
+
     def loadParquet(self):
+        dfNullCheck = self.sparkSession.read.format("com.databricks.spark.csv").option("header", "true").option("treatEmptyValuesAsNulls", "true").option("inferSchema", "true").load(self.EmpTransAdjIn)
+        if dfNullCheck.count() > 0:
+            file, fileHeader = self.searchFile(self.EmpTransAdjIn)
+            nonTransposeCols = ['Market', 'Region', 'District', 'Location', 'Loc', 'SalesPerson', 'SalesPersonID']
+            empTrnasAdjCols = list(filter(None, fileHeader))
+            empTrnasAdjCols = [column.replace(' ', '') for column in empTrnasAdjCols]
+            empTrnasAdjCols = [column + '_wxyz' if column not in nonTransposeCols else column.lower() for index, column in enumerate(empTrnasAdjCols)]
 
-        file, fileHeader = self.searchFile(self.EmpTransAdjIn)
-        nonTransposeCols = ['Market', 'Region', 'District', 'Location', 'Loc', 'SalesPerson', 'SalesPersonID']
-        empTrnasAdjCols = list(filter(None, fileHeader))
-        empTrnasAdjCols = [column.replace(' ', '') for column in empTrnasAdjCols]
-        empTrnasAdjCols = [column + '_wxyz' if column not in nonTransposeCols else column.lower() for index, column in enumerate(empTrnasAdjCols)]
+            self.logger.info("Employee Transaction Columns : " + ','.join(empTrnasAdjCols))
 
-        self.logger.info("Employee Transaction Columns : " + ','.join(empTrnasAdjCols))
+            dfEmpTrnasAdj = self.sparkSession.read.format("com.databricks.spark.csv").\
+                option("header", "true").\
+                option("treatEmptyValuesAsNulls", "true").\
+                option("inferSchema", "true").\
+                load(self.EmpTransAdjIn).toDF(*empTrnasAdjCols)
 
-        dfEmpTrnasAdj = self.sparkSession.read.format("com.databricks.spark.csv").\
-            option("header", "true").\
-            option("treatEmptyValuesAsNulls", "true").\
-            option("inferSchema", "true").\
-            load(self.EmpTransAdjIn).toDF(*empTrnasAdjCols)
+            fileName, fileExtension = os.path.splitext(os.path.basename(file))
+            fields = fileName.split('\\')
+            newformat = ''
+            if len(fields) > 0:
+                filenamefield = fields[len(fields) - 1].split('_')
+                if len(filenamefield) > 0:
+                    self.logger.info("###############################")
+                    self.logger.info(filenamefield)
+                    oldformat1 = filenamefield[1]
+                    self.logger.info(oldformat1)
+                    oldformat = oldformat1.replace('TransAdjEMP', '')
+                    newformat = datetime.strptime(str(oldformat), '%Y%m%d').strftime('%m/%d/%Y')
 
-        fileName, fileExtension = os.path.splitext(os.path.basename(file))
-        fields = fileName.split('\\')
-        newformat = ''
-        if len(fields) > 0:
-            filenamefield = fields[len(fields) - 1].split('_')
-            if len(filenamefield) > 0:
-                self.logger.info("###############################")
-                self.logger.info(filenamefield)
-                oldformat1 = filenamefield[1]
-                self.logger.info(oldformat1)
-                oldformat = oldformat1.replace('TransAdjEMP', '')
-                newformat = datetime.strptime(str(oldformat), '%Y%m%d').strftime('%m/%d/%Y')
+            dfEmpTrnasAdj = dfEmpTrnasAdj.withColumn('reportdate', lit(newformat))
 
-        dfEmpTrnasAdj = dfEmpTrnasAdj.withColumn('reportdate', lit(newformat))
+            dfEmpTrnasAdj.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).write.mode('append').partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
 
-        dfEmpTrnasAdj.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).write.mode('append').partitionBy('year', 'month').format('parquet').save(self.EmpTransAdjOut)
-
-        dfEmpTrnasAdj.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
+            dfEmpTrnasAdj.coalesce(1).select("*").write.mode("overwrite").parquet(self.EmpTransAdjOut + '/' + 'Working')
+        else:
+            self.makeZeroByteFile(self.EmpTransAdjDelivery, 'zero_byte_file.csv')
+            self.logger.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
 
         self.sparkSession.stop()
 
