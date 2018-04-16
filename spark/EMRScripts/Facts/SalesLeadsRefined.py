@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 import sys
 import boto3
 from datetime import datetime
+from pyspark.sql.functions import col, regexp_replace
 
 
 class InvalidInputError(RuntimeError):
@@ -157,6 +158,8 @@ class SalesLeadsRefined(object):
         # ######################### EXCEPTION HANDLING ENDS ##########################
 
         self.log.info("========== SalesLeads Processing STARTS")
+        dfSalesLead = dfSalesLead.withColumn('account', regexp_replace(col('account'), '[\\r\\n\\\\\/\\"\\\"\\\""]', ' '))
+        dfSalesLead = dfSalesLead.withColumn('repname', regexp_replace(col('repname'), '[\\r\\n\\\\\/\\"\\\"\\\""]', ' '))
 
         dfEmpployeeRefine.registerTempTable("emprefine")
         dfStoreRefine.registerTempTable("storerefine")
