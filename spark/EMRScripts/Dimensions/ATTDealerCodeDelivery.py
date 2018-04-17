@@ -2,7 +2,10 @@ from pyspark.sql import SparkSession
 import sys
 import boto3
 from datetime import datetime
-import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
 class ATTDealerCodeDelivery(object):
@@ -70,7 +73,9 @@ class ATTDealerCodeDelivery(object):
 
     def loadDelivery(self):
 
-        dfDealerCode = self.sparkSession.read.parquet(self.dealerCodeIn)
+        # dfDealerCode = self.sparkSession.read.parquet(self.dealerCodeIn)
+        dfDealerCodeCurrFile = self.findLastModifiedFile(self.refinedBucketNode, self.prefixAttDealerRefinePath, self.refinedBucket)
+        dfDealerCode = self.sparkSession.read.parquet(dfDealerCodeCurrFile)
 
         #############################################################################################
         #                                 Reading the source data files                              #

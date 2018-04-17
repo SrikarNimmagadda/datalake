@@ -139,15 +139,20 @@ class ATTDealerCodeRefine(object):
                                                 "attmarket, olddealercode, olddealercode2, attregion, notes, notes2"
                                                 " from att_dealer_cdc")
                 FinalDF.coalesce(1).select("*").write.mode("overwrite").parquet(self.dealerCodeOutput + '/' + 'Working')
-                FinalDF.coalesce(1).select("*").write.mode("overwrite").csv(self.dealerCodeOutput + '/csv', header=True)
+                # FinalDF.coalesce(1).select("*").write.mode("overwrite").csv(self.dealerCodeOutput + '/csv', header=True)
 
                 FinalDF.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))). \
                     withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).select("*").write.mode(
                     "append").partitionBy('year', 'month').format('parquet').save(self.dealerCodeOutput)
             else:
-                self.sparkSession.createDataFrame(self.sparkSession.sparkContext.emptyRDD()).write.mode("overwrite")\
-                    .csv(self.dealerCodeOutput + '/' + 'Working')
-                self.log.info("The prev and current files same.So zero size delta file generated in delivery bucket.")
+                FinalDF.coalesce(1).select("*").write.mode("overwrite").parquet(self.dealerCodeOutput + '/' + 'Working')
+                # FinalDF.coalesce(1).select("*").write.mode("overwrite").csv(self.dealerCodeOutput + '/csv', header=True)
+                FinalDF.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))). \
+                    withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).select("*").write.mode(
+                    "append"). \
+                    partitionBy('year', 'month').format('parquet').save(
+                    self.dealerCodeOutput)
+                self.log.info("The prev and current files are same. So full file will be generated in refined bucket.")
 
         else:
             #########################################################################################################
@@ -155,7 +160,7 @@ class ATTDealerCodeRefine(object):
             #########################################################################################################
             self.log.info(" This is the first transaformation call, So keeping the file in refined bucket.")
             FinalDF.coalesce(1).select("*").write.mode("overwrite").parquet(self.dealerCodeOutput + '/' + 'Working')
-            FinalDF.coalesce(1).select("*").write.mode("overwrite").csv(self.dealerCodeOutput + '/csv', header=True)
+            # FinalDF.coalesce(1).select("*").write.mode("overwrite").csv(self.dealerCodeOutput + '/csv', header=True)
             FinalDF.coalesce(1).withColumn("year", year(from_unixtime(unix_timestamp()))).\
                 withColumn("month", substring(from_unixtime(unix_timestamp()), 6, 2)).select("*").write.mode("append").\
                 partitionBy('year', 'month').format('parquet').save(
