@@ -149,7 +149,7 @@ class EmpOprEffCSVToParquet(object):
         df1 = df1.withColumn("totalloss", rtrim(regexp_replace("total_loss", '\\(|\\)|\\$|\\,', '')).cast(DecimalType(15, 2)))
         df1 = df1.withColumn("totalissues", df1["total_issues"].cast(IntegerType()))
         df1 = df1.withColumn("hrconsultedbeforetermination", df1["hrconsultedbefore_termination"].cast(BooleanType()))
-        df1 = df1.withColumn("transactionerrors", rtrim(regexp_replace("transaction_errors", '\\(|\\)|\\$', '')).cast(DecimalType(15, 2)))
+        df1 = df1.withColumn("transactionerrors", rtrim(regexp_replace("transaction_errors", '\\(|\\)|\\$|\\,', '')).cast(DecimalType(15, 2)))
         df1 = df1.withColumn("totalerrors", df1["total_errors"].cast(IntegerType()))
         df1 = df1.withColumn("nexttrades", rtrim(regexp_replace("next_trades", '\\(|\\)|\\$', '')).cast(DecimalType(15, 2)))
         df1 = df1.withColumn("totaldevices12", df1["total_devices12"].cast(IntegerType()))
